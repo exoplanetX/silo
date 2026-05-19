@@ -8,10 +8,14 @@ Introduce basis-oriented LP solving and prepare the LP layer for reoptimization 
 
 This phase adds explicit basis state, reduced-cost computation, primal feasibility checks, and a revised simplex loop for small LPs.
 
+The Phase 3 implementation should follow `notes/10_revised_simplex_design.md`. Start with a standard-form builder and a `Basis` dataclass before adding the revised simplex loop.
+
 ## Expected Files
 
 - `src/silo/lp/simplex/basis.py`
-- `src/silo/lp/revised_simplex.py`
+- `src/silo/lp/simplex/standard_form.py`
+- `src/silo/lp/simplex/factorization.py`
+- `src/silo/lp/simplex/revised.py`
 - `src/silo/lp/base.py`
 - `tests/unit/test_revised_simplex.py`
 

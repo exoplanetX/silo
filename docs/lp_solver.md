@@ -39,3 +39,7 @@ The solver rejects minimization models, finite upper bounds, nonzero lower bound
 - No external solver call in native algorithms.
 
 The tableau path is intended to remain simple enough for tests and documentation to explain every mathematical convention.
+
+## Planned Revised Simplex Layer
+
+The current implementation uses a dense tableau solver. The next LP-layer goal is a revised simplex design documented in [`notes/10_revised_simplex_design.md`](../notes/10_revised_simplex_design.md). That layer should introduce explicit basis objects, standard-form builders, and a path toward warm starts and reoptimization without changing the current tableau reference implementation.
