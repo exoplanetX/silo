@@ -1,6 +1,6 @@
 # SILO: Simplex and Integer Linear Optimization
 
-A minimal solver kernel for learning LP simplex, MIP search, and extensible mathematical programming solver architecture.
+SILO is a Python-first educational optimization solver kernel that currently supports small continuous LPs through a dense tableau simplex implementation and a JSON-based CLI solve workflow.
 
 ## Project Philosophy
 
@@ -15,9 +15,29 @@ The project follows four principles:
 
 ## Current Scope
 
-The current repository is a project scaffold. It defines the package layout, core model objects, canonicalization entry points, a placeholder tableau-simplex solver, a minimal command-line interface, examples, fixtures, and tests.
+The current repository contains a working educational LP path:
 
-The next implementation phases will complete the model core, canonical form conversion, JSON input/output, tableau simplex, revised simplex, presolve, scaling, and branch-and-bound modules.
+- Python model objects for LP/MIP-style model representation.
+- JSON model reader.
+- Dense tableau simplex solver.
+- Phase I / Phase II support for `<=`, `>=`, and `=` rows.
+- Infeasible and unbounded LP status detection.
+- CLI solve workflow for JSON LP files.
+- Solution JSON output with primal values, slacks, reduced costs, and basis status.
+
+The native solver path does not call external solvers.
+
+## Current Limitations
+
+- Continuous LPs only.
+- Maximization models only.
+- Variables must have lower bound `0`.
+- Finite variable upper bounds are not supported yet.
+- Integer and binary variables are not solved yet.
+- No revised simplex yet.
+- No MIP branch-and-bound yet.
+- No presolve or scaling yet.
+- No external solver backend is used by native algorithms.
 
 ## Long-Term Roadmap
 
@@ -40,19 +60,33 @@ Use an editable install for development:
 pip install -e ".[dev]"
 ```
 
+## Quick Start
+
+Solve the production LP example and print deterministic solution JSON:
+
+```bash
+silo solve examples/json/production.json
+```
+
+Write the same solution JSON to an ignored local output file:
+
+```bash
+silo solve examples/json/production.json --output outputs/production_solution.json
+```
+
+The `outputs/` directory is for local runs and generated files there should not be committed.
+
 ## Running Tests
 
 ```bash
 pytest
 ```
 
-## CLI Placeholder
+## Documentation
 
-```bash
-silo --help
-```
-
-The `solve` command is present only as a stable interface placeholder.
+- [JSON model format](docs/json_model_format.md)
+- [CLI solve usage](docs/cli_solve.md)
+- [LP solver scope](docs/lp_solver.md)
 
 ## License
 

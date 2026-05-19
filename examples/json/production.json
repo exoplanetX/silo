@@ -1,0 +1,15 @@
+{
+  "name": "production",
+  "sense": "maximize",
+  "variables": [
+    {"name": "x1", "lower": 0.0, "upper": null, "type": "continuous"},
+    {"name": "x2", "lower": 0.0, "upper": null, "type": "continuous"}
+  ],
+  "objective": {
+    "coefficients": {"x1": 3.0, "x2": 5.0}
+  },
+  "constraints": [
+    {"name": "labor", "coefficients": {"x1": 1.0, "x2": 2.0}, "sense": "<=", "rhs": 8.0},
+    {"name": "material", "coefficients": {"x1": 3.0, "x2": 2.0}, "sense": "<=", "rhs": 12.0}
+  ]
+}

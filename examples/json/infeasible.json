@@ -1,0 +1,14 @@
+{
+  "name": "infeasible",
+  "sense": "maximize",
+  "variables": [
+    {"name": "x", "lower": 0.0, "upper": null, "type": "continuous"}
+  ],
+  "objective": {
+    "coefficients": {"x": 1.0}
+  },
+  "constraints": [
+    {"name": "demand", "coefficients": {"x": 1.0}, "sense": ">=", "rhs": 2.0},
+    {"name": "capacity", "coefficients": {"x": 1.0}, "sense": "<=", "rhs": 1.0}
+  ]
+}
