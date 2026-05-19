@@ -51,25 +51,29 @@ class SimplexTableau:
         )
 
     def pivot(self, row_index: int, column_index: int) -> None:
-        pivot_value = self.rows[row_index][column_index]
-        self.rows[row_index] = [value / pivot_value for value in self.rows[row_index]]
-        pivot_row = self.rows[row_index]
+        pivot_element = self.rows[row_index][column_index]
+        normalized_pivot_row = [value / pivot_element for value in self.rows[row_index]]
+        self.rows[row_index] = normalized_pivot_row
 
         for candidate_index, row in enumerate(self.rows):
             if candidate_index == row_index:
                 continue
-            multiplier = row[column_index]
-            if abs(multiplier) <= DEFAULT_TOLERANCE:
+            row_multiplier = row[column_index]
+            if abs(row_multiplier) <= DEFAULT_TOLERANCE:
                 continue
             self.rows[candidate_index] = [
-                value - multiplier * pivot_value
-                for value, pivot_value in zip(row, pivot_row, strict=True)
+                value - row_multiplier * pivot_row_value
+                for value, pivot_row_value in zip(row, normalized_pivot_row, strict=True)
             ]
 
-        multiplier = self.objective_row[column_index]
+        objective_multiplier = self.objective_row[column_index]
         self.objective_row = [
-            value - multiplier * pivot_value
-            for value, pivot_value in zip(self.objective_row, pivot_row, strict=True)
+            value - objective_multiplier * pivot_row_value
+            for value, pivot_row_value in zip(
+                self.objective_row,
+                normalized_pivot_row,
+                strict=True,
+            )
         ]
         self.basis[row_index] = column_index
 
