@@ -1,4 +1,4 @@
-# Phase 3: Tableau Simplex
+# Phase 2: Tableau Simplex
 
 ## Goal
 

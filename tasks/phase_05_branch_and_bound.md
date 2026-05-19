@@ -1,4 +1,4 @@
-# Phase 6: Branch and Bound
+# Phase 5: MIP Branch-and-Bound
 
 ## Goal
 

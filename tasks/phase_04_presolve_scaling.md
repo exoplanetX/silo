@@ -1,4 +1,4 @@
-# Phase 5: Presolve and Scaling
+# Phase 4: Presolve, Scaling, and Numerical Diagnostics
 
 ## Goal
 

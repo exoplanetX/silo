@@ -21,14 +21,16 @@ The next implementation phases will complete the model core, canonical form conv
 
 ## Long-Term Roadmap
 
-- Phase 1: Python modeling and canonical form
-- Phase 2: tableau simplex
-- Phase 3: revised simplex and basis handling
-- Phase 4: presolve and scaling
-- Phase 5: branch-and-bound for MIP
-- Phase 6: cuts and callbacks
-- Phase 7: stochastic and robust model transformations
-- Phase 8: native backend
+- Phase 0: Project scaffold
+- Phase 1: Model core and canonicalization
+- Phase 2: Tableau simplex
+- Phase 3: Revised simplex and basis reoptimization
+- Phase 4: Presolve, scaling, and numerical diagnostics
+- Phase 5: MIP branch-and-bound
+- Phase 6: Cut generation and callbacks
+- Phase 7: Decomposition layer
+- Phase 8: Stochastic and robust optimization extensions
+- Phase 9: Native backend
 
 ## Installation
 

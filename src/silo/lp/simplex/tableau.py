@@ -10,6 +10,6 @@ class TableauSimplexSolver(LPSolver):
             status=SolverStatus.NOT_SOLVED,
             message=(
                 "Tableau simplex is not implemented yet. "
-                "This placeholder will be completed in Phase 3."
+                "This placeholder will be completed in Phase 2."
             ),
         )

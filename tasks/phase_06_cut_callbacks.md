@@ -1,4 +1,4 @@
-# Phase 7: Cut Callbacks
+# Phase 6: Cut Generation and Callbacks
 
 ## Goal
 

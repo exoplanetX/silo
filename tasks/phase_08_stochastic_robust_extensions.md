@@ -1,4 +1,4 @@
-# Phase 8: Stochastic and Robust Extensions
+# Phase 8: Stochastic and Robust Optimization Extensions
 
 ## Goal
 

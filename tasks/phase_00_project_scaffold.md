@@ -1,4 +1,4 @@
-# Phase 1: Project Scaffold
+# Phase 0: Project Scaffold
 
 ## Goal
 

@@ -1,4 +1,4 @@
-# Phase 2: Model Core
+# Phase 1: Model Core and Canonicalization
 
 ## Goal
 
