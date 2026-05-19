@@ -43,3 +43,7 @@ The tableau path is intended to remain simple enough for tests and documentation
 ## Planned Revised Simplex Layer
 
 The current implementation uses a dense tableau solver. The next LP-layer goal is a revised simplex design documented in [`notes/10_revised_simplex_design.md`](../notes/10_revised_simplex_design.md). That layer should introduce explicit basis objects, standard-form builders, and a path toward warm starts and reoptimization without changing the current tableau reference implementation.
+
+## Revised Simplex Preparation
+
+Phase 3A adds a standard-form builder and explicit `Basis` dataclass. These components transform supported LP models into equality form and record deterministic basic/nonbasic column metadata before a future revised simplex iteration loop is implemented.
