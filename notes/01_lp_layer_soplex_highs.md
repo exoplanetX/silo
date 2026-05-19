@@ -1,0 +1,13 @@
+# LP Layer: SoPlex and HiGHS as References
+
+SoPlex and HiGHS are useful learning references because they show two important aspects of the LP layer: a clean mathematical interface and serious attention to basis-oriented computation. SILO should not imitate their engineering complexity in the beginning. Instead, it should borrow the conceptual separation between model data, basis state, solver status, and solution objects.
+
+The LP model convention should be explicit. Variables have lower and upper bounds. Rows represent linear constraints, and later phases may move toward row bounds rather than only `<=`, `>=`, and `=` senses. The coefficient matrix should eventually be sparse, even if early canonicalization produces a dense placeholder for clarity. A solver result should distinguish primal values, dual values, reduced costs, basis status, and termination status. These concepts are necessary before branch-and-bound and decomposition can be implemented cleanly.
+
+SoPlex is especially helpful as a conceptual reference for basis management and reoptimization. It treats an LP solve as more than a one-shot objective-value computation. Basis information is valuable when bounds or rows change, which is exactly what happens in MIP nodes and decomposition iterations. SILO should eventually expose basis objects and reoptimization hooks, but it should not rush into sparse LU updates or advanced numerical recovery before the basic state transitions are tested.
+
+HiGHS is useful as a modern open-source reference for LP and MIP architecture. It demonstrates that solver code needs careful interfaces around presolve, scaling, model status, and optional algorithm choices. SILO can learn from this by keeping its LP interface small and stable. A `Model` enters the LP solver; a `Solution` comes back with status, values, and a message. Later, specialized solution objects can expose basis and diagnostics without changing the basic contract.
+
+SILO will borrow three ideas at the LP layer. First, the LP interface should be clean enough that tableau simplex, revised simplex, and optional external backends can share the same high-level contract. Second, basis-oriented design matters because MIP and decomposition solve many related LPs. Third, reoptimization should be part of the roadmap, not an afterthought.
+
+SILO will not initially implement industrial sparse factorization, advanced numerical scaling, crossover, crash bases, or performance-tuned pricing. Those features matter in production solvers, but they would obscure the educational goal. The early LP layer should instead make feasibility, optimality, unboundedness, infeasibility, pivot selection, and basis state visible through small deterministic tests.

@@ -1,0 +1,19 @@
+{
+  "name": "diet",
+  "sense": "minimize",
+  "variables": [
+    {"name": "bread", "lower": 0.0, "upper": null, "type": "continuous"},
+    {"name": "milk", "lower": 0.0, "upper": null, "type": "continuous"}
+  ],
+  "objective": {
+    "coefficients": {"bread": 0.5, "milk": 0.8}
+  },
+  "constraints": [
+    {
+      "name": "calories",
+      "coefficients": {"bread": 100.0, "milk": 150.0},
+      "sense": ">=",
+      "rhs": 500.0
+    }
+  ]
+}
