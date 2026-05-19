@@ -1,11 +1,12 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from silo.core.solution import Solution
 
 
-def write_solution_json(solution: Solution, path: str | Path) -> None:
-    payload = {
+def solution_to_dict(solution: Solution) -> dict[str, Any]:
+    return {
         "status": solution.status.value,
         "objective_value": solution.objective_value,
         "primal_values": solution.primal_values,
@@ -15,7 +16,13 @@ def write_solution_json(solution: Solution, path: str | Path) -> None:
         "basis_status": solution.basis_status,
         "message": solution.message,
     }
-    Path(path).write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+
+
+def solution_to_json(solution: Solution) -> str:
+    return json.dumps(solution_to_dict(solution), indent=2, sort_keys=True) + "\n"
+
+
+def write_solution_json(solution: Solution, path: str | Path) -> None:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(solution_to_json(solution), encoding="utf-8")
