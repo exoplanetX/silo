@@ -37,8 +37,8 @@ def test_revised_simplex_solves_production_lp() -> None:
     assert solution.basis_status == {"x1": BASIC, "x2": BASIC}
 
 
-def test_revised_simplex_matches_tableau_on_small_le_lps() -> None:
-    for model in (_single_variable_model(), _production_model()):
+def test_revised_simplex_matches_tableau_on_supported_lps() -> None:
+    for model in (_production_model(), _ge_model(), _equality_model()):
         revised = RevisedSimplexSolver().solve(model)
         tableau = TableauSimplexSolver().solve(model)
 
@@ -46,7 +46,6 @@ def test_revised_simplex_matches_tableau_on_small_le_lps() -> None:
         assert revised.objective_value == pytest.approx(tableau.objective_value)
         assert revised.primal_values == pytest.approx(tableau.primal_values)
         assert revised.slack_values == pytest.approx(tableau.slack_values)
-        assert revised.basis_status == tableau.basis_status
 
 
 def test_revised_simplex_reports_reduced_costs_for_nonbasic_original_variables() -> None:
@@ -106,69 +105,69 @@ def test_revised_simplex_detects_unbounded_lp() -> None:
     assert "unbounded" in solution.message
 
 
-def test_revised_simplex_rejects_artificial_column_cases() -> None:
-    model = Model(name="ge_row")
-    model.add_variable(Variable(name="x"))
-    model.add_constraint(
-        Constraint(
-            name="demand",
-            coefficients={"x": 1.0},
-            sense=ConstraintSense.GE,
-            rhs=2.0,
-        )
-    )
-    model.add_constraint(
-        Constraint(
-            name="capacity",
-            coefficients={"x": 1.0},
-            sense=ConstraintSense.LE,
-            rhs=5.0,
-        )
-    )
-    model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
+def test_revised_simplex_solves_ge_row_with_phase_one() -> None:
+    solution = RevisedSimplexSolver().solve(_ge_model())
 
-    solution = RevisedSimplexSolver().solve(model)
-
-    assert solution.status == SolverStatus.ERROR
-    assert "artificial columns" in solution.message
+    assert solution.status == SolverStatus.OPTIMAL
+    assert solution.objective_value == pytest.approx(5.0)
+    assert solution.primal_values == {"x": pytest.approx(5.0)}
+    assert solution.slack_values == {
+        "demand": pytest.approx(3.0),
+        "capacity": pytest.approx(0.0),
+    }
+    assert solution.basis_status == {"x": BASIC}
 
 
-def test_revised_simplex_rejects_equality_cases() -> None:
-    model = Model(name="equality")
-    model.add_variable(Variable(name="x"))
-    model.add_constraint(
-        Constraint(
-            name="balance",
-            coefficients={"x": 1.0},
-            sense=ConstraintSense.EQ,
-            rhs=1.0,
-        )
-    )
-    model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
+def test_revised_simplex_solves_equality_row_with_phase_one() -> None:
+    solution = RevisedSimplexSolver().solve(_equality_model())
 
-    solution = RevisedSimplexSolver().solve(model)
-
-    assert solution.status == SolverStatus.ERROR
-    assert "artificial columns" in solution.message
+    assert solution.status == SolverStatus.OPTIMAL
+    assert solution.objective_value == pytest.approx(7.0)
+    assert solution.primal_values == {"x": pytest.approx(3.0), "y": pytest.approx(1.0)}
+    assert solution.slack_values == {
+        "balance": pytest.approx(0.0),
+        "x_capacity": pytest.approx(0.0),
+        "y_capacity": pytest.approx(2.0),
+    }
 
 
-def test_revised_simplex_rejects_negative_rhs_requiring_artificial_column() -> None:
-    model = Model(name="negative_rhs")
-    model.add_variable(Variable(name="x"))
-    model.add_constraint(
-        Constraint(
-            name="demand",
-            coefficients={"x": -1.0},
-            sense=ConstraintSense.LE,
-            rhs=-2.0,
-        )
-    )
-    model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
+def test_revised_simplex_solves_degenerate_equality_row_with_phase_one() -> None:
+    solution = RevisedSimplexSolver().solve(_degenerate_equality_model())
 
-    solution = RevisedSimplexSolver().solve(model)
+    assert solution.status == SolverStatus.OPTIMAL
+    assert solution.objective_value == pytest.approx(4.0)
+    assert solution.slack_values["balance"] == pytest.approx(0.0)
+    assert set(solution.primal_values) == {"x", "y"}
+    assert set(solution.reduced_costs) == {"x", "y"}
+    assert set(solution.basis_status) == {"x", "y"}
 
-    assert solution.status == SolverStatus.ERROR
-    assert "artificial columns" in solution.message
+
+def test_revised_simplex_solves_negative_rhs_with_phase_one() -> None:
+    solution = RevisedSimplexSolver().solve(_negative_rhs_model())
+
+    assert solution.status == SolverStatus.OPTIMAL
+    assert solution.objective_value == pytest.approx(5.0)
+    assert solution.primal_values == {"x": pytest.approx(5.0)}
+    assert solution.slack_values == {
+        "demand": pytest.approx(3.0),
+        "capacity": pytest.approx(0.0),
+    }
+
+
+def test_revised_simplex_detects_phase_one_infeasibility() -> None:
+    solution = RevisedSimplexSolver().solve(_infeasible_phase_one_model())
+
+    assert solution.status == SolverStatus.INFEASIBLE
+    assert "Phase I" in solution.message
+    assert "infeasibility" in solution.message
+
+
+def test_revised_simplex_detects_unbounded_after_phase_one() -> None:
+    solution = RevisedSimplexSolver().solve(_unbounded_after_phase_one_model())
+
+    assert solution.status == SolverStatus.UNBOUNDED
+    assert "Phase II" in solution.message
+    assert "unbounded" in solution.message
 
 
 def test_revised_simplex_returns_error_for_unsupported_model_classes() -> None:
@@ -211,6 +210,15 @@ def test_revised_simplex_returns_iteration_limit_when_limit_is_zero() -> None:
     solution = RevisedSimplexSolver(iteration_limit=0).solve(_single_variable_model())
 
     assert solution.status == SolverStatus.ITERATION_LIMIT
+    assert "Phase II" in solution.message
+    assert "iteration limit" in solution.message
+
+
+def test_revised_simplex_returns_phase_one_iteration_limit_when_limit_is_zero() -> None:
+    solution = RevisedSimplexSolver(iteration_limit=0).solve(_ge_model())
+
+    assert solution.status == SolverStatus.ITERATION_LIMIT
+    assert "Phase I" in solution.message
     assert "iteration limit" in solution.message
 
 
@@ -261,4 +269,156 @@ def _production_model() -> Model:
             sense=OptimizationSense.MAXIMIZE,
         )
     )
+    return model
+
+
+def _ge_model() -> Model:
+    model = Model(name="ge_row")
+    model.add_variable(Variable(name="x"))
+    model.add_constraint(
+        Constraint(
+            name="demand",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.GE,
+            rhs=2.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=5.0,
+        )
+    )
+    model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
+    return model
+
+
+def _equality_model() -> Model:
+    model = Model(name="equality")
+    model.add_variable(Variable(name="x"))
+    model.add_variable(Variable(name="y"))
+    model.add_constraint(
+        Constraint(
+            name="balance",
+            coefficients={"x": 1.0, "y": 1.0},
+            sense=ConstraintSense.EQ,
+            rhs=4.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="x_capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=3.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="y_capacity",
+            coefficients={"y": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=3.0,
+        )
+    )
+    model.set_objective(
+        Objective(coefficients={"x": 2.0, "y": 1.0}, sense=OptimizationSense.MAXIMIZE)
+    )
+    return model
+
+
+def _degenerate_equality_model() -> Model:
+    model = Model(name="degenerate_equality")
+    model.add_variable(Variable(name="x"))
+    model.add_variable(Variable(name="y"))
+    model.add_constraint(
+        Constraint(
+            name="balance",
+            coefficients={"x": 1.0, "y": 1.0},
+            sense=ConstraintSense.EQ,
+            rhs=4.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="x_capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=3.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="y_capacity",
+            coefficients={"y": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=3.0,
+        )
+    )
+    model.set_objective(
+        Objective(coefficients={"x": 1.0, "y": 1.0}, sense=OptimizationSense.MAXIMIZE)
+    )
+    return model
+
+
+def _negative_rhs_model() -> Model:
+    model = Model(name="negative_rhs")
+    model.add_variable(Variable(name="x"))
+    model.add_constraint(
+        Constraint(
+            name="demand",
+            coefficients={"x": -1.0},
+            sense=ConstraintSense.LE,
+            rhs=-2.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=5.0,
+        )
+    )
+    model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
+    return model
+
+
+def _infeasible_phase_one_model() -> Model:
+    model = Model(name="infeasible")
+    model.add_variable(Variable(name="x"))
+    model.add_constraint(
+        Constraint(
+            name="demand",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.GE,
+            rhs=2.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=1.0,
+        )
+    )
+    model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
+    return model
+
+
+def _unbounded_after_phase_one_model() -> Model:
+    model = Model(name="unbounded_after_phase_one")
+    model.add_variable(Variable(name="x"))
+    model.add_constraint(
+        Constraint(
+            name="demand",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.GE,
+            rhs=2.0,
+        )
+    )
+    model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
     return model

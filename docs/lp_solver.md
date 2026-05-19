@@ -30,7 +30,7 @@ The solver rejects minimization models, finite upper bounds, nonzero lower bound
 
 ## Current Non-Goals
 
-- No revised simplex yet.
+- No sparse or industrial-grade revised simplex implementation.
 - No dual simplex.
 - No sparse factorization.
 - No presolve or scaling.
@@ -42,7 +42,7 @@ The tableau path is intended to remain simple enough for tests and documentation
 
 ## Planned Revised Simplex Layer
 
-The current implementation uses a dense tableau solver. The next LP-layer goal is a revised simplex design documented in [`notes/10_revised_simplex_design.md`](../notes/10_revised_simplex_design.md). That layer should introduce explicit basis objects, standard-form builders, and a path toward warm starts and reoptimization without changing the current tableau reference implementation.
+The LP layer includes a dense tableau reference solver and an initial revised simplex implementation documented in [`notes/10_revised_simplex_design.md`](../notes/10_revised_simplex_design.md). The revised path uses explicit basis objects and the shared standard-form builder as a foundation for later warm starts and reoptimization without changing the tableau reference implementation.
 
 ## Revised Simplex Preparation
 
@@ -50,4 +50,8 @@ Phase 3A adds a standard-form builder and explicit `Basis` dataclass. These comp
 
 ## Revised Simplex Feasible-Basis Path
 
-SILO now includes an initial primal revised simplex implementation for small LPs that already have a feasible slack basis. This path is intentionally narrower than the tableau solver: it currently supports only continuous maximization LPs with nonnegative variables and `<=` rows that produce no artificial variables. Phase I support for the revised simplex layer is planned later.
+SILO includes a primal revised simplex implementation for small LPs that already have a feasible slack basis. It handles continuous maximization LPs with nonnegative variables and `<=` rows directly through the standard-form slack basis.
+
+## Revised Simplex Phase I
+
+The revised simplex solver now supports Phase I construction for artificial-variable cases. It can solve small continuous maximization LPs with `<=`, `>=`, and `=` rows, including rows normalized from a negative RHS, while still excluding finite upper bounds, nonzero lower bounds, and integer or binary variables. Phase I maximizes the negative sum of artificial variables, removes artificial columns after feasibility is established, and then runs Phase II with the original objective.
