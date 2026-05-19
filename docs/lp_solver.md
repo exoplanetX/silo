@@ -47,3 +47,7 @@ The current implementation uses a dense tableau solver. The next LP-layer goal i
 ## Revised Simplex Preparation
 
 Phase 3A adds a standard-form builder and explicit `Basis` dataclass. These components transform supported LP models into equality form and record deterministic basic/nonbasic column metadata before a future revised simplex iteration loop is implemented.
+
+## Revised Simplex Feasible-Basis Path
+
+SILO now includes an initial primal revised simplex implementation for small LPs that already have a feasible slack basis. This path is intentionally narrower than the tableau solver: it currently supports only continuous maximization LPs with nonnegative variables and `<=` rows that produce no artificial variables. Phase I support for the revised simplex layer is planned later.
