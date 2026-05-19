@@ -13,4 +13,7 @@ def write_solution_json(solution: Solution, path: str | Path) -> None:
         "reduced_costs": solution.reduced_costs,
         "message": solution.message,
     }
-    Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    Path(path).write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )

@@ -13,3 +13,4 @@ class Constraint:
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError("Constraint name must not be empty.")
+        object.__setattr__(self, "sense", ConstraintSense(self.sense))

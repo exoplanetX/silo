@@ -13,4 +13,5 @@ class Variable:
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError("Variable name must not be empty.")
+        object.__setattr__(self, "var_type", VariableType(self.var_type))
         self.bounds.validate()
