@@ -20,3 +20,13 @@
 9. Do not silently change mathematical conventions. Record conventions in notes and docs.
 
 10. Avoid premature optimization. First implement a readable reference version.
+
+## Task Management Rules
+
+- Long-term phase plans belong under `tasks/phases/`.
+- Issued Codex task prompts belong under `tasks/codex/`.
+- Optional execution reports belong under `tasks/reports/`.
+- Files under `tasks/codex/` are immutable after creation. Coding agents may read them, but must not edit, rename, delete, or move existing files under `tasks/codex/` unless the user explicitly asks for task-file maintenance.
+- If a task needs revision, create a new `tasks/codex/YYYYMMDD-TT-RR_slug.md` file with an incremented revision number.
+- If an execution report is needed, create it under `tasks/reports/` instead of modifying the issued task file.
+- If the task naming or folder rules need to change, update `tasks/README.md` first or in the same commit.
