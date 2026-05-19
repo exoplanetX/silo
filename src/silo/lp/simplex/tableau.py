@@ -78,6 +78,24 @@ class SimplexTableau:
     def objective_value(self) -> float:
         return _clean_zero(self.objective_row[-1])
 
+    def reduced_costs(self) -> dict[str, float]:
+        # Public reduced costs use the maximization convention rc_j = -row_j.
+        return {
+            variable_name: _clean_zero(-self.objective_row[column_index])
+            for column_index, variable_name in enumerate(
+                self.variable_names[: self.original_variable_count]
+            )
+        }
+
+    def basis_status(self) -> dict[str, str]:
+        basic_columns = set(self.basis)
+        return {
+            variable_name: "basic" if column_index in basic_columns else "nonbasic"
+            for column_index, variable_name in enumerate(
+                self.variable_names[: self.original_variable_count]
+            )
+        }
+
 
 @dataclass(frozen=True)
 class SimplexRunResult:
@@ -118,10 +136,14 @@ class TableauSimplexSolver(LPSolver):
             phase_name="Phase II",
         )
         if phase_two_result.status == SolverStatus.OPTIMAL:
+            primal_values = tableau.primal_values()
             return Solution(
                 status=SolverStatus.OPTIMAL,
                 objective_value=tableau.objective_value(),
-                primal_values=tableau.primal_values(),
+                primal_values=primal_values,
+                slack_values=_constraint_slacks(model, primal_values),
+                reduced_costs=tableau.reduced_costs(),
+                basis_status=tableau.basis_status(),
                 message="Tableau simplex solved the LP.",
             )
         return Solution(status=phase_two_result.status, message=phase_two_result.message)
@@ -375,6 +397,21 @@ def _run_simplex_iterations(
         status=SolverStatus.ITERATION_LIMIT,
         message=f"{phase_name} reached the iteration limit: {iteration_limit}",
     )
+
+
+def _constraint_slacks(model: Model, primal_values: dict[str, float]) -> dict[str, float]:
+    slack_values: dict[str, float] = {}
+    for constraint in model.constraints:
+        activity = sum(
+            coefficient * primal_values[variable_name]
+            for variable_name, coefficient in constraint.coefficients.items()
+        )
+        if constraint.sense == ConstraintSense.GE:
+            slack = activity - constraint.rhs
+        else:
+            slack = constraint.rhs - activity
+        slack_values[constraint.name] = _clean_zero(slack)
+    return slack_values
 
 
 def _clean_zero(value: float) -> float:

@@ -11,8 +11,10 @@ def test_write_solution_json_is_deterministic(tmp_path) -> None:
         status=SolverStatus.OPTIMAL,
         objective_value=12.5,
         primal_values={"x": 1.0},
+        slack_values={"capacity": 0.0},
         dual_values={"row": 0.5},
         reduced_costs={"x": 0.0},
+        basis_status={"x": "basic"},
         message="ok",
     )
 
@@ -20,6 +22,9 @@ def test_write_solution_json_is_deterministic(tmp_path) -> None:
 
     assert path.read_text(encoding="utf-8") == (
         "{\n"
+        '  "basis_status": {\n'
+        '    "x": "basic"\n'
+        "  },\n"
         '  "dual_values": {\n'
         '    "row": 0.5\n'
         "  },\n"
@@ -31,7 +36,13 @@ def test_write_solution_json_is_deterministic(tmp_path) -> None:
         '  "reduced_costs": {\n'
         '    "x": 0.0\n'
         "  },\n"
+        '  "slack_values": {\n'
+        '    "capacity": 0.0\n'
+        "  },\n"
         '  "status": "optimal"\n'
         "}\n"
     )
-    assert json.loads(path.read_text(encoding="utf-8"))["status"] == "optimal"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["status"] == "optimal"
+    assert payload["slack_values"] == {"capacity": 0.0}
+    assert payload["basis_status"] == {"x": "basic"}

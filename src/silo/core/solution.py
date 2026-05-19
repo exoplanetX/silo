@@ -8,6 +8,8 @@ class Solution:
     status: SolverStatus
     objective_value: float | None = None
     primal_values: dict[str, float] = field(default_factory=dict)
+    slack_values: dict[str, float] = field(default_factory=dict)
     dual_values: dict[str, float] = field(default_factory=dict)
     reduced_costs: dict[str, float] = field(default_factory=dict)
+    basis_status: dict[str, str] = field(default_factory=dict)
     message: str = ""
