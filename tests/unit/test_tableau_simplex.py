@@ -23,6 +23,39 @@ def test_tableau_from_model_adds_slack_basis() -> None:
     assert tableau.objective_row == [-2.0, 0.0, 1.0]
 
 
+def test_tableau_from_model_canonicalizes_phase_one_objective() -> None:
+    model = Model(name="phase_one")
+    model.add_variable(Variable(name="x"))
+    model.add_constraint(
+        Constraint(
+            name="demand",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.GE,
+            rhs=2.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=5.0,
+        )
+    )
+    model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
+
+    tableau = SimplexTableau.from_model(model)
+
+    assert tableau.variable_names == (
+        "x",
+        "surplus_demand",
+        "artificial_demand",
+        "slack_capacity",
+    )
+    assert tableau.basis == [2, 3]
+    assert tableau.objective_row == [-1.0, 1.0, 0.0, 0.0, -2.0]
+
+
 def test_tableau_simplex_solves_single_variable_lp() -> None:
     solution = TableauSimplexSolver().solve(_single_variable_model())
 
@@ -128,7 +161,7 @@ def test_choose_entering_column_uses_tolerance() -> None:
     assert choose_entering_column([-1e-10, -1.0, 0.0]) == 1
 
 
-def test_tableau_simplex_rejects_minimization_for_mvp() -> None:
+def test_tableau_simplex_rejects_minimization() -> None:
     model = _single_variable_model()
     model.set_objective(Objective(coefficients={"x": 2.0}, sense=OptimizationSense.MINIMIZE))
 
@@ -138,33 +171,152 @@ def test_tableau_simplex_rejects_minimization_for_mvp() -> None:
     assert "maximization" in solution.message
 
 
-def test_tableau_simplex_rejects_non_le_constraints_for_mvp() -> None:
-    model = Model(name="unsupported")
+def test_tableau_simplex_solves_ge_row_with_phase_one() -> None:
+    model = Model(name="ge_row")
     model.add_variable(Variable(name="x"))
     model.add_constraint(
         Constraint(
             name="demand",
             coefficients={"x": 1.0},
             sense=ConstraintSense.GE,
-            rhs=1.0,
+            rhs=2.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=5.0,
         )
     )
     model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
 
     solution = TableauSimplexSolver().solve(model)
 
-    assert solution.status == SolverStatus.ERROR
-    assert "<= constraints" in solution.message
+    assert solution.status == SolverStatus.OPTIMAL
+    assert solution.objective_value == pytest.approx(5.0)
+    assert solution.primal_values == {"x": pytest.approx(5.0)}
 
 
-def test_tableau_simplex_rejects_equality_constraints_for_mvp() -> None:
-    model = Model(name="unsupported")
+def test_tableau_simplex_preserves_objective_constant_after_phase_one() -> None:
+    model = Model(name="phase_one_constant")
     model.add_variable(Variable(name="x"))
     model.add_constraint(
         Constraint(
-            name="balance",
+            name="demand",
             coefficients={"x": 1.0},
+            sense=ConstraintSense.GE,
+            rhs=2.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=5.0,
+        )
+    )
+    model.set_objective(
+        Objective(
+            coefficients={"x": 1.0},
+            sense=OptimizationSense.MAXIMIZE,
+            constant=10.0,
+        )
+    )
+
+    solution = TableauSimplexSolver().solve(model)
+
+    assert solution.status == SolverStatus.OPTIMAL
+    assert solution.objective_value == pytest.approx(15.0)
+
+
+def test_tableau_simplex_solves_equality_row_with_phase_one() -> None:
+    model = Model(name="eq_row")
+    model.add_variable(Variable(name="x"))
+    model.add_variable(Variable(name="y"))
+    model.add_constraint(
+        Constraint(
+            name="balance",
+            coefficients={"x": 1.0, "y": 1.0},
             sense=ConstraintSense.EQ,
+            rhs=4.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="x_capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=3.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="y_capacity",
+            coefficients={"y": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=3.0,
+        )
+    )
+    model.set_objective(
+        Objective(coefficients={"x": 1.0, "y": 1.0}, sense=OptimizationSense.MAXIMIZE)
+    )
+
+    solution = TableauSimplexSolver().solve(model)
+
+    assert solution.status == SolverStatus.OPTIMAL
+    assert solution.objective_value == pytest.approx(4.0)
+    assert solution.primal_values["x"] + solution.primal_values["y"] == pytest.approx(4.0)
+    assert solution.primal_values["x"] <= 3.0
+    assert solution.primal_values["y"] <= 3.0
+
+
+def test_tableau_simplex_normalizes_negative_rhs_rows() -> None:
+    model = Model(name="negative_rhs")
+    model.add_variable(Variable(name="x"))
+    model.add_constraint(
+        Constraint(
+            name="demand",
+            coefficients={"x": -1.0},
+            sense=ConstraintSense.LE,
+            rhs=-2.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=5.0,
+        )
+    )
+    model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
+
+    solution = TableauSimplexSolver().solve(model)
+
+    assert solution.status == SolverStatus.OPTIMAL
+    assert solution.objective_value == pytest.approx(5.0)
+    assert solution.primal_values == {"x": pytest.approx(5.0)}
+
+
+def test_tableau_simplex_detects_phase_one_infeasibility() -> None:
+    model = Model(name="infeasible")
+    model.add_variable(Variable(name="x"))
+    model.add_constraint(
+        Constraint(
+            name="demand",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.GE,
+            rhs=2.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="capacity",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.LE,
             rhs=1.0,
         )
     )
@@ -172,11 +324,40 @@ def test_tableau_simplex_rejects_equality_constraints_for_mvp() -> None:
 
     solution = TableauSimplexSolver().solve(model)
 
-    assert solution.status == SolverStatus.ERROR
-    assert "<= constraints" in solution.message
+    assert solution.status == SolverStatus.INFEASIBLE
+    assert "Phase I" in solution.message or "infeasibility" in solution.message
 
 
-def test_tableau_simplex_rejects_finite_upper_bounds_for_mvp() -> None:
+def test_tableau_simplex_solves_equality_with_zero_rhs() -> None:
+    model = Model(name="zero_rhs_eq")
+    model.add_variable(Variable(name="x"))
+    model.add_variable(Variable(name="y"))
+    model.add_constraint(
+        Constraint(
+            name="fix_x",
+            coefficients={"x": 1.0},
+            sense=ConstraintSense.EQ,
+            rhs=0.0,
+        )
+    )
+    model.add_constraint(
+        Constraint(
+            name="capacity_y",
+            coefficients={"y": 1.0},
+            sense=ConstraintSense.LE,
+            rhs=3.0,
+        )
+    )
+    model.set_objective(Objective(coefficients={"y": 1.0}, sense=OptimizationSense.MAXIMIZE))
+
+    solution = TableauSimplexSolver().solve(model)
+
+    assert solution.status == SolverStatus.OPTIMAL
+    assert solution.objective_value == pytest.approx(3.0)
+    assert solution.primal_values == {"x": pytest.approx(0.0), "y": pytest.approx(3.0)}
+
+
+def test_tableau_simplex_rejects_finite_upper_bounds() -> None:
     model = Model(name="unsupported")
     model.add_variable(Variable(name="x", bounds=Bounds(lower=0.0, upper=5.0)))
     model.add_constraint(
@@ -195,7 +376,7 @@ def test_tableau_simplex_rejects_finite_upper_bounds_for_mvp() -> None:
     assert "finite variable upper bounds" in solution.message
 
 
-def test_tableau_simplex_rejects_nonzero_lower_bounds_for_mvp() -> None:
+def test_tableau_simplex_rejects_nonzero_lower_bounds() -> None:
     model = Model(name="unsupported")
     model.add_variable(Variable(name="x", bounds=Bounds(lower=1.0)))
     model.add_constraint(
@@ -214,7 +395,7 @@ def test_tableau_simplex_rejects_nonzero_lower_bounds_for_mvp() -> None:
     assert "lower bound 0" in solution.message
 
 
-def test_tableau_simplex_rejects_integer_variables_for_mvp() -> None:
+def test_tableau_simplex_rejects_integer_variables() -> None:
     model = _single_variable_model()
     model.variables[0] = Variable(name="x", var_type=VariableType.INTEGER)
 
@@ -224,7 +405,7 @@ def test_tableau_simplex_rejects_integer_variables_for_mvp() -> None:
     assert "continuous variables" in solution.message
 
 
-def test_tableau_simplex_rejects_binary_variables_for_mvp() -> None:
+def test_tableau_simplex_rejects_binary_variables() -> None:
     model = _single_variable_model()
     model.variables[0] = Variable(
         name="x",
@@ -236,25 +417,6 @@ def test_tableau_simplex_rejects_binary_variables_for_mvp() -> None:
 
     assert solution.status == SolverStatus.ERROR
     assert "continuous variables" in solution.message
-
-
-def test_tableau_simplex_rejects_negative_rhs_for_mvp() -> None:
-    model = Model(name="unsupported")
-    model.add_variable(Variable(name="x"))
-    model.add_constraint(
-        Constraint(
-            name="negative_rhs",
-            coefficients={"x": 1.0},
-            sense=ConstraintSense.LE,
-            rhs=-1.0,
-        )
-    )
-    model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
-
-    solution = TableauSimplexSolver().solve(model)
-
-    assert solution.status == SolverStatus.ERROR
-    assert "nonnegative RHS" in solution.message
 
 
 def test_tableau_simplex_returns_iteration_limit_when_limit_is_zero() -> None:
