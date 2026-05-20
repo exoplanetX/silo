@@ -25,6 +25,16 @@ class RevisedRunResult:
     basis: Basis
     state: BasisState | None = None
     message: str = ""
+    iterations: int = 0
+
+
+@dataclass(frozen=True)
+class RevisedSimplexResult:
+    solution: Solution
+    problem: StandardFormProblem | None = None
+    basis: Basis | None = None
+    iterations: int = 0
+    used_warm_start: bool = False
 
 
 class RevisedSimplexSolver(LPSolver):
@@ -32,12 +42,42 @@ class RevisedSimplexSolver(LPSolver):
         self.iteration_limit = iteration_limit
 
     def solve(self, model: Model) -> Solution:
+        return self.solve_with_details(model).solution
+
+    def solve_with_details(
+        self,
+        model: Model,
+        basis: Basis | None = None,
+    ) -> RevisedSimplexResult:
         try:
             problem = build_standard_form(model)
         except ValueError as exc:
-            return Solution(status=SolverStatus.ERROR, message=str(exc))
+            return RevisedSimplexResult(
+                solution=Solution(status=SolverStatus.ERROR, message=str(exc))
+            )
 
-        basis = problem.initial_basis
+        used_warm_start = False
+        initial_basis = problem.initial_basis
+        if basis is not None:
+            if problem.artificial_columns:
+                return RevisedSimplexResult(
+                    solution=Solution(
+                        status=SolverStatus.ERROR,
+                        message=(
+                            "Warm-start basis is not supported for models requiring "
+                            "artificial variables yet."
+                        ),
+                    ),
+                    problem=problem,
+                )
+            warm_start_result = _validate_warm_start_basis(problem, basis)
+            if isinstance(warm_start_result, Solution):
+                return RevisedSimplexResult(solution=warm_start_result, problem=problem)
+            initial_basis = basis
+            used_warm_start = True
+
+        iterations = 0
+        basis = initial_basis
         if problem.artificial_columns:
             phase_one_objective = _phase_one_objective(problem)
             phase_one_result = _run_primal_revised_simplex(
@@ -47,20 +87,39 @@ class RevisedSimplexSolver(LPSolver):
                 iteration_limit=self.iteration_limit,
                 phase_name="Phase I",
             )
+            iterations += phase_one_result.iterations
             if phase_one_result.status == SolverStatus.UNBOUNDED:
-                return Solution(
-                    status=SolverStatus.NUMERICAL_ISSUE,
-                    message=(
-                        "Revised simplex Phase I became unbounded; "
-                        "the artificial problem should be bounded."
+                return RevisedSimplexResult(
+                    solution=Solution(
+                        status=SolverStatus.NUMERICAL_ISSUE,
+                        message=(
+                            "Revised simplex Phase I became unbounded; "
+                            "the artificial problem should be bounded."
+                        ),
                     ),
+                    problem=problem,
+                    basis=phase_one_result.basis,
+                    iterations=iterations,
                 )
             if phase_one_result.status != SolverStatus.OPTIMAL:
-                return Solution(status=phase_one_result.status, message=phase_one_result.message)
+                return RevisedSimplexResult(
+                    solution=Solution(
+                        status=phase_one_result.status,
+                        message=phase_one_result.message,
+                    ),
+                    problem=problem,
+                    basis=phase_one_result.basis,
+                    iterations=iterations,
+                )
             if phase_one_result.state is None:
-                return Solution(
-                    status=SolverStatus.NUMERICAL_ISSUE,
-                    message="Revised simplex Phase I did not return a basis state.",
+                return RevisedSimplexResult(
+                    solution=Solution(
+                        status=SolverStatus.NUMERICAL_ISSUE,
+                        message="Revised simplex Phase I did not return a basis state.",
+                    ),
+                    problem=problem,
+                    basis=phase_one_result.basis,
+                    iterations=iterations,
                 )
 
             phase_one_value = _objective_value(
@@ -69,9 +128,14 @@ class RevisedSimplexSolver(LPSolver):
                 objective_constant=0.0,
             )
             if phase_one_value < -DEFAULT_TOLERANCE:
-                return Solution(
-                    status=SolverStatus.INFEASIBLE,
-                    message="Revised simplex Phase I detected infeasibility.",
+                return RevisedSimplexResult(
+                    solution=Solution(
+                        status=SolverStatus.INFEASIBLE,
+                        message="Revised simplex Phase I detected infeasibility.",
+                    ),
+                    problem=problem,
+                    basis=phase_one_result.basis,
+                    iterations=iterations,
                 )
 
             cleanup_result = _remove_artificial_columns(
@@ -79,7 +143,12 @@ class RevisedSimplexSolver(LPSolver):
                 basis=phase_one_result.basis,
             )
             if isinstance(cleanup_result, Solution):
-                return cleanup_result
+                return RevisedSimplexResult(
+                    solution=cleanup_result,
+                    problem=problem,
+                    basis=phase_one_result.basis,
+                    iterations=iterations,
+                )
             problem, basis = cleanup_result
 
         phase_two_result = _run_primal_revised_simplex(
@@ -89,14 +158,38 @@ class RevisedSimplexSolver(LPSolver):
             iteration_limit=self.iteration_limit,
             phase_name="Phase II",
         )
+        iterations += phase_two_result.iterations
         if phase_two_result.status == SolverStatus.OPTIMAL:
             if phase_two_result.state is None:
-                return Solution(
-                    status=SolverStatus.NUMERICAL_ISSUE,
-                    message="Revised simplex Phase II did not return a basis state.",
+                return RevisedSimplexResult(
+                    solution=Solution(
+                        status=SolverStatus.NUMERICAL_ISSUE,
+                        message="Revised simplex Phase II did not return a basis state.",
+                    ),
+                    problem=problem,
+                    basis=phase_two_result.basis,
+                    iterations=iterations,
+                    used_warm_start=used_warm_start,
                 )
-            return _optimal_solution(model, problem, phase_two_result.basis, phase_two_result.state)
-        return Solution(status=phase_two_result.status, message=phase_two_result.message)
+            return RevisedSimplexResult(
+                solution=_optimal_solution(
+                    model,
+                    problem,
+                    phase_two_result.basis,
+                    phase_two_result.state,
+                ),
+                problem=problem,
+                basis=phase_two_result.basis,
+                iterations=iterations,
+                used_warm_start=used_warm_start,
+            )
+        return RevisedSimplexResult(
+            solution=Solution(status=phase_two_result.status, message=phase_two_result.message),
+            problem=problem,
+            basis=phase_two_result.basis,
+            iterations=iterations,
+            used_warm_start=used_warm_start,
+        )
 
 
 def _run_primal_revised_simplex(
@@ -107,6 +200,7 @@ def _run_primal_revised_simplex(
     phase_name: str,
 ) -> RevisedRunResult:
     basis.validate(column_count=len(problem.columns), row_count=len(problem.row_names))
+    iterations = 0
     for _ in range(iteration_limit):
         state_result = _compute_basis_state(problem, basis, objective_coefficients)
         if isinstance(state_result, Solution):
@@ -114,12 +208,18 @@ def _run_primal_revised_simplex(
                 status=state_result.status,
                 basis=basis,
                 message=state_result.message,
+                iterations=iterations,
             )
         state = state_result
 
         entering_column = _choose_entering_column(problem, basis, state.reduced_costs)
         if entering_column is None:
-            return RevisedRunResult(status=SolverStatus.OPTIMAL, basis=basis, state=state)
+            return RevisedRunResult(
+                status=SolverStatus.OPTIMAL,
+                basis=basis,
+                state=state,
+                iterations=iterations,
+            )
 
         direction_result = _compute_direction(problem, basis, entering_column)
         if isinstance(direction_result, Solution):
@@ -127,6 +227,7 @@ def _run_primal_revised_simplex(
                 status=direction_result.status,
                 basis=basis,
                 message=direction_result.message,
+                iterations=iterations,
             )
         direction = direction_result
 
@@ -139,9 +240,11 @@ def _run_primal_revised_simplex(
                     f"Revised simplex {phase_name} detected an unbounded "
                     "improving direction."
                 ),
+                iterations=iterations,
             )
 
         basis = basis.pivot(leaving_row=leaving_row, entering_column=entering_column)
+        iterations += 1
         basis.validate(
             column_count=len(problem.columns),
             row_count=len(problem.row_names),
@@ -151,7 +254,40 @@ def _run_primal_revised_simplex(
         status=SolverStatus.ITERATION_LIMIT,
         basis=basis,
         message=f"Revised simplex {phase_name} reached the iteration limit: {iteration_limit}",
+        iterations=iterations,
     )
+
+
+def _validate_warm_start_basis(
+    problem: StandardFormProblem,
+    basis: Basis,
+) -> BasisState | Solution:
+    try:
+        basis.validate(column_count=len(problem.columns), row_count=len(problem.row_names))
+    except ValueError as exc:
+        return Solution(
+            status=SolverStatus.ERROR,
+            message=f"Invalid warm-start basis: {exc}",
+        )
+
+    state_result = _compute_basis_state(
+        problem=problem,
+        basis=basis,
+        objective_coefficients=np.asarray(problem.objective_coefficients, dtype=float),
+    )
+    if isinstance(state_result, Solution):
+        return Solution(
+            status=SolverStatus.ERROR,
+            message=f"Invalid warm-start basis: {state_result.message}",
+        )
+
+    if np.any(state_result.basic_values < -DEFAULT_TOLERANCE):
+        return Solution(
+            status=SolverStatus.ERROR,
+            message="Warm-start basis is not primal feasible.",
+        )
+
+    return state_result
 
 
 def _phase_one_objective(problem: StandardFormProblem) -> np.ndarray:
