@@ -1,6 +1,6 @@
 # SILO: Simplex and Integer Linear Optimization
 
-SILO is a Python-first educational optimization solver kernel that currently supports small continuous LPs through a dense tableau simplex implementation and a JSON-based CLI solve workflow.
+SILO is a Python-first educational optimization solver kernel that currently supports small continuous LPs through dense tableau simplex and revised simplex implementations, plus a JSON-based CLI solve workflow.
 
 ## Project Philosophy
 
@@ -20,6 +20,7 @@ The current repository contains a working educational LP path:
 - Python model objects for LP/MIP-style model representation.
 - JSON model reader.
 - Dense tableau simplex solver.
+- Basis-oriented revised simplex solver.
 - Phase I / Phase II support for `<=`, `>=`, and `=` rows.
 - Infeasible and unbounded LP status detection.
 - CLI solve workflow for JSON LP files.
@@ -34,7 +35,6 @@ The native solver path does not call external solvers.
 - Variables must have lower bound `0`.
 - Finite variable upper bounds are not supported yet.
 - Integer and binary variables are not solved yet.
-- No revised simplex yet.
 - No MIP branch-and-bound yet.
 - No presolve or scaling yet.
 - No external solver backend is used by native algorithms.
@@ -72,6 +72,12 @@ Write the same solution JSON to an ignored local output file:
 
 ```bash
 silo solve examples/json/production.json --output outputs/production_solution.json
+```
+
+Select the revised simplex backend explicitly:
+
+```bash
+silo solve examples/json/production.json --solver revised
 ```
 
 The `outputs/` directory is for local runs and generated files there should not be committed.

@@ -10,6 +10,22 @@ silo solve examples/json/production.json
 
 The solution JSON is printed to stdout.
 
+## Selecting a Solver Backend
+
+The default backend is still the educational dense tableau simplex solver:
+
+```bash
+silo solve examples/json/production.json --solver tableau
+```
+
+The basis-oriented revised simplex solver can be selected explicitly:
+
+```bash
+silo solve examples/json/production.json --solver revised
+```
+
+Both backends are native SILO implementations. No external solver is called. The `tableau` backend remains the default for now, while `revised` is available for comparison and future basis-oriented workflows.
+
 ## Write Output To File
 
 ```bash
@@ -28,6 +44,7 @@ Generated files under `outputs/` are local run artifacts and should not be commi
 
 ```bash
 python -m silo.cli.main solve examples/json/production.json
+python -m silo.cli.main solve examples/json/production.json --solver revised
 ```
 
 ## Exit Codes

@@ -3,10 +3,10 @@ import sys
 from pathlib import Path
 
 from silo import __version__
+from silo.cli.solvers import available_solver_names, create_solver
 from silo.core.status import SolverStatus
 from silo.io.json_reader import read_json_model
 from silo.io.solution_writer import solution_to_json, write_solution_json
-from silo.lp.simplex.tableau import TableauSimplexSolver
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,7 +31,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--solver",
         default="tableau",
-        choices=["tableau"],
+        choices=available_solver_names(),
         help="Solver backend to use.",
     )
     return parser
@@ -48,13 +48,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "solve":
         if not args.path:
             parser.error("The solve command requires a model file path.")
-        return _solve(args.path, args.output)
+        return _solve(args.path, args.output, args.solver)
 
     parser.print_help()
     return 0
 
 
-def _solve(model_path: str, output_path: str | None) -> int:
+def _solve(model_path: str, output_path: str | None, solver_name: str) -> int:
     path = Path(model_path)
     if not path.exists():
         print(f"Error: model file not found: {path}", file=sys.stderr)
@@ -66,7 +66,7 @@ def _solve(model_path: str, output_path: str | None) -> int:
         print(f"Error: failed to read model: {exc}", file=sys.stderr)
         return 1
 
-    solution = TableauSimplexSolver().solve(model)
+    solution = create_solver(solver_name).solve(model)
     try:
         if output_path:
             write_solution_json(solution, output_path)

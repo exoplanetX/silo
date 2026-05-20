@@ -10,3 +10,15 @@ def test_cli_default_command_is_help() -> None:
     parser = build_parser()
     args = parser.parse_args([])
     assert args.command == "help"
+
+
+def test_cli_default_solver_is_tableau() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["solve", "model.json"])
+    assert args.solver == "tableau"
+
+
+def test_cli_accepts_revised_solver_option() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["solve", "model.json", "--solver", "revised"])
+    assert args.solver == "revised"

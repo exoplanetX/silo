@@ -40,6 +40,10 @@ The solver rejects minimization models, finite upper bounds, nonzero lower bound
 
 The tableau path is intended to remain simple enough for tests and documentation to explain every mathematical convention.
 
+## Native LP Solver Backends
+
+SILO currently exposes two native LP backends through the CLI. The `tableau` backend is the educational reference path and is useful for inspecting full tableau algebra on small models. The `revised` backend is the basis-oriented path and is useful for future warm starts, reoptimization, and MIP relaxation work. The CLI default remains `tableau`.
+
 ## Planned Revised Simplex Layer
 
 The LP layer includes a dense tableau reference solver and an initial revised simplex implementation documented in [`notes/10_revised_simplex_design.md`](../notes/10_revised_simplex_design.md). The revised path uses explicit basis objects and the shared standard-form builder as a foundation for later warm starts and reoptimization without changing the tableau reference implementation.
