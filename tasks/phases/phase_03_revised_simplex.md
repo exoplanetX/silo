@@ -6,7 +6,7 @@ Introduce basis-oriented LP solving and prepare the LP layer for reoptimization 
 
 ## Scope
 
-This phase adds explicit basis state, reduced-cost computation, primal feasibility checks, Phase I feasibility construction, and a revised simplex loop for small LPs.
+This phase adds explicit basis state, reduced-cost computation, primal feasibility checks, Phase I feasibility construction, public diagnostic alignment, and a revised simplex loop for small LPs.
 
 The Phase 3 implementation should follow `notes/10_revised_simplex_design.md`. Start with a standard-form builder and a `Basis` dataclass before adding the revised simplex loop.
 
@@ -25,7 +25,7 @@ Represent basic and nonbasic variables explicitly. Compute primal values and red
 
 ## Testing Requirements
 
-Compare revised simplex against tableau simplex on shared fixtures. Add tests for basis updates, reduced costs, Phase I infeasibility detection, unbounded Phase II behavior, and simple RHS reoptimization.
+Compare revised simplex against tableau simplex on shared fixtures. Add tests for basis updates, reduced costs, public diagnostic parity, Phase I infeasibility detection, unbounded Phase II behavior, and simple RHS reoptimization.
 
 ## Do Not Do
 
@@ -33,4 +33,4 @@ Do not implement industrial sparse factorization, crash basis heuristics, or adv
 
 ## Acceptance Criteria
 
-Revised simplex matches tableau results on small LP fixtures, handles Phase I artificial-variable cases, and exposes basis information for future MIP use.
+Revised simplex matches tableau results on small LP fixtures, handles Phase I artificial-variable cases, aligns public diagnostics with tableau, and exposes basis information for future MIP use.

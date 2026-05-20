@@ -6,6 +6,7 @@ from silo.core.model import Model
 from silo.core.solution import Solution
 from silo.core.status import SolverStatus
 from silo.lp.base import LPSolver
+from silo.lp.simplex.basis import BASIC, NONBASIC_LOWER
 from silo.lp.simplex.pricing import choose_entering_column
 from silo.lp.simplex.ratio_test import choose_leaving_row
 from silo.utils.numerics import DEFAULT_TOLERANCE
@@ -90,7 +91,7 @@ class SimplexTableau:
     def basis_status(self) -> dict[str, str]:
         basic_columns = set(self.basis)
         return {
-            variable_name: "basic" if column_index in basic_columns else "nonbasic"
+            variable_name: BASIC if column_index in basic_columns else NONBASIC_LOWER
             for column_index, variable_name in enumerate(
                 self.variable_names[: self.original_variable_count]
             )

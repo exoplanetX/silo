@@ -6,6 +6,7 @@ from silo.core.model import Model
 from silo.core.objective import Objective
 from silo.core.status import SolverStatus
 from silo.core.variable import Variable
+from silo.lp.simplex.basis import BASIC, NONBASIC_LOWER
 from silo.lp.simplex.tableau import TableauSimplexSolver
 
 
@@ -38,7 +39,7 @@ def test_tableau_solution_reports_le_slacks_and_basis_status() -> None:
         "tight_capacity": pytest.approx(0.0),
         "loose_capacity": pytest.approx(2.0),
     }
-    assert solution.basis_status == {"x": "basic"}
+    assert solution.basis_status == {"x": BASIC}
 
 
 def test_tableau_solution_reports_ge_and_le_slacks_from_original_rows() -> None:
@@ -142,5 +143,5 @@ def test_tableau_solution_reports_reduced_costs_for_original_variables() -> None
     assert solution.primal_values == {"x": pytest.approx(1.0), "y": pytest.approx(0.0)}
     assert solution.objective_value == pytest.approx(1.0)
     assert solution.reduced_costs == {"x": pytest.approx(0.0), "y": pytest.approx(-1.0)}
-    assert solution.basis_status == {"x": "basic", "y": "nonbasic"}
+    assert solution.basis_status == {"x": BASIC, "y": NONBASIC_LOWER}
     assert solution.dual_values == {}

@@ -55,3 +55,9 @@ SILO includes a primal revised simplex implementation for small LPs that already
 ## Revised Simplex Phase I
 
 The revised simplex solver now supports Phase I construction for artificial-variable cases. It can solve small continuous maximization LPs with `<=`, `>=`, and `=` rows, including rows normalized from a negative RHS, while still excluding finite upper bounds, nonzero lower bounds, and integer or binary variables. Phase I maximizes the negative sum of artificial variables, removes artificial columns after feasibility is established, and then runs Phase II with the original objective.
+
+## Public Reduced-Cost Convention
+
+For maximization LPs, public reduced costs are reported for original variables as `c_j - pi^T A_j`. At optimality, basic original variables should have reduced costs near zero, and nonbasic variables at their lower bound should have nonpositive reduced costs within tolerance. The tableau implementation may store the opposite sign in its internal objective row, but public `Solution.reduced_costs` is normalized to the same convention used by revised simplex.
+
+Both current native LP solvers intentionally leave `dual_values` empty. Dual-value exposure requires a separate mapping design because original rows may be `<=`, `>=`, or `=`, and negative RHS normalization can flip row signs before solving.

@@ -42,9 +42,9 @@ python -m silo.cli.main solve examples/json/production.json
 - `objective_value`: objective value for optimal solutions, otherwise `null`.
 - `primal_values`: values of original decision variables.
 - `slack_values`: public slack or residual values for original constraints.
-- `dual_values`: currently empty for the tableau solver.
-- `reduced_costs`: reduced costs for original decision variables under the tableau maximization convention.
-- `basis_status`: `"basic"` or `"nonbasic"` for original decision variables.
+- `dual_values`: currently empty for native LP solvers.
+- `reduced_costs`: reduced costs for original decision variables under the public maximization convention `c_j - pi^T A_j`.
+- `basis_status`: `"basic"` or `"nonbasic_lower"` for original decision variables.
 - `message`: short solver message.
 
 ## Short Example Output
