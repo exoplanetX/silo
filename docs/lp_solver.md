@@ -73,3 +73,7 @@ Both current native LP solvers intentionally leave `dual_values` empty. Dual-val
 ## Planned Presolve and Scaling Layer
 
 Phase 4 will introduce conservative presolve and scaling diagnostics. The initial design is documented in [`notes/12_presolve_scaling_design.md`](../notes/12_presolve_scaling_design.md). Early presolve will prioritize traceability and solution reconstruction over aggressive reductions.
+
+## Presolve Core
+
+Phase 4 begins with immutable presolve result and diagnostics objects. The initial `Presolver` is intentionally a no-op that validates the model and returns a traceable `PresolveResult`; actual reductions are added in later tasks.

@@ -10,6 +10,8 @@ This phase covers fixed-variable elimination, simple bound tightening, row reduc
 
 The implementation should follow the initial design in `notes/12_presolve_scaling_design.md`. Early tasks should prioritize transformation traceability, original-space solution reconstruction, and diagnostic-only scaling before any aggressive reductions are considered.
 
+Phase 4B starts with immutable presolve result, reduction, and diagnostics dataclasses plus a no-op `Presolver` entry point. Actual reductions and solver integration remain deferred to later tasks.
+
 ## Expected Files
 
 - `src/silo/presolve/presolver.py`
@@ -18,7 +20,10 @@ The implementation should follow the initial design in `notes/12_presolve_scalin
 - `src/silo/presolve/fixed_variable.py`
 - `src/silo/presolve/scaling.py`
 - `src/silo/presolve/diagnostics.py`
+- `src/silo/presolve/reductions.py`
 - `tests/unit/test_presolve.py`
+- `tests/unit/test_presolve_core.py`
+- `tests/unit/test_scaling_diagnostics.py`
 
 ## Algorithmic Requirements
 
@@ -26,7 +31,7 @@ Every transformation must be deterministic and reversible enough to reconstruct 
 
 ## Testing Requirements
 
-Add tests for fixed variables, invalid rows, redundant simple rows, tightened-bound diagnostics, no-op behavior, coefficient-range diagnostics, and reconstruction of original variable values.
+Add tests for fixed variables, invalid rows, redundant simple rows, tightened-bound diagnostics, core dataclass defaults, no-op behavior, coefficient-range diagnostics, scaling diagnostics defaults, and reconstruction of original variable values.
 
 ## Do Not Do
 
