@@ -69,3 +69,7 @@ The revised simplex solver now supports Phase I construction for artificial-vari
 For maximization LPs, public reduced costs are reported for original variables as `c_j - pi^T A_j`. At optimality, basic original variables should have reduced costs near zero, and nonbasic variables at their lower bound should have nonpositive reduced costs within tolerance. The tableau implementation may store the opposite sign in its internal objective row, but public `Solution.reduced_costs` is normalized to the same convention used by revised simplex.
 
 Both current native LP solvers intentionally leave `dual_values` empty. Dual-value exposure requires a separate mapping design because original rows may be `<=`, `>=`, or `=`, and negative RHS normalization can flip row signs before solving.
+
+## Planned Presolve and Scaling Layer
+
+Phase 4 will introduce conservative presolve and scaling diagnostics. The initial design is documented in [`notes/12_presolve_scaling_design.md`](../notes/12_presolve_scaling_design.md). Early presolve will prioritize traceability and solution reconstruction over aggressive reductions.
