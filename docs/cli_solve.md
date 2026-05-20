@@ -2,6 +2,8 @@
 
 The `silo solve` command connects the JSON model reader, the native tableau simplex solver, and deterministic solution JSON output.
 
+For backend-to-backend diagnostics, use `silo compare MODEL_PATH`; see [Backend Compare Command](backend_compare.md).
+
 ## Basic Command
 
 ```bash

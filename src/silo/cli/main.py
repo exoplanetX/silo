@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from silo import __version__
+from silo.cli.compare import compare_backends, comparison_to_json, write_comparison_json
 from silo.cli.solvers import available_solver_names, create_solver
 from silo.core.status import SolverStatus
 from silo.io.json_reader import read_json_model
@@ -19,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
         "command",
         nargs="?",
         default="help",
-        choices=["help", "solve"],
+        choices=["compare", "help", "solve"],
         help="Command to run.",
     )
     parser.add_argument("path", nargs="?", help="Path to model file.")
@@ -50,6 +51,11 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("The solve command requires a model file path.")
         return _solve(args.path, args.output, args.solver)
 
+    if args.command == "compare":
+        if not args.path:
+            parser.error("The compare command requires a model file path.")
+        return _compare(args.path, args.output)
+
     parser.print_help()
     return 0
 
@@ -77,6 +83,30 @@ def _solve(model_path: str, output_path: str | None, solver_name: str) -> int:
         return 1
 
     return 0 if solution.status == SolverStatus.OPTIMAL else 1
+
+
+def _compare(model_path: str, output_path: str | None) -> int:
+    path = Path(model_path)
+    if not path.exists():
+        print(f"Error: model file not found: {path}", file=sys.stderr)
+        return 1
+
+    try:
+        payload = compare_backends(path)
+    except ValueError as exc:
+        print(f"Error: failed to read model: {exc}", file=sys.stderr)
+        return 1
+
+    try:
+        if output_path:
+            write_comparison_json(payload, output_path)
+        else:
+            print(comparison_to_json(payload), end="")
+    except OSError as exc:
+        print(f"Error: failed to write comparison: {exc}", file=sys.stderr)
+        return 1
+
+    return 0 if payload["consistent"] else 1
 
 
 if __name__ == "__main__":

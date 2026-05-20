@@ -12,6 +12,12 @@ def test_cli_default_command_is_help() -> None:
     assert args.command == "help"
 
 
+def test_cli_accepts_compare_command() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["compare", "model.json"])
+    assert args.command == "compare"
+
+
 def test_cli_default_solver_is_tableau() -> None:
     parser = build_parser()
     args = parser.parse_args(["solve", "model.json"])

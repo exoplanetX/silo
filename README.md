@@ -80,6 +80,12 @@ Select the revised simplex backend explicitly:
 silo solve examples/json/production.json --solver revised
 ```
 
+Compare the tableau and revised native backends on the same JSON model:
+
+```bash
+silo compare examples/json/production.json
+```
+
 The `outputs/` directory is for local runs and generated files there should not be committed.
 
 ## Running Tests
@@ -92,6 +98,7 @@ pytest
 
 - [JSON model format](docs/json_model_format.md)
 - [CLI solve usage](docs/cli_solve.md)
+- [Backend compare command](docs/backend_compare.md)
 - [LP solver scope](docs/lp_solver.md)
 
 ## License
