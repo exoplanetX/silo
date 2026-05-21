@@ -44,6 +44,12 @@ The tableau path is intended to remain simple enough for tests and documentation
 
 SILO currently exposes two native LP backends through the CLI. The `tableau` backend is the educational reference path and is useful for inspecting full tableau algebra on small models. The `revised` backend is the basis-oriented path and is useful for future warm starts, reoptimization, and MIP relaxation work. The CLI default remains `tableau`.
 
+## MIP Relaxation Boundary
+
+The MIP layer now includes a deterministic LP relaxation builder for the first Phase 5 branch-and-bound scope. It converts binary and bounded nonnegative integer variables into continuous relaxation variables and represents their finite upper bounds as ordinary linear rows before calling an LP backend. This keeps the tableau and revised simplex solvers unchanged: they still receive only continuous maximization LPs with nonnegative variables and no direct finite variable upper bounds.
+
+The relaxation builder is an internal Python API. SILO still does not expose a working branch-and-bound solver or MIP CLI path.
+
 ## Revised Simplex Layer
 
 The LP layer includes a dense tableau reference solver and a revised simplex implementation documented in [`notes/10_revised_simplex_design.md`](../notes/10_revised_simplex_design.md). The revised path uses explicit basis objects and the shared standard-form builder as a foundation for warm starts and future reoptimization work without changing the tableau reference implementation.

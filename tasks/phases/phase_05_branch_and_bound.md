@@ -6,6 +6,8 @@ Implement a minimal branch-and-bound solver for small MIP instances using the LP
 
 Phase 5 begins with the design note in `notes/15_branch_and_bound_design.md`. The note defines the first supported MIP class, LP-relaxation boundary, branching rule, node selection rule, incumbent handling, pruning logic, status mapping, deterministic test fixtures, and implementation sequence.
 
+Phase 5B adds the MIP-to-LP relaxation builder. It converts binary and bounded nonnegative integer variables into continuous relaxation variables and explicit upper-bound rows while keeping tableau and revised simplex behavior unchanged.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.
