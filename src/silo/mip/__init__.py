@@ -1,5 +1,6 @@
 """Mixed-integer programming search components."""
 
+from silo.mip.branch_and_bound import BranchAndBoundResult, BranchAndBoundSolver
 from silo.mip.branching import (
     DEFAULT_INTEGER_TOLERANCE,
     branch_on_value,
@@ -17,6 +18,8 @@ from silo.mip.tree import NodeIdGenerator, SearchTree
 __all__ = [
     "DEFAULT_INTEGER_TOLERANCE",
     "BranchingConstraint",
+    "BranchAndBoundResult",
+    "BranchAndBoundSolver",
     "Incumbent",
     "MIPNode",
     "MIPRelaxation",

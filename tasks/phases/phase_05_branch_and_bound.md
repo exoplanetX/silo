@@ -10,6 +10,8 @@ Phase 5B adds the MIP-to-LP relaxation builder. It converts binary and bounded n
 
 Phase 5C adds deterministic MIP search dataclasses and pure helpers for nodes, branching constraints, branching-variable selection, incumbent updates, node logs, prune reasons, depth-first node selection, and deterministic node ids. It still does not implement the branch-and-bound solve loop.
 
+Phase 5D adds the first pure depth-first branch-and-bound solver for small binary maximization MIPs. It uses the MIP relaxation builder, native LP backends, first-fractional binary branching, incumbent updates, node logs, and deterministic left-before-right child processing. General bounded integer variables and CLI integration remain future work.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.
