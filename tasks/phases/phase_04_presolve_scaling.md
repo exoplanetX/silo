@@ -28,6 +28,8 @@ Phase 4J recomputes recovered slack values from the original model constraints a
 
 Phase 4K adds checked-in JSON examples and regression coverage for fixed-variable recovery, repeated-pass empty-row removal, original-space slack recovery, and presolve-detected infeasibility.
 
+Phase 4L adds a documented CLI regression checklist that fixes the current solve, presolve, and compare behavior for every checked-in JSON example before Phase 5 begins.
+
 ## Expected Files
 
 - `src/silo/presolve/presolver.py`

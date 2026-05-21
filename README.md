@@ -102,6 +102,8 @@ silo solve examples/json/production.json --presolve
 
 Presolve recovery examples are available under `examples/json/`, including fixed-variable and repeated-pass cases.
 
+See [Phase 4 regression checklist](docs/phase4_regression_checklist.md) for the current solve, presolve, and compare behavior matrix.
+
 The `outputs/` directory is for local runs and generated files there should not be committed.
 
 ## Running Tests

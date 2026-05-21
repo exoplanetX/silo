@@ -6,6 +6,8 @@ The `silo compare` command runs the same JSON LP model through both native SILO 
 silo compare examples/json/production.json
 ```
 
+For the current example-by-example compare behavior matrix, see [Phase 4 Regression Checklist](phase4_regression_checklist.md).
+
 It prints deterministic comparison JSON to stdout. To write the comparison to a file:
 
 ```bash

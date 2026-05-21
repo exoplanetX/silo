@@ -6,6 +6,8 @@ For backend-to-backend diagnostics, use `silo compare MODEL_PATH`; see [Backend 
 
 For presolve and scaling diagnostics without solving the model, use `silo presolve MODEL_PATH`; see [Presolve Diagnostics CLI](presolve_cli.md).
 
+For the current example-by-example solve behavior matrix, see [Phase 4 Regression Checklist](phase4_regression_checklist.md).
+
 ## Basic Command
 
 ```bash

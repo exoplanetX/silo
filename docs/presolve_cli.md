@@ -4,6 +4,8 @@
 
 The `silo presolve` command runs the conservative presolve layer and prints diagnostics without solving the model. It is intended for inspecting presolve reductions, infeasibility or unboundedness diagnostics, and coefficient-range scaling warnings.
 
+For the current example-by-example presolve status matrix, see [Phase 4 Regression Checklist](phase4_regression_checklist.md).
+
 ## Basic Usage
 
 ```bash
