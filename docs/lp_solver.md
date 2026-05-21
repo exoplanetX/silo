@@ -77,3 +77,7 @@ Phase 4 will introduce conservative presolve and scaling diagnostics. The initia
 ## Presolve Core
 
 Phase 4 begins with immutable presolve result and diagnostics objects. The initial `Presolver` is intentionally a no-op that validates the model and returns a traceable `PresolveResult`; actual reductions are added in later tasks.
+
+## Empty-Row and Empty-Column Presolve Diagnostics
+
+The presolver now detects feasible empty rows, infeasible empty rows, and simple empty-column unboundedness. Feasible empty rows are removed from the returned presolved model with traceable reduction records. Empty columns are diagnostic-only except when a nonconstrained variable with positive maximization objective and no finite upper bound proves unboundedness.

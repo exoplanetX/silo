@@ -12,6 +12,8 @@ The implementation should follow the initial design in `notes/12_presolve_scalin
 
 Phase 4B starts with immutable presolve result, reduction, and diagnostics dataclasses plus a no-op `Presolver` entry point. Actual reductions and solver integration remain deferred to later tasks.
 
+Phase 4C adds conservative empty-row and empty-column diagnostics. Feasible empty rows may be removed with traceable records, while empty columns remain diagnostic-only except for simple unboundedness detection.
+
 ## Expected Files
 
 - `src/silo/presolve/presolver.py`
@@ -21,8 +23,11 @@ Phase 4B starts with immutable presolve result, reduction, and diagnostics datac
 - `src/silo/presolve/scaling.py`
 - `src/silo/presolve/diagnostics.py`
 - `src/silo/presolve/reductions.py`
+- `src/silo/presolve/column_diagnostics.py`
 - `tests/unit/test_presolve.py`
 - `tests/unit/test_presolve_core.py`
+- `tests/unit/test_empty_row_diagnostics.py`
+- `tests/unit/test_empty_column_diagnostics.py`
 - `tests/unit/test_scaling_diagnostics.py`
 
 ## Algorithmic Requirements
