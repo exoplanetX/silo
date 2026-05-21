@@ -128,6 +128,10 @@ def test_cli_solve_presolve_handles_repeated_pass_recovery(tmp_path, capsys) -> 
     assert payload["primal_values"]["y"] == pytest.approx(3.0)
     assert payload["objective_value"] == pytest.approx(3.0)
     assert payload["basis_status"]["x"] == "fixed"
+    assert payload["slack_values"] == {
+        "x_eq_2": pytest.approx(0.0),
+        "y_limit": pytest.approx(0.0),
+    }
 
 
 def test_cli_solve_presolve_recovers_fixed_variable_with_revised(tmp_path, capsys) -> None:

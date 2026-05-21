@@ -23,6 +23,7 @@ class PresolveResult:
     changed: bool = False
     message: str = ""
     fixed_values: tuple[FixedValue, ...] = ()
+    original_model: Model | None = None
 
     def recover_solution(self, solution: Solution) -> Solution:
         presolved_variable_names = set(self.model.variable_names())
@@ -46,11 +47,18 @@ class PresolveResult:
             reduced_costs[variable_name] = 0.0
             basis_status[variable_name] = FIXED_BASIS_STATUS
 
+        slack_values = dict(solution.slack_values)
+        if self.original_model is not None and _can_compute_constraint_slacks(
+            self.original_model,
+            primal_values,
+        ):
+            slack_values = _constraint_slacks(self.original_model, primal_values)
+
         return Solution(
             status=solution.status,
             objective_value=solution.objective_value,
             primal_values=primal_values,
-            slack_values=dict(solution.slack_values),
+            slack_values=slack_values,
             dual_values=dict(solution.dual_values),
             reduced_costs=reduced_costs,
             basis_status=basis_status,
@@ -105,6 +113,7 @@ class Presolver:
                     changed=bool(reductions),
                     message=f"Empty row is infeasible: {infeasible_empty_row.name}.",
                     fixed_values=tuple(fixed_values),
+                    original_model=model,
                 )
 
             column_diagnostics = inspect_empty_columns(current_model)
@@ -125,6 +134,7 @@ class Presolver:
                         f"{column_diagnostics.unbounded_variable}."
                     ),
                     fixed_values=tuple(fixed_values),
+                    original_model=model,
                 )
 
             pass_result = _run_structural_pass(current_model)
@@ -143,6 +153,7 @@ class Presolver:
                         changed=True,
                         message="Applied presolve reductions.",
                         fixed_values=tuple(fixed_values),
+                        original_model=model,
                     )
 
                 return PresolveResult(
@@ -155,6 +166,7 @@ class Presolver:
                     scaling=scaling,
                     changed=False,
                     message="No presolve reductions were applied.",
+                    original_model=model,
                 )
 
             current_model = pass_result.model
@@ -226,6 +238,36 @@ def _fixed_variable_names(fixed_values: list[FixedValue]) -> tuple[str, ...]:
 
 def _default_max_passes(model: Model) -> int:
     return len(model.variables) + len(model.constraints) + 1
+
+
+def _can_compute_constraint_slacks(
+    model: Model,
+    primal_values: dict[str, float],
+) -> bool:
+    known_variables = set(primal_values)
+    return all(
+        variable_name in known_variables
+        for constraint in model.constraints
+        for variable_name in constraint.coefficients
+    )
+
+
+def _constraint_slacks(
+    model: Model,
+    primal_values: dict[str, float],
+) -> dict[str, float]:
+    slack_values: dict[str, float] = {}
+    for constraint in model.constraints:
+        activity = sum(
+            coefficient * primal_values[variable_name]
+            for variable_name, coefficient in constraint.coefficients.items()
+        )
+        if constraint.sense == ConstraintSense.GE:
+            slack = activity - constraint.rhs
+        else:
+            slack = constraint.rhs - activity
+        slack_values[constraint.name] = _clean_near_zero(slack)
+    return slack_values
 
 
 def _is_empty_row(

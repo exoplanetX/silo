@@ -26,6 +26,7 @@ def test_no_op_presolver_returns_same_model() -> None:
     result = Presolver().run(model)
 
     assert result.model is model
+    assert result.original_model is model
     assert result.reductions == ()
     assert result.diagnostics.status == PresolveStatus.NO_CHANGE
     assert result.scaling.max_abs_coefficient == 1.0

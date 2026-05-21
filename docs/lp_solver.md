@@ -99,3 +99,7 @@ Use `silo presolve MODEL_PATH` to inspect presolve and scaling diagnostics witho
 The presolver now repeats conservative structural passes until no further empty-row or fixed-variable reductions are exposed. This allows fixed-variable elimination to create feasible empty rows that can be removed in a later pass. Diagnostics-only warnings do not trigger additional passes.
 
 The repeated-pass design is documented in [`notes/13_repeated_presolve_design.md`](../notes/13_repeated_presolve_design.md).
+
+## Original-Space Slack Recovery
+
+When `silo solve MODEL_PATH --presolve` recovers a solver-space solution, slack values are recomputed from the original model constraints and recovered primal values. This keeps solution JSON in original model space even when presolve removed feasible empty rows.

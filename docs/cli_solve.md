@@ -39,7 +39,7 @@ silo solve examples/json/production.json --presolve
 silo solve examples/json/production.json --solver revised --presolve
 ```
 
-When `--presolve` is used, SILO runs conservative presolve before the selected solver. If presolve proves infeasibility or unboundedness, `silo solve` returns the corresponding solution status without calling a simplex backend. Otherwise, the selected backend solves the presolved model and the solution is recovered in original model space.
+When `--presolve` is used, SILO runs conservative presolve before the selected solver. If presolve proves infeasibility or unboundedness, `silo solve` returns the corresponding solution status without calling a simplex backend. Otherwise, the selected backend solves the presolved model and the solution is recovered in original model space, including slack values recomputed from the original constraints.
 
 Default solve behavior does not run presolve. Presolve diagnostics are not included in solution JSON; use `silo presolve MODEL_PATH` to inspect diagnostics, reductions, and scaling warnings.
 

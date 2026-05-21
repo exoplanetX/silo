@@ -147,6 +147,10 @@ def test_recovery_restores_fixed_variables_after_repeated_passes() -> None:
     assert recovered.objective_value == pytest.approx(3.0)
     assert recovered.basis_status["x"] == "fixed"
     assert recovered.reduced_costs["x"] == 0.0
+    assert recovered.slack_values == {
+        "x_eq_2": pytest.approx(0.0),
+        "y_limit": pytest.approx(0.0),
+    }
 
 
 def _fixed_x_with_x_eq_2_model() -> Model:

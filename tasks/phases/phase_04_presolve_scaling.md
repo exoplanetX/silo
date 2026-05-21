@@ -24,6 +24,8 @@ Phase 4H records the repeated-pass presolve design for cases where one conservat
 
 Phase 4I implements the first repeated-pass presolve loop. It composes existing feasible empty-row removal and fixed-variable elimination until no structural change remains, while keeping scaling diagnostics on the original submitted model.
 
+Phase 4J recomputes recovered slack values from the original model constraints after presolve recovery. This keeps `silo solve --presolve` solution JSON in original constraint space when presolve removes rows.
+
 ## Expected Files
 
 - `src/silo/presolve/presolver.py`
