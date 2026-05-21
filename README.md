@@ -60,6 +60,8 @@ The native solver path does not call external solvers.
 - Phase 8: Stochastic and robust optimization extensions
 - Phase 9: Native backend
 
+Phase 5 starts from the branch-and-bound design note in [notes/15_branch_and_bound_design.md](notes/15_branch_and_bound_design.md) before MIP implementation.
+
 ## Installation
 
 Use an editable install for development:

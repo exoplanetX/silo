@@ -4,7 +4,7 @@
 
 Implement a minimal branch-and-bound solver for small MIP instances using the LP relaxation interface.
 
-Phase 5 should begin with a design note before implementation. The design note should define the first supported MIP class, LP-relaxation boundary, branching rule, node selection rule, incumbent handling, pruning logic, status mapping, and deterministic test fixtures.
+Phase 5 begins with the design note in `notes/15_branch_and_bound_design.md`. The note defines the first supported MIP class, LP-relaxation boundary, branching rule, node selection rule, incumbent handling, pruning logic, status mapping, deterministic test fixtures, and implementation sequence.
 
 ## Scope
 
@@ -13,11 +13,13 @@ This phase covers node representation, incumbent management, branching decisions
 ## Expected Files
 
 - `src/silo/mip/branch_and_bound.py`
+- `src/silo/mip/relaxation.py`
 - `src/silo/mip/node.py`
 - `src/silo/mip/tree.py`
 - `src/silo/mip/incumbent.py`
 - `src/silo/mip/branching.py`
 - `src/silo/mip/node_selection.py`
+- `tests/unit/test_mip_relaxation.py`
 - `tests/unit/test_branch_and_bound.py`
 
 ## Algorithmic Requirements
@@ -26,7 +28,7 @@ Use deterministic branching and node selection. Start with binary and bounded in
 
 ## Testing Requirements
 
-Add tests for binary knapsack, a small integer minimization model, infeasible MIP, incumbent update, and deterministic node order.
+Add tests for binary knapsack, simple binary choice, bounded nonnegative integer maximization, infeasible MIP, incumbent update, pruning reasons, relaxation construction, and deterministic node order.
 
 ## Do Not Do
 
