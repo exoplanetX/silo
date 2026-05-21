@@ -20,6 +20,8 @@ Phase 4E adds diagnostic-only coefficient-range checks for matrix coefficients, 
 
 Phase 4F exposes presolve diagnostics through `silo presolve`, and Phase 4G adds an explicit `silo solve --presolve` path that applies conservative presolve before solving without changing the default solve workflow.
 
+Phase 4H records the repeated-pass presolve design for cases where one conservative reduction exposes another, such as fixed-variable elimination creating empty rows.
+
 ## Expected Files
 
 - `src/silo/presolve/presolver.py`

@@ -93,3 +93,7 @@ The presolver now computes coefficient-range diagnostics without automatically s
 ## Presolve Diagnostics CLI
 
 Use `silo presolve MODEL_PATH` to inspect presolve and scaling diagnostics without solving the model. This command does not change the default `silo solve` workflow.
+
+## Repeated-Pass Presolve Plan
+
+A repeated-pass presolve design note is available in [`notes/13_repeated_presolve_design.md`](../notes/13_repeated_presolve_design.md). The goal is to handle cases where one conservative reduction exposes another, such as fixed-variable elimination creating feasible empty rows.
