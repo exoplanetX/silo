@@ -6,11 +6,13 @@ Add conservative presolve and scaling diagnostics while preserving traceability 
 
 ## Scope
 
-This phase covers fixed-variable elimination, simple bound tightening, row reduction, empty-row detection, and coefficient-range diagnostics.
+Phase 4 is complete for the current conservative presolve/scaling scope. It covers traceable presolve results, empty-row and empty-column diagnostics, fixed-variable elimination, repeated-pass conservative reductions, original-space solution recovery, diagnostic-only coefficient-range checks, and CLI exposure.
 
-The implementation should follow the initial design in `notes/12_presolve_scaling_design.md`. Early tasks should prioritize transformation traceability, original-space solution reconstruction, and diagnostic-only scaling before any aggressive reductions are considered.
+The implementation follows the initial design in `notes/12_presolve_scaling_design.md`, the repeated-pass design in `notes/13_repeated_presolve_design.md`, and the completion summary in `notes/14_phase4_completion_summary.md`.
 
-Phase 4B starts with immutable presolve result, reduction, and diagnostics dataclasses plus a no-op `Presolver` entry point. Actual reductions and solver integration remain deferred to later tasks.
+## Completed Work
+
+Phase 4B added immutable presolve result, reduction, and diagnostics dataclasses plus the initial `Presolver` entry point.
 
 Phase 4C adds conservative empty-row and empty-column diagnostics. Feasible empty rows may be removed with traceable records, while empty columns remain diagnostic-only except for simple unboundedness detection.
 
@@ -47,6 +49,7 @@ Phase 4L adds a documented CLI regression checklist that fixes the current solve
 - `tests/unit/test_fixed_variable_presolve.py`
 - `tests/unit/test_presolve_scaling_integration.py`
 - `tests/unit/test_scaling_diagnostics.py`
+- `tests/regression/test_phase4_cli_regression_matrix.py`
 
 ## Algorithmic Requirements
 
@@ -54,12 +57,12 @@ Every transformation must be deterministic and reversible enough to reconstruct 
 
 ## Testing Requirements
 
-Add tests for fixed variables, invalid rows, redundant simple rows, tightened-bound diagnostics, core dataclass defaults, no-op behavior, coefficient-range diagnostics, scaling diagnostics defaults, and reconstruction of original variable values.
+Maintain deterministic tests for fixed variables, empty-row diagnostics, empty-column diagnostics, repeated-pass behavior, scaling diagnostics, original-space recovery, presolve examples, and the Phase 4 CLI regression matrix.
 
 ## Do Not Do
 
-Do not hide convention changes inside presolve. Do not implement aggressive reductions that are hard to explain or test.
+Do not hide convention changes inside presolve. Do not implement aggressive reductions that are hard to explain or test. Automatic scaling, singleton-row bound tightening, general redundancy detection, MIP presolve, dual reductions, probing, and performance-oriented presolve remain future work.
 
 ## Acceptance Criteria
 
-Presolve can simplify small models safely and report diagnostics without changing solver-facing conventions silently.
+Presolve can simplify small models safely, report diagnostics, recover supported transformed solutions in original model space, and preserve public CLI behavior through the regression checklist.

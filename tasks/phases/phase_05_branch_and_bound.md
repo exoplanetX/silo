@@ -4,6 +4,8 @@
 
 Implement a minimal branch-and-bound solver for small MIP instances using the LP relaxation interface.
 
+Phase 5 should begin with a design note before implementation. The design note should define the first supported MIP class, LP-relaxation boundary, branching rule, node selection rule, incumbent handling, pruning logic, status mapping, and deterministic test fixtures.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.

@@ -33,7 +33,7 @@ The solver rejects minimization models, finite upper bounds, nonzero lower bound
 - No sparse or industrial-grade revised simplex implementation.
 - No dual simplex.
 - No sparse factorization.
-- No presolve or scaling.
+- No default presolve and no automatic scaling.
 - No MIP branch-and-bound.
 - No cuts, decomposition, stochastic programming, or robust optimization.
 - No external solver call in native algorithms.
@@ -44,13 +44,13 @@ The tableau path is intended to remain simple enough for tests and documentation
 
 SILO currently exposes two native LP backends through the CLI. The `tableau` backend is the educational reference path and is useful for inspecting full tableau algebra on small models. The `revised` backend is the basis-oriented path and is useful for future warm starts, reoptimization, and MIP relaxation work. The CLI default remains `tableau`.
 
-## Planned Revised Simplex Layer
+## Revised Simplex Layer
 
-The LP layer includes a dense tableau reference solver and an initial revised simplex implementation documented in [`notes/10_revised_simplex_design.md`](../notes/10_revised_simplex_design.md). The revised path uses explicit basis objects and the shared standard-form builder as a foundation for later warm starts and reoptimization without changing the tableau reference implementation.
+The LP layer includes a dense tableau reference solver and a revised simplex implementation documented in [`notes/10_revised_simplex_design.md`](../notes/10_revised_simplex_design.md). The revised path uses explicit basis objects and the shared standard-form builder as a foundation for warm starts and future reoptimization work without changing the tableau reference implementation.
 
 ## Revised Simplex Preparation
 
-Phase 3A adds a standard-form builder and explicit `Basis` dataclass. These components transform supported LP models into equality form and record deterministic basic/nonbasic column metadata before a future revised simplex iteration loop is implemented.
+Phase 3A added a standard-form builder and explicit `Basis` dataclass. These components transform supported LP models into equality form and record deterministic basic/nonbasic column metadata used by the revised simplex implementation.
 
 ## Revised Simplex Feasible-Basis Path
 
@@ -70,13 +70,13 @@ For maximization LPs, public reduced costs are reported for original variables a
 
 Both current native LP solvers intentionally leave `dual_values` empty. Dual-value exposure requires a separate mapping design because original rows may be `<=`, `>=`, or `=`, and negative RHS normalization can flip row signs before solving.
 
-## Planned Presolve and Scaling Layer
+## Presolve and Scaling Layer
 
-Phase 4 will introduce conservative presolve and scaling diagnostics. The initial design is documented in [`notes/12_presolve_scaling_design.md`](../notes/12_presolve_scaling_design.md). Early presolve will prioritize traceability and solution reconstruction over aggressive reductions.
+Phase 4 added conservative presolve and scaling diagnostics. The initial design is documented in [`notes/12_presolve_scaling_design.md`](../notes/12_presolve_scaling_design.md), and the completed Phase 4 scope is summarized in [`notes/14_phase4_completion_summary.md`](../notes/14_phase4_completion_summary.md). The presolve layer prioritizes traceability and solution reconstruction over aggressive reductions.
 
 ## Presolve Core
 
-Phase 4 begins with immutable presolve result and diagnostics objects. The initial `Presolver` is intentionally a no-op that validates the model and returns a traceable `PresolveResult`; actual reductions are added in later tasks.
+The presolve layer uses immutable result, diagnostics, scaling, and reduction record objects. `Presolver.run(model)` validates the model, applies conservative diagnostics and reductions, and returns a traceable `PresolveResult`.
 
 ## Empty-Row and Empty-Column Presolve Diagnostics
 
@@ -92,7 +92,7 @@ The presolver now computes coefficient-range diagnostics without automatically s
 
 ## Presolve Diagnostics CLI
 
-Use `silo presolve MODEL_PATH` to inspect presolve and scaling diagnostics without solving the model. This command does not change the default `silo solve` workflow.
+Use `silo presolve MODEL_PATH` to inspect presolve and scaling diagnostics without solving the model. Use `silo solve MODEL_PATH --presolve` to explicitly solve a presolved model and recover the result in original model space. Default `silo solve MODEL_PATH` behavior does not run presolve.
 
 ## Repeated-Pass Presolve
 
@@ -103,3 +103,7 @@ The repeated-pass design is documented in [`notes/13_repeated_presolve_design.md
 ## Original-Space Slack Recovery
 
 When `silo solve MODEL_PATH --presolve` recovers a solver-space solution, slack values are recomputed from the original model constraints and recovered primal values. This keeps solution JSON in original model space even when presolve removed feasible empty rows.
+
+## Phase 4 Regression Matrix
+
+The current solve, presolve, and compare behavior for all checked-in JSON examples is documented in [`docs/phase4_regression_checklist.md`](phase4_regression_checklist.md) and enforced by `tests/regression/test_phase4_cli_regression_matrix.py`.
