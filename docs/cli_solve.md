@@ -30,6 +30,19 @@ silo solve examples/json/production.json --solver revised
 
 Both backends are native SILO implementations. No external solver is called. The `tableau` backend remains the default for now, while `revised` is available for comparison and future basis-oriented workflows.
 
+## Optional Presolve Before Solving
+
+Presolve is opt-in for the solve command:
+
+```bash
+silo solve examples/json/production.json --presolve
+silo solve examples/json/production.json --solver revised --presolve
+```
+
+When `--presolve` is used, SILO runs conservative presolve before the selected solver. If presolve proves infeasibility or unboundedness, `silo solve` returns the corresponding solution status without calling a simplex backend. Otherwise, the selected backend solves the presolved model and the solution is recovered in original model space.
+
+Default solve behavior does not run presolve. Presolve diagnostics are not included in solution JSON; use `silo presolve MODEL_PATH` to inspect diagnostics, reductions, and scaling warnings.
+
 ## Write Output To File
 
 ```bash

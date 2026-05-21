@@ -33,6 +33,7 @@ def test_cli_help_mentions_presolve(capsys) -> None:
     captured = capsys.readouterr()
 
     assert "presolve" in captured.out
+    assert "--presolve" in captured.out
 
 
 def test_cli_rejects_unknown_command() -> None:

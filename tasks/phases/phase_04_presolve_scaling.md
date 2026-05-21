@@ -18,6 +18,8 @@ Phase 4D adds fixed-variable elimination with solution recovery. Fixed variables
 
 Phase 4E adds diagnostic-only coefficient-range checks for matrix coefficients, RHS values, and objective coefficients. Automatic scaling remains deferred.
 
+Phase 4F exposes presolve diagnostics through `silo presolve`, and Phase 4G adds an explicit `silo solve --presolve` path that applies conservative presolve before solving without changing the default solve workflow.
+
 ## Expected Files
 
 - `src/silo/presolve/presolver.py`

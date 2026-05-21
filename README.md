@@ -94,6 +94,12 @@ Inspect presolve and scaling diagnostics without solving the model:
 silo presolve examples/json/production.json
 ```
 
+Run conservative presolve before solving only when explicitly requested:
+
+```bash
+silo solve examples/json/production.json --presolve
+```
+
 The `outputs/` directory is for local runs and generated files there should not be committed.
 
 ## Running Tests

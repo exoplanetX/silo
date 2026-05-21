@@ -56,3 +56,5 @@ The command reads a JSON model, runs `Presolver().run(model)`, and serializes di
 ## Important Limitations
 
 The command does not solve the model. It does not change `silo solve` behavior, does not automatically scale the model, and does not connect presolve to tableau or revised simplex.
+
+`silo solve MODEL_PATH --presolve` is the separate opt-in path that applies safe presolve before solving and then returns ordinary solution JSON.
