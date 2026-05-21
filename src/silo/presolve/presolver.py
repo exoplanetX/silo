@@ -8,7 +8,7 @@ from silo.presolve.column_diagnostics import inspect_empty_columns
 from silo.presolve.diagnostics import PresolveDiagnostics, PresolveStatus, PresolveWarning
 from silo.presolve.fixed_variable import FixedValue, eliminate_fixed_variables
 from silo.presolve.reductions import ReductionRecord, ReductionType, reduction_data
-from silo.presolve.scaling import ScalingDiagnostics, empty_scaling_diagnostics
+from silo.presolve.scaling import ScalingDiagnostics, analyze_scaling
 from silo.utils.numerics import DEFAULT_TOLERANCE
 
 FIXED_BASIS_STATUS = "fixed"
@@ -61,7 +61,7 @@ class PresolveResult:
 class Presolver:
     def run(self, model: Model) -> PresolveResult:
         model.validate()
-        scaling = empty_scaling_diagnostics()
+        scaling = analyze_scaling(model)
 
         for constraint in model.constraints:
             if _is_empty_row(constraint) and not _empty_row_is_feasible(constraint):

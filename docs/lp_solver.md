@@ -85,3 +85,7 @@ The presolver now detects feasible empty rows, infeasible empty rows, and simple
 ## Fixed-Variable Presolve
 
 The presolver can eliminate variables with equal lower and upper bounds by substituting their fixed values into constraints and the objective. The transformation is recorded with `ReductionType.FIXED_VARIABLE`, and recovered solutions restore fixed variable values in original model space.
+
+## Scaling Diagnostics
+
+The presolver now computes coefficient-range diagnostics without automatically scaling the model. Diagnostics report matrix coefficient range, RHS magnitude, objective magnitude, near-zero coefficients, and large-range warnings. Automatic scaling remains future work because primal, reduced-cost, and future dual-value mappings must be handled carefully.

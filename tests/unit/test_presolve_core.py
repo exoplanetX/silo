@@ -28,7 +28,9 @@ def test_no_op_presolver_returns_same_model() -> None:
     assert result.model is model
     assert result.reductions == ()
     assert result.diagnostics.status == PresolveStatus.NO_CHANGE
-    assert result.scaling == ScalingDiagnostics()
+    assert result.scaling.max_abs_coefficient == 1.0
+    assert result.scaling.min_abs_nonzero_coefficient == 1.0
+    assert result.scaling.coefficient_ratio == 1.0
     assert result.changed is False
 
 

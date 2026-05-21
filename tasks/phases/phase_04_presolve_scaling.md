@@ -16,6 +16,8 @@ Phase 4C adds conservative empty-row and empty-column diagnostics. Feasible empt
 
 Phase 4D adds fixed-variable elimination with solution recovery. Fixed variables are substituted into constraints and the objective, then restored into recovered original-space solutions.
 
+Phase 4E adds diagnostic-only coefficient-range checks for matrix coefficients, RHS values, and objective coefficients. Automatic scaling remains deferred.
+
 ## Expected Files
 
 - `src/silo/presolve/presolver.py`
@@ -31,6 +33,7 @@ Phase 4D adds fixed-variable elimination with solution recovery. Fixed variables
 - `tests/unit/test_empty_row_diagnostics.py`
 - `tests/unit/test_empty_column_diagnostics.py`
 - `tests/unit/test_fixed_variable_presolve.py`
+- `tests/unit/test_presolve_scaling_integration.py`
 - `tests/unit/test_scaling_diagnostics.py`
 
 ## Algorithmic Requirements
