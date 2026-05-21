@@ -22,6 +22,8 @@ Phase 4F exposes presolve diagnostics through `silo presolve`, and Phase 4G adds
 
 Phase 4H records the repeated-pass presolve design for cases where one conservative reduction exposes another, such as fixed-variable elimination creating empty rows.
 
+Phase 4I implements the first repeated-pass presolve loop. It composes existing feasible empty-row removal and fixed-variable elimination until no structural change remains, while keeping scaling diagnostics on the original submitted model.
+
 ## Expected Files
 
 - `src/silo/presolve/presolver.py`

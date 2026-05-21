@@ -94,6 +94,8 @@ The presolver now computes coefficient-range diagnostics without automatically s
 
 Use `silo presolve MODEL_PATH` to inspect presolve and scaling diagnostics without solving the model. This command does not change the default `silo solve` workflow.
 
-## Repeated-Pass Presolve Plan
+## Repeated-Pass Presolve
 
-A repeated-pass presolve design note is available in [`notes/13_repeated_presolve_design.md`](../notes/13_repeated_presolve_design.md). The goal is to handle cases where one conservative reduction exposes another, such as fixed-variable elimination creating feasible empty rows.
+The presolver now repeats conservative structural passes until no further empty-row or fixed-variable reductions are exposed. This allows fixed-variable elimination to create feasible empty rows that can be removed in a later pass. Diagnostics-only warnings do not trigger additional passes.
+
+The repeated-pass design is documented in [`notes/13_repeated_presolve_design.md`](../notes/13_repeated_presolve_design.md).

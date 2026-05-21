@@ -92,7 +92,7 @@ def test_fixed_variable_absent_from_row_leaves_row_unchanged() -> None:
     assert result.model.constraints[1].rhs == 8.0
 
 
-def test_row_made_empty_by_fixed_variable_is_left_for_future_pass() -> None:
+def test_row_made_empty_by_fixed_variable_is_removed_by_repeated_pass() -> None:
     model = Model(name="row_made_empty")
     model.add_variable(Variable(name="x", bounds=Bounds(lower=2.0, upper=2.0)))
     model.add_constraint(
@@ -108,10 +108,16 @@ def test_row_made_empty_by_fixed_variable_is_left_for_future_pass() -> None:
     result = Presolver().run(model)
 
     assert result.diagnostics.status == PresolveStatus.REDUCED
-    assert result.diagnostics.removed_rows == ()
-    assert result.model.constraints[0].name == "fixed_only"
-    assert result.model.constraints[0].coefficients == {}
-    assert result.model.constraints[0].rhs == 0.0
+    assert result.diagnostics.removed_rows == ("fixed_only",)
+    assert result.model.constraints == []
+    assert [reduction.reduction_type for reduction in result.reductions] == [
+        ReductionType.FIXED_VARIABLE,
+        ReductionType.EMPTY_ROW,
+    ]
+    assert [reduction.target for reduction in result.reductions] == [
+        "x",
+        "fixed_only",
+    ]
 
 
 def test_recover_solution_restores_fixed_variable_values() -> None:

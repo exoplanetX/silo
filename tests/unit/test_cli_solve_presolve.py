@@ -115,6 +115,21 @@ def test_cli_solve_presolve_recovers_fixed_variable_with_tableau(tmp_path, capsy
     assert payload["basis_status"]["x"] == "fixed"
 
 
+def test_cli_solve_presolve_handles_repeated_pass_recovery(tmp_path, capsys) -> None:
+    model_path = _write_model(tmp_path, _repeated_presolve_model_payload())
+
+    exit_code = main(["solve", str(model_path), "--presolve"])
+
+    payload = _json_stdout(capsys)
+
+    assert exit_code == 0
+    assert payload["status"] == "optimal"
+    assert payload["primal_values"]["x"] == pytest.approx(2.0)
+    assert payload["primal_values"]["y"] == pytest.approx(3.0)
+    assert payload["objective_value"] == pytest.approx(3.0)
+    assert payload["basis_status"]["x"] == "fixed"
+
+
 def test_cli_solve_presolve_recovers_fixed_variable_with_revised(tmp_path, capsys) -> None:
     model_path = _write_model(tmp_path, _fixed_variable_model_payload())
 
@@ -176,6 +191,32 @@ def _fixed_variable_model_payload() -> dict[str, object]:
                 "sense": "<=",
                 "rhs": 5.0,
             }
+        ],
+    }
+
+
+def _repeated_presolve_model_payload() -> dict[str, object]:
+    return {
+        "name": "repeated_presolve",
+        "sense": "maximize",
+        "variables": [
+            {"name": "x", "lower": 2.0, "upper": 2.0},
+            {"name": "y", "lower": 0.0, "upper": None},
+        ],
+        "objective": {"coefficients": {"y": 1.0}},
+        "constraints": [
+            {
+                "name": "x_eq_2",
+                "coefficients": {"x": 1.0},
+                "sense": "=",
+                "rhs": 2.0,
+            },
+            {
+                "name": "y_limit",
+                "coefficients": {"y": 1.0},
+                "sense": "<=",
+                "rhs": 3.0,
+            },
         ],
     }
 
