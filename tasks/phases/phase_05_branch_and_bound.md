@@ -8,6 +8,8 @@ Phase 5 begins with the design note in `notes/15_branch_and_bound_design.md`. Th
 
 Phase 5B adds the MIP-to-LP relaxation builder. It converts binary and bounded nonnegative integer variables into continuous relaxation variables and explicit upper-bound rows while keeping tableau and revised simplex behavior unchanged.
 
+Phase 5C adds deterministic MIP search dataclasses and pure helpers for nodes, branching constraints, branching-variable selection, incumbent updates, node logs, prune reasons, depth-first node selection, and deterministic node ids. It still does not implement the branch-and-bound solve loop.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.

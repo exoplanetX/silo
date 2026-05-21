@@ -8,21 +8,9 @@ from silo.core.enums import ConstraintSense, OptimizationSense, VariableType
 from silo.core.model import Model
 from silo.core.objective import Objective
 from silo.core.variable import Variable
+from silo.mip.node import BranchingConstraint
 
 GENERATED_ROW_PREFIX = "__mip_"
-
-
-@dataclass(frozen=True)
-class BranchingConstraint:
-    variable_name: str
-    sense: ConstraintSense
-    rhs: float
-
-    def __post_init__(self) -> None:
-        if not self.variable_name:
-            raise ValueError("Branching constraint variable name must not be empty.")
-        object.__setattr__(self, "sense", ConstraintSense(self.sense))
-        object.__setattr__(self, "rhs", float(self.rhs))
 
 
 @dataclass(frozen=True)
