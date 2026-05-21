@@ -14,6 +14,8 @@ Phase 5D adds the first pure depth-first branch-and-bound solver for small binar
 
 Phase 5E extends the same depth-first branch-and-bound loop to bounded nonnegative integer variables. Binary variables, bounded integer variables, and compatible continuous variables are supported through LP relaxations with explicit upper-bound rows; CLI integration, cuts, heuristics, callbacks, and advanced MIP features remain future work.
 
+Phase 5F adds checked-in MIP JSON examples and regression tests for the Python branch-and-bound API before CLI exposure.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.

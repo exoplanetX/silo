@@ -1,0 +1,19 @@
+{
+  "name": "integer_allocation",
+  "sense": "maximize",
+  "variables": [
+    {"name": "x", "lower": 0.0, "upper": 2.0, "type": "integer"},
+    {"name": "y", "lower": 0.0, "upper": 3.0, "type": "integer"}
+  ],
+  "objective": {
+    "coefficients": {"x": 3.0, "y": 2.0}
+  },
+  "constraints": [
+    {
+      "name": "capacity",
+      "coefficients": {"x": 2.0, "y": 1.0},
+      "sense": "<=",
+      "rhs": 4.0
+    }
+  ]
+}

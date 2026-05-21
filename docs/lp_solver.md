@@ -34,7 +34,7 @@ The solver rejects minimization models, finite upper bounds, nonzero lower bound
 - No dual simplex.
 - No sparse factorization.
 - No default presolve and no automatic scaling.
-- No MIP branch-and-bound.
+- LP backends do not solve MIPs directly.
 - No cuts, decomposition, stochastic programming, or robust optimization.
 - No external solver call in native algorithms.
 
@@ -48,7 +48,7 @@ SILO currently exposes two native LP backends through the CLI. The `tableau` bac
 
 The MIP layer now includes a deterministic LP relaxation builder for the first Phase 5 branch-and-bound scope. It converts binary and bounded nonnegative integer variables into continuous relaxation variables and represents their finite upper bounds as ordinary linear rows before calling an LP backend. This keeps the tableau and revised simplex solvers unchanged: they still receive only continuous maximization LPs with nonnegative variables and no direct finite variable upper bounds.
 
-The relaxation builder is an internal Python API. SILO still does not expose a working branch-and-bound solver or MIP CLI path.
+The MIP layer now has a small Python `BranchAndBoundSolver` API for binary and bounded nonnegative integer examples. SILO still does not expose a MIP CLI path.
 
 ## Revised Simplex Layer
 

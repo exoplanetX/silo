@@ -29,18 +29,19 @@ The current repository contains a working educational LP path:
 - CLI presolve diagnostics for inspecting presolve and scaling without solving.
 - Optional solve-time presolve through `silo solve --presolve`.
 - Conservative presolve with empty-row diagnostics/removal, empty-column diagnostics, fixed-variable elimination, repeated-pass reductions, original-space slack recovery, and coefficient-range scaling diagnostics.
+- Python API branch-and-bound for small binary and bounded nonnegative integer MIPs.
 - Solution JSON output with primal values, slacks, reduced costs, and basis status.
 
 The native solver path does not call external solvers.
 
 ## Current Limitations
 
-- Continuous LPs only.
+- CLI solve workflows are continuous LP only.
 - Maximization models only.
 - Variables must have lower bound `0`.
-- Finite variable upper bounds are not supported yet.
-- Integer and binary variables are not solved yet.
-- No MIP branch-and-bound yet.
+- Native LP backends do not support finite variable upper bounds directly.
+- MIP support is Python API only; no MIP CLI yet.
+- No cuts, heuristics, callbacks, or branch-and-cut yet.
 - Presolve is not enabled by default; solve-time presolve is opt-in.
 - No automatic scaling yet.
 - No dual values exposed yet.
@@ -94,6 +95,8 @@ Presolve recovery examples are available under `examples/json/`, including fixed
 
 See [Phase 4 regression checklist](docs/phase4_regression_checklist.md) for the current solve, presolve, and compare behavior matrix.
 
+MIP examples are available under `examples/mip/` and can be run through the Python `BranchAndBoundSolver` API.
+
 The `outputs/` directory is for local runs and generated files there should not be committed.
 
 ## Running Tests
@@ -108,6 +111,7 @@ pytest
 - [CLI solve usage](docs/cli_solve.md)
 - [Presolve diagnostics CLI](docs/presolve_cli.md)
 - [Backend compare command](docs/backend_compare.md)
+- [MIP JSON examples](docs/mip_examples.md)
 - [Phase 4 regression checklist](docs/phase4_regression_checklist.md)
 - [LP solver scope](docs/lp_solver.md)
 

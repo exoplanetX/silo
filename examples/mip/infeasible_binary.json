@@ -1,0 +1,24 @@
+{
+  "name": "infeasible_binary",
+  "sense": "maximize",
+  "variables": [
+    {"name": "x", "lower": 0.0, "upper": 1.0, "type": "binary"}
+  ],
+  "objective": {
+    "coefficients": {"x": 1.0}
+  },
+  "constraints": [
+    {
+      "name": "force_one",
+      "coefficients": {"x": 1.0},
+      "sense": ">=",
+      "rhs": 1.0
+    },
+    {
+      "name": "force_zero",
+      "coefficients": {"x": 1.0},
+      "sense": "<=",
+      "rhs": 0.0
+    }
+  ]
+}

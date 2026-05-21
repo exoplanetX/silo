@@ -1,0 +1,19 @@
+{
+  "name": "mixed_continuous_integer",
+  "sense": "maximize",
+  "variables": [
+    {"name": "x", "lower": 0.0, "upper": 2.0, "type": "integer"},
+    {"name": "y", "lower": 0.0, "upper": null, "type": "continuous"}
+  ],
+  "objective": {
+    "coefficients": {"x": 5.0, "y": 1.0}
+  },
+  "constraints": [
+    {
+      "name": "capacity",
+      "coefficients": {"x": 1.0, "y": 1.0},
+      "sense": "<=",
+      "rhs": 3.0
+    }
+  ]
+}

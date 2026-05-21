@@ -37,7 +37,19 @@ Current tableau solve support:
 - `lower`: `0.0`
 - `upper`: `null`
 
-The model layer also recognizes integer and binary variable types, but the current tableau LP solver returns an error for them instead of solving a MIP.
+The model layer also recognizes integer and binary variable types. LP CLI commands still use LP backends, while MIP examples are currently solved through the Python `BranchAndBoundSolver` API.
+
+Binary variables use bounds within `[0, 1]`:
+
+```json
+{"name": "x", "lower": 0.0, "upper": 1.0, "type": "binary"}
+```
+
+Bounded nonnegative integer variables use finite integer-valued upper bounds:
+
+```json
+{"name": "x", "lower": 0.0, "upper": 3.0, "type": "integer"}
+```
 
 Fixed variables can be represented with equal lower and upper bounds:
 
@@ -107,4 +119,4 @@ silo solve examples/json/production.json
 
 ## Solver Support Warning
 
-The JSON model format may represent more than the current tableau solver can solve. For example, binary variables can be represented in JSON, but the tableau LP solver currently reports an unsupported-model error for binary and integer variables.
+The JSON model format may represent more than the LP CLI can solve. For example, binary and integer variables can be represented in JSON, but `silo solve` currently reports an unsupported-model error for them because it uses LP backends. Use the Python `BranchAndBoundSolver` API for the MIP examples under `examples/mip/`.

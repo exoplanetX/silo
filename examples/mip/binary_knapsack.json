@@ -1,0 +1,20 @@
+{
+  "name": "binary_knapsack",
+  "sense": "maximize",
+  "variables": [
+    {"name": "item_1", "lower": 0.0, "upper": 1.0, "type": "binary"},
+    {"name": "item_2", "lower": 0.0, "upper": 1.0, "type": "binary"},
+    {"name": "item_3", "lower": 0.0, "upper": 1.0, "type": "binary"}
+  ],
+  "objective": {
+    "coefficients": {"item_1": 6.0, "item_2": 10.0, "item_3": 12.0}
+  },
+  "constraints": [
+    {
+      "name": "capacity",
+      "coefficients": {"item_1": 1.0, "item_2": 2.0, "item_3": 3.0},
+      "sense": "<=",
+      "rhs": 5.0
+    }
+  ]
+}

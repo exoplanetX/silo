@@ -1,0 +1,19 @@
+{
+  "name": "mixed_binary_integer",
+  "sense": "maximize",
+  "variables": [
+    {"name": "b", "lower": 0.0, "upper": 1.0, "type": "binary"},
+    {"name": "x", "lower": 0.0, "upper": 3.0, "type": "integer"}
+  ],
+  "objective": {
+    "coefficients": {"b": 5.0, "x": 3.0}
+  },
+  "constraints": [
+    {
+      "name": "capacity",
+      "coefficients": {"b": 2.0, "x": 1.0},
+      "sense": "<=",
+      "rhs": 4.0
+    }
+  ]
+}

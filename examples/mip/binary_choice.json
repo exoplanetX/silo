@@ -1,0 +1,19 @@
+{
+  "name": "binary_choice",
+  "sense": "maximize",
+  "variables": [
+    {"name": "x", "lower": 0.0, "upper": 1.0, "type": "binary"},
+    {"name": "y", "lower": 0.0, "upper": 1.0, "type": "binary"}
+  ],
+  "objective": {
+    "coefficients": {"x": 1.0, "y": 1.0}
+  },
+  "constraints": [
+    {
+      "name": "choice",
+      "coefficients": {"x": 1.0, "y": 1.0},
+      "sense": "<=",
+      "rhs": 1.0
+    }
+  ]
+}
