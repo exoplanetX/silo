@@ -49,7 +49,7 @@ class BranchAndBoundSolver:
 
     def solve_with_details(self, model: Model) -> BranchAndBoundResult:
         try:
-            binary_variable_names = _validate_binary_mip_scope(model)
+            integer_variable_names = _validate_supported_mip_scope(model)
         except ValueError as exc:
             return _terminal_result(
                 Solution(status=SolverStatus.ERROR, message=str(exc)),
@@ -181,7 +181,7 @@ class BranchAndBoundSolver:
             try:
                 branching_variable = choose_branching_variable(
                     variable_names=variable_names,
-                    integer_variable_names=binary_variable_names,
+                    integer_variable_names=integer_variable_names,
                     values=lp_solution.primal_values,
                 )
             except ValueError as exc:
@@ -200,7 +200,7 @@ class BranchAndBoundSolver:
 
             if branching_variable is None:
                 nodes_pruned += 1
-                candidate = _mip_candidate_solution(lp_solution, binary_variable_names)
+                candidate = _mip_candidate_solution(lp_solution, integer_variable_names)
                 incumbent = incumbent.update(candidate)
                 logs.append(
                     _log_node(
@@ -208,7 +208,7 @@ class BranchAndBoundSolver:
                         lp_solution=lp_solution,
                         prune_reason=PruneReason.INTEGER_FEASIBLE,
                         incumbent_value=incumbent.objective_value,
-                        message="LP relaxation solution is binary feasible.",
+                        message="LP relaxation solution is integer feasible.",
                     )
                 )
                 continue
@@ -231,7 +231,7 @@ class BranchAndBoundSolver:
                     prune_reason=PruneReason.NOT_PRUNED,
                     branching_variable=branching_variable,
                     incumbent_value=incumbent.objective_value,
-                    message="Branched on first fractional binary variable.",
+                    message="Branched on first fractional integer-restricted variable.",
                 )
             )
 
@@ -263,7 +263,7 @@ class BranchAndBoundSolver:
 
         solution = Solution(
             status=SolverStatus.INFEASIBLE,
-            message="Branch-and-bound proved the binary MIP infeasible.",
+            message="Branch-and-bound proved the MIP infeasible.",
         )
         return BranchAndBoundResult(
             solution=solution,
@@ -277,24 +277,31 @@ class BranchAndBoundSolver:
         )
 
 
-def _validate_binary_mip_scope(model: Model) -> tuple[str, ...]:
+def _validate_supported_mip_scope(model: Model) -> tuple[str, ...]:
     model.validate()
     if model.objective.sense != OptimizationSense.MAXIMIZE:
-        raise ValueError("Binary branch-and-bound supports maximization models only.")
+        raise ValueError("Branch-and-bound supports maximization models only.")
 
-    binary_variable_names: list[str] = []
+    integer_variable_names: list[str] = []
     for variable in model.variables:
         if variable.var_type == VariableType.BINARY:
             if variable.bounds.lower != 0.0 or variable.bounds.upper != 1.0:
                 raise ValueError(
                     f"Binary variable bounds must be exactly [0, 1]: {variable.name}"
                 )
-            binary_variable_names.append(variable.name)
+            integer_variable_names.append(variable.name)
         elif variable.var_type == VariableType.INTEGER:
-            raise ValueError(
-                f"Binary branch-and-bound does not support general integer variables: "
-                f"{variable.name}"
-            )
+            if variable.bounds.lower != 0.0:
+                raise ValueError(f"Integer variable lower bound must be 0: {variable.name}")
+            if isinf(variable.bounds.upper):
+                raise ValueError(
+                    f"Integer variable requires a finite upper bound: {variable.name}"
+                )
+            if not _is_integer_bound(variable.bounds.upper):
+                raise ValueError(
+                    f"Integer variable upper bound must be integer-valued: {variable.name}"
+                )
+            integer_variable_names.append(variable.name)
         elif variable.var_type == VariableType.CONTINUOUS:
             if variable.bounds.lower != 0.0:
                 raise ValueError(
@@ -307,15 +314,15 @@ def _validate_binary_mip_scope(model: Model) -> tuple[str, ...]:
                 )
         else:
             raise ValueError(f"Unsupported variable type: {variable.var_type}")
-    return tuple(binary_variable_names)
+    return tuple(integer_variable_names)
 
 
 def _mip_candidate_solution(
     lp_solution: Solution,
-    binary_variable_names: tuple[str, ...],
+    integer_variable_names: tuple[str, ...],
 ) -> Solution:
     primal_values = dict(lp_solution.primal_values)
-    for variable_name in binary_variable_names:
+    for variable_name in integer_variable_names:
         value = primal_values[variable_name]
         rounded = float(round(value))
         if abs(value - rounded) <= DEFAULT_INTEGER_TOLERANCE:
@@ -334,7 +341,7 @@ def _final_optimal_solution(solution: Solution) -> Solution:
         status=SolverStatus.OPTIMAL,
         objective_value=solution.objective_value,
         primal_values=dict(solution.primal_values),
-        message="Branch-and-bound solved the binary MIP.",
+        message="Branch-and-bound solved the MIP.",
     )
 
 
@@ -405,3 +412,7 @@ def _max_optional(left: float | None, right: float) -> float:
     if left is None:
         return right
     return max(left, right)
+
+
+def _is_integer_bound(value: float) -> bool:
+    return abs(value - round(value)) <= DEFAULT_INTEGER_TOLERANCE

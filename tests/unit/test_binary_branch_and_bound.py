@@ -54,21 +54,15 @@ def test_infeasible_binary_mip_returns_infeasible() -> None:
     assert result.log[0].prune_reason == PruneReason.LP_INFEASIBLE
 
 
-def test_unsupported_integer_variable_returns_error() -> None:
+def test_unbounded_integer_variable_returns_error() -> None:
     model = Model(name="integer")
-    model.add_variable(
-        Variable(
-            name="x",
-            bounds=Bounds(lower=0.0, upper=2.0),
-            var_type=VariableType.INTEGER,
-        )
-    )
+    model.add_variable(Variable(name="x", var_type=VariableType.INTEGER))
     model.set_objective(Objective(coefficients={"x": 1.0}, sense=OptimizationSense.MAXIMIZE))
 
     solution = BranchAndBoundSolver().solve(model)
 
     assert solution.status == SolverStatus.ERROR
-    assert "general integer variables" in solution.message
+    assert "finite upper bound" in solution.message
 
 
 def test_unsupported_minimization_returns_error() -> None:
