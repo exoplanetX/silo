@@ -4,10 +4,12 @@ from pathlib import Path
 
 from silo import __version__
 from silo.cli.compare import compare_backends, comparison_to_json, write_comparison_json
+from silo.cli.presolve import presolve_to_dict, presolve_to_json, write_presolve_json
 from silo.cli.solvers import available_solver_names, create_solver
 from silo.core.status import SolverStatus
 from silo.io.json_reader import read_json_model
 from silo.io.solution_writer import solution_to_json, write_solution_json
+from silo.presolve import Presolver
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -20,14 +22,14 @@ def build_parser() -> argparse.ArgumentParser:
         "command",
         nargs="?",
         default="help",
-        choices=["compare", "help", "solve"],
+        choices=["compare", "help", "presolve", "solve"],
         help="Command to run.",
     )
     parser.add_argument("path", nargs="?", help="Path to model file.")
     parser.add_argument(
         "-o",
         "--output",
-        help="Optional path to write solution JSON.",
+        help="Optional path to write JSON output.",
     )
     parser.add_argument(
         "--solver",
@@ -55,6 +57,11 @@ def main(argv: list[str] | None = None) -> int:
         if not args.path:
             parser.error("The compare command requires a model file path.")
         return _compare(args.path, args.output)
+
+    if args.command == "presolve":
+        if not args.path:
+            parser.error("The presolve command requires a model file path.")
+        return _presolve(args.path, args.output)
 
     parser.print_help()
     return 0
@@ -107,6 +114,32 @@ def _compare(model_path: str, output_path: str | None) -> int:
         return 1
 
     return 0 if payload["consistent"] else 1
+
+
+def _presolve(model_path: str, output_path: str | None) -> int:
+    path = Path(model_path)
+    if not path.exists():
+        print(f"Error: model file not found: {path}", file=sys.stderr)
+        return 1
+
+    try:
+        model = read_json_model(path)
+    except ValueError as exc:
+        print(f"Error: failed to read model: {exc}", file=sys.stderr)
+        return 1
+
+    result = Presolver().run(model)
+    payload = presolve_to_dict(path, result)
+    try:
+        if output_path:
+            write_presolve_json(payload, output_path)
+        else:
+            print(presolve_to_json(payload), end="")
+    except OSError as exc:
+        print(f"Error: failed to write presolve diagnostics: {exc}", file=sys.stderr)
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":

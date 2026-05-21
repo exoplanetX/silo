@@ -4,6 +4,8 @@ The `silo solve` command connects the JSON model reader, the native tableau simp
 
 For backend-to-backend diagnostics, use `silo compare MODEL_PATH`; see [Backend Compare Command](backend_compare.md).
 
+For presolve and scaling diagnostics without solving the model, use `silo presolve MODEL_PATH`; see [Presolve Diagnostics CLI](presolve_cli.md).
+
 ## Basic Command
 
 ```bash

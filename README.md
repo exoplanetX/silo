@@ -24,6 +24,7 @@ The current repository contains a working educational LP path:
 - Phase I / Phase II support for `<=`, `>=`, and `=` rows.
 - Infeasible and unbounded LP status detection.
 - CLI solve workflow for JSON LP files.
+- CLI presolve diagnostics for inspecting presolve and scaling without solving.
 - Solution JSON output with primal values, slacks, reduced costs, and basis status.
 
 The native solver path does not call external solvers.
@@ -36,7 +37,8 @@ The native solver path does not call external solvers.
 - Finite variable upper bounds are not supported yet.
 - Integer and binary variables are not solved yet.
 - No MIP branch-and-bound yet.
-- No presolve or scaling yet.
+- Presolve is diagnostic-only and is not connected to `silo solve` by default.
+- No automatic scaling yet.
 - No external solver backend is used by native algorithms.
 
 ## Long-Term Roadmap
@@ -86,6 +88,12 @@ Compare the tableau and revised native backends on the same JSON model:
 silo compare examples/json/production.json
 ```
 
+Inspect presolve and scaling diagnostics without solving the model:
+
+```bash
+silo presolve examples/json/production.json
+```
+
 The `outputs/` directory is for local runs and generated files there should not be committed.
 
 ## Running Tests
@@ -98,6 +106,7 @@ pytest
 
 - [JSON model format](docs/json_model_format.md)
 - [CLI solve usage](docs/cli_solve.md)
+- [Presolve diagnostics CLI](docs/presolve_cli.md)
 - [Backend compare command](docs/backend_compare.md)
 - [LP solver scope](docs/lp_solver.md)
 

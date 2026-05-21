@@ -89,3 +89,7 @@ The presolver can eliminate variables with equal lower and upper bounds by subst
 ## Scaling Diagnostics
 
 The presolver now computes coefficient-range diagnostics without automatically scaling the model. Diagnostics report matrix coefficient range, RHS magnitude, objective magnitude, near-zero coefficients, and large-range warnings. Automatic scaling remains future work because primal, reduced-cost, and future dual-value mappings must be handled carefully.
+
+## Presolve Diagnostics CLI
+
+Use `silo presolve MODEL_PATH` to inspect presolve and scaling diagnostics without solving the model. This command does not change the default `silo solve` workflow.
