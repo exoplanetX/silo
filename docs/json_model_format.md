@@ -39,6 +39,14 @@ Current tableau solve support:
 
 The model layer also recognizes integer and binary variable types, but the current tableau LP solver returns an error for them instead of solving a MIP.
 
+Fixed variables can be represented with equal lower and upper bounds:
+
+```json
+{"name": "x", "lower": 2.0, "upper": 2.0, "type": "continuous"}
+```
+
+Native simplex solvers still reject finite bounds directly. Use `silo solve MODEL_PATH --presolve` when a checked-in example relies on fixed-variable presolve recovery.
+
 ## Objective
 
 ```json

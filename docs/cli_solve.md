@@ -43,6 +43,16 @@ When `--presolve` is used, SILO runs conservative presolve before the selected s
 
 Default solve behavior does not run presolve. Presolve diagnostics are not included in solution JSON; use `silo presolve MODEL_PATH` to inspect diagnostics, reductions, and scaling warnings.
 
+### Presolve Recovery Examples
+
+```bash
+silo solve examples/json/fixed_var_recovery.json --presolve
+silo solve examples/json/repeated_empty_row.json --presolve
+silo solve examples/json/presolve_infeasible_after_fixed.json --presolve
+```
+
+These examples show fixed-variable recovery, repeated-pass empty-row removal, original-space slack recovery, and presolve-detected infeasibility.
+
 ## Write Output To File
 
 ```bash

@@ -47,6 +47,15 @@ EXAMPLE_EXPECTATIONS: dict[str, dict[str, Any]] = {
     "infeasible.json": {
         "status": SolverStatus.INFEASIBLE,
     },
+    "fixed_var_recovery.json": {
+        "status": SolverStatus.ERROR,
+    },
+    "presolve_infeasible_after_fixed.json": {
+        "status": SolverStatus.ERROR,
+    },
+    "repeated_empty_row.json": {
+        "status": SolverStatus.ERROR,
+    },
 }
 
 

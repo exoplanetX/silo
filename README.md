@@ -100,6 +100,8 @@ Run conservative presolve before solving only when explicitly requested:
 silo solve examples/json/production.json --presolve
 ```
 
+Presolve recovery examples are available under `examples/json/`, including fixed-variable and repeated-pass cases.
+
 The `outputs/` directory is for local runs and generated files there should not be committed.
 
 ## Running Tests

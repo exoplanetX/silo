@@ -18,6 +18,18 @@ The same command can be run through the Python module entry point:
 python -m silo.cli.main presolve examples/json/production.json
 ```
 
+## Presolve Examples
+
+The presolve examples under `examples/json/` show reductions before solving:
+
+```bash
+silo presolve examples/json/fixed_var_recovery.json
+silo presolve examples/json/repeated_empty_row.json
+silo presolve examples/json/presolve_infeasible_after_fixed.json
+```
+
+Use `silo solve MODEL_PATH --presolve` on the same files to solve reduced models when presolve does not prove a terminal status.
+
 ## Output File
 
 ```bash

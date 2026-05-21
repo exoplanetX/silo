@@ -1,0 +1,15 @@
+{
+  "name": "presolve_infeasible_after_fixed",
+  "sense": "maximize",
+  "variables": [
+    {"name": "x", "lower": 2.0, "upper": 2.0, "type": "continuous"},
+    {"name": "y", "lower": 0.0, "upper": null, "type": "continuous"}
+  ],
+  "objective": {
+    "coefficients": {"y": 1.0}
+  },
+  "constraints": [
+    {"name": "x_limit", "coefficients": {"x": 1.0}, "sense": "<=", "rhs": 1.0},
+    {"name": "y_limit", "coefficients": {"y": 1.0}, "sense": "<=", "rhs": 3.0}
+  ]
+}

@@ -26,6 +26,8 @@ Phase 4I implements the first repeated-pass presolve loop. It composes existing 
 
 Phase 4J recomputes recovered slack values from the original model constraints after presolve recovery. This keeps `silo solve --presolve` solution JSON in original constraint space when presolve removes rows.
 
+Phase 4K adds checked-in JSON examples and regression coverage for fixed-variable recovery, repeated-pass empty-row removal, original-space slack recovery, and presolve-detected infeasibility.
+
 ## Expected Files
 
 - `src/silo/presolve/presolver.py`
