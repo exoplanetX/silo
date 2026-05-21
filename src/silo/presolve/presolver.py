@@ -3,11 +3,15 @@ from dataclasses import dataclass
 from silo.core.constraint import Constraint
 from silo.core.enums import ConstraintSense
 from silo.core.model import Model
+from silo.core.solution import Solution
 from silo.presolve.column_diagnostics import inspect_empty_columns
 from silo.presolve.diagnostics import PresolveDiagnostics, PresolveStatus, PresolveWarning
+from silo.presolve.fixed_variable import FixedValue, eliminate_fixed_variables
 from silo.presolve.reductions import ReductionRecord, ReductionType, reduction_data
 from silo.presolve.scaling import ScalingDiagnostics, empty_scaling_diagnostics
 from silo.utils.numerics import DEFAULT_TOLERANCE
+
+FIXED_BASIS_STATUS = "fixed"
 
 
 @dataclass(frozen=True)
@@ -18,6 +22,40 @@ class PresolveResult:
     scaling: ScalingDiagnostics
     changed: bool = False
     message: str = ""
+    fixed_values: tuple[FixedValue, ...] = ()
+
+    def recover_solution(self, solution: Solution) -> Solution:
+        presolved_variable_names = set(self.model.variable_names())
+        primal_values = {
+            name: value
+            for name, value in solution.primal_values.items()
+            if name in presolved_variable_names
+        }
+        reduced_costs = {
+            name: value
+            for name, value in solution.reduced_costs.items()
+            if name in presolved_variable_names
+        }
+        basis_status = {
+            name: status
+            for name, status in solution.basis_status.items()
+            if name in presolved_variable_names
+        }
+        for variable_name, fixed_value in self.fixed_values:
+            primal_values[variable_name] = fixed_value
+            reduced_costs[variable_name] = 0.0
+            basis_status[variable_name] = FIXED_BASIS_STATUS
+
+        return Solution(
+            status=solution.status,
+            objective_value=solution.objective_value,
+            primal_values=primal_values,
+            slack_values=dict(solution.slack_values),
+            dual_values=dict(solution.dual_values),
+            reduced_costs=reduced_costs,
+            basis_status=basis_status,
+            message=solution.message,
+        )
 
 
 class Presolver:
@@ -61,13 +99,14 @@ class Presolver:
                 ),
             )
 
+        presolved_model = model
         reduced_constraints: list[Constraint] = []
         removed_rows: list[str] = []
-        reductions: list[ReductionRecord] = []
+        empty_row_reductions: list[ReductionRecord] = []
         for constraint in model.constraints:
             if _is_empty_row(constraint):
                 removed_rows.append(constraint.name)
-                reductions.append(
+                empty_row_reductions.append(
                     ReductionRecord(
                         reduction_type=ReductionType.EMPTY_ROW,
                         target=constraint.name,
@@ -82,23 +121,29 @@ class Presolver:
             reduced_constraints.append(constraint)
 
         if removed_rows:
-            reduced_model = Model(
+            presolved_model = Model(
                 name=model.name,
                 variables=list(model.variables),
                 constraints=reduced_constraints,
                 objective=model.objective,
             )
+
+        fixed_elimination = eliminate_fixed_variables(presolved_model)
+        if removed_rows or fixed_elimination.fixed_values:
+            reductions = tuple(empty_row_reductions) + fixed_elimination.reductions
             return PresolveResult(
-                model=reduced_model,
-                reductions=tuple(reductions),
+                model=fixed_elimination.model,
+                reductions=reductions,
                 diagnostics=PresolveDiagnostics(
                     status=PresolveStatus.REDUCED,
                     warnings=column_diagnostics.warnings,
                     removed_rows=tuple(removed_rows),
+                    fixed_variables=fixed_elimination.fixed_variables,
                 ),
                 scaling=scaling,
                 changed=True,
-                message="Removed feasible empty rows.",
+                message="Applied presolve reductions.",
+                fixed_values=fixed_elimination.fixed_values,
             )
 
         return PresolveResult(

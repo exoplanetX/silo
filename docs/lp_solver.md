@@ -81,3 +81,7 @@ Phase 4 begins with immutable presolve result and diagnostics objects. The initi
 ## Empty-Row and Empty-Column Presolve Diagnostics
 
 The presolver now detects feasible empty rows, infeasible empty rows, and simple empty-column unboundedness. Feasible empty rows are removed from the returned presolved model with traceable reduction records. Empty columns are diagnostic-only except when a nonconstrained variable with positive maximization objective and no finite upper bound proves unboundedness.
+
+## Fixed-Variable Presolve
+
+The presolver can eliminate variables with equal lower and upper bounds by substituting their fixed values into constraints and the objective. The transformation is recorded with `ReductionType.FIXED_VARIABLE`, and recovered solutions restore fixed variable values in original model space.

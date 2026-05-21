@@ -14,6 +14,8 @@ Phase 4B starts with immutable presolve result, reduction, and diagnostics datac
 
 Phase 4C adds conservative empty-row and empty-column diagnostics. Feasible empty rows may be removed with traceable records, while empty columns remain diagnostic-only except for simple unboundedness detection.
 
+Phase 4D adds fixed-variable elimination with solution recovery. Fixed variables are substituted into constraints and the objective, then restored into recovered original-space solutions.
+
 ## Expected Files
 
 - `src/silo/presolve/presolver.py`
@@ -28,6 +30,7 @@ Phase 4C adds conservative empty-row and empty-column diagnostics. Feasible empt
 - `tests/unit/test_presolve_core.py`
 - `tests/unit/test_empty_row_diagnostics.py`
 - `tests/unit/test_empty_column_diagnostics.py`
+- `tests/unit/test_fixed_variable_presolve.py`
 - `tests/unit/test_scaling_diagnostics.py`
 
 ## Algorithmic Requirements
