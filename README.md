@@ -61,7 +61,7 @@ The native solver path does not call external solvers.
 - Phase 8: Stochastic and robust optimization extensions
 - Phase 9: Native backend
 
-Phase 5 starts from the branch-and-bound design note in [notes/15_branch_and_bound_design.md](notes/15_branch_and_bound_design.md) before MIP implementation.
+Phase 5 starts from the branch-and-bound design note in [notes/15_branch_and_bound_design.md](notes/15_branch_and_bound_design.md) before MIP implementation. MIP CLI exposure is being designed separately in [notes/16_mip_cli_exposure_design.md](notes/16_mip_cli_exposure_design.md); no MIP CLI command is implemented yet.
 
 ## Installation
 
@@ -112,6 +112,7 @@ pytest
 - [Presolve diagnostics CLI](docs/presolve_cli.md)
 - [Backend compare command](docs/backend_compare.md)
 - [MIP JSON examples](docs/mip_examples.md)
+- [MIP CLI exposure design](notes/16_mip_cli_exposure_design.md)
 - [Phase 4 regression checklist](docs/phase4_regression_checklist.md)
 - [LP solver scope](docs/lp_solver.md)
 

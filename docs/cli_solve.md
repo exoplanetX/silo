@@ -32,6 +32,8 @@ silo solve examples/json/production.json --solver revised
 
 Both backends are native SILO implementations. No external solver is called. The `tableau` backend remains the default for now, while `revised` is available for comparison and future basis-oriented workflows.
 
+`silo solve` is still the continuous LP solve path. The `--solver` flag selects an LP backend, not a MIP algorithm. MIP CLI exposure is being designed separately in [MIP CLI Exposure Design Note](../notes/16_mip_cli_exposure_design.md); the planned command is not implemented yet.
+
 ## Optional Presolve Before Solving
 
 Presolve is opt-in for the solve command:

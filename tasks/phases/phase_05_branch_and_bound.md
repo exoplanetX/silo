@@ -16,6 +16,8 @@ Phase 5E extends the same depth-first branch-and-bound loop to bounded nonnegati
 
 Phase 5F adds checked-in MIP JSON examples and regression tests for the Python branch-and-bound API before CLI exposure.
 
+Phase 5G drafts the MIP CLI exposure design note before implementing a command.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.

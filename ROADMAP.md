@@ -62,7 +62,7 @@ Acceptance criteria: presolve transformations are deterministic, documented, and
 
 ## Phase 5: MIP Branch-and-Bound
 
-Status: next; design note drafted in [`notes/15_branch_and_bound_design.md`](notes/15_branch_and_bound_design.md).
+Status: in progress; branch-and-bound design drafted in [`notes/15_branch_and_bound_design.md`](notes/15_branch_and_bound_design.md), with CLI exposure design drafted in [`notes/16_mip_cli_exposure_design.md`](notes/16_mip_cli_exposure_design.md).
 
 Goal: implement a minimal branch-and-bound layer over LP relaxation solves.
 
@@ -72,7 +72,7 @@ Expected tests: binary knapsack, small integer programs, infeasible MIPs, incumb
 
 Acceptance criteria: pure branch-and-bound solves small MIP fixtures without cuts or heuristics.
 
-Phase 5 begins with the branch-and-bound design note before implementation.
+Phase 5 begins with the branch-and-bound design note before implementation and a separate CLI exposure note before adding a public MIP command.
 
 ## Phase 6: Cut Generation and Callbacks
 

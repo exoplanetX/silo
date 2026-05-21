@@ -34,6 +34,8 @@ Use `solve_with_details(model)` when tests or diagnostics need node counts, incu
 
 MIP examples are not yet exposed through a dedicated CLI command. `silo solve` currently uses LP backends and is not the MIP interface. Do not use `silo solve examples/mip/...` as a MIP solve command.
 
+A MIP CLI is being designed in [MIP CLI Exposure Design Note](../notes/16_mip_cli_exposure_design.md). The recommended first command is likely `silo mip-solve MODEL_PATH`, but this command is planned only and is not implemented yet.
+
 ## Limitations
 
 The current MIP path has no cuts, heuristics, callbacks, branch-and-cut, minimization, general lower bounds, unbounded integer variables, or MIP CLI. It is a small deterministic reference implementation intended for early Phase 5 tests and examples.
