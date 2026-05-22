@@ -26,6 +26,14 @@ def test_cli_accepts_presolve_command() -> None:
     assert args.command == "presolve"
 
 
+def test_cli_accepts_mip_solve_command() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["mip-solve", "model.json"])
+    assert args.command == "mip-solve"
+    assert args.node_limit == 10_000
+    assert args.lp_solver is None
+
+
 def test_cli_help_mentions_presolve(capsys) -> None:
     parser = build_parser()
     parser.print_help()
@@ -34,6 +42,17 @@ def test_cli_help_mentions_presolve(capsys) -> None:
 
     assert "presolve" in captured.out
     assert "--presolve" in captured.out
+
+
+def test_cli_help_mentions_mip_solve_options(capsys) -> None:
+    parser = build_parser()
+    parser.print_help()
+
+    captured = capsys.readouterr()
+
+    assert "mip-solve" in captured.out
+    assert "--lp-solver" in captured.out
+    assert "--node-limit" in captured.out
 
 
 def test_cli_rejects_unknown_command() -> None:

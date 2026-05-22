@@ -4,6 +4,7 @@ from pathlib import Path
 
 from silo import __version__
 from silo.cli.compare import compare_backends, comparison_to_json, write_comparison_json
+from silo.cli.mip_solve import mip_solve
 from silo.cli.presolve import presolve_to_dict, presolve_to_json, write_presolve_json
 from silo.cli.solvers import available_solver_names, create_solver
 from silo.core.model import Model
@@ -24,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
         "command",
         nargs="?",
         default="help",
-        choices=["compare", "help", "presolve", "solve"],
+        choices=["compare", "help", "mip-solve", "presolve", "solve"],
         help="Command to run.",
     )
     parser.add_argument("path", nargs="?", help="Path to model file.")
@@ -40,6 +41,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Solver backend to use.",
     )
     parser.add_argument(
+        "--lp-solver",
+        choices=available_solver_names(),
+        help="LP relaxation backend to use. Used only by the mip-solve command.",
+    )
+    parser.add_argument(
+        "--node-limit",
+        type=_nonnegative_int,
+        default=10_000,
+        help="Branch-and-bound node limit. Used only by the mip-solve command.",
+    )
+    parser.add_argument(
         "--presolve",
         action="store_true",
         help="Run presolve before solving. Used only by the solve command.",
@@ -49,7 +61,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
-    args = parser.parse_args(argv)
+    raw_args = sys.argv[1:] if argv is None else argv
+    args = parser.parse_args(raw_args)
 
     if args.command == "help":
         parser.print_help()
@@ -59,6 +72,19 @@ def main(argv: list[str] | None = None) -> int:
         if not args.path:
             parser.error("The solve command requires a model file path.")
         return _solve(args.path, args.output, args.solver, args.presolve)
+
+    if args.command == "mip-solve":
+        if _option_used(raw_args, "--solver"):
+            parser.error(
+                "The mip-solve command uses --lp-solver; --solver is reserved for "
+                "the LP solve command."
+            )
+        if args.presolve:
+            parser.error("The mip-solve command does not support --presolve.")
+        if not args.path:
+            parser.error("The mip-solve command requires a model file path.")
+        lp_solver_name = args.lp_solver if args.lp_solver is not None else "tableau"
+        return mip_solve(args.path, args.output, lp_solver_name, args.node_limit)
 
     if args.command == "compare":
         if not args.path:
@@ -72,6 +98,20 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.print_help()
     return 0
+
+
+def _nonnegative_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a nonnegative integer") from exc
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("must be a nonnegative integer")
+    return parsed
+
+
+def _option_used(argv: list[str], option: str) -> bool:
+    return any(arg == option or arg.startswith(f"{option}=") for arg in argv)
 
 
 def _solve(

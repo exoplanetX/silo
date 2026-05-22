@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The files under `examples/mip/` are checked-in JSON models for the native branch-and-bound Python API. They provide small deterministic regression examples before SILO exposes any user-facing MIP CLI command.
+The files under `examples/mip/` are checked-in JSON models for the native branch-and-bound Python API and `silo mip-solve` CLI. They provide small deterministic regression examples for the current supported MIP scope.
 
 ## Current Solver Scope
 
@@ -21,6 +21,14 @@ print(solution.status, solution.objective_value)
 
 Use `solve_with_details(model)` when tests or diagnostics need node counts, incumbent value, best bound, or node logs.
 
+## How to Run from CLI
+
+```bash
+silo mip-solve examples/mip/binary_knapsack.json
+```
+
+Use [MIP Solve CLI](mip_solve_cli.md) for command options and exit-code behavior.
+
 ## Examples
 
 - `binary_knapsack.json`: binary knapsack with expected objective `22`.
@@ -32,10 +40,8 @@ Use `solve_with_details(model)` when tests or diagnostics need node counts, incu
 
 ## Current CLI Status
 
-MIP examples are not yet exposed through a dedicated CLI command. `silo solve` currently uses LP backends and is not the MIP interface. Do not use `silo solve examples/mip/...` as a MIP solve command.
-
-A MIP CLI is being designed in [MIP CLI Exposure Design Note](../notes/16_mip_cli_exposure_design.md). The recommended first command is likely `silo mip-solve MODEL_PATH`, but this command is planned only and is not implemented yet.
+MIP examples are exposed through `silo mip-solve`. `silo solve` remains the continuous LP solve path and does not silently route MIP models to branch-and-bound.
 
 ## Limitations
 
-The current MIP path has no cuts, heuristics, callbacks, branch-and-cut, minimization, general lower bounds, unbounded integer variables, or MIP CLI. It is a small deterministic reference implementation intended for early Phase 5 tests and examples.
+The current MIP path has no cuts, heuristics, callbacks, branch-and-cut, minimization, general lower bounds, unbounded integer variables, MIP presolve, or detailed node-count JSON. It is a small deterministic reference implementation intended for early Phase 5 tests and examples.

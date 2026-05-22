@@ -1,6 +1,6 @@
 # SILO: Simplex and Integer Linear Optimization
 
-SILO is a Python-first educational optimization solver kernel for small LPs. It currently includes dense tableau simplex and revised simplex backends, JSON model input, CLI solve and compare workflows, and a conservative presolve/scaling diagnostics layer.
+SILO is a Python-first educational optimization solver kernel for small LPs and early small MIPs. It currently includes dense tableau simplex and revised simplex backends, JSON model input, LP CLI solve and compare workflows, a conservative presolve/scaling diagnostics layer, and a small branch-and-bound MIP CLI.
 
 ## Project Philosophy
 
@@ -29,18 +29,18 @@ The current repository contains a working educational LP path:
 - CLI presolve diagnostics for inspecting presolve and scaling without solving.
 - Optional solve-time presolve through `silo solve --presolve`.
 - Conservative presolve with empty-row diagnostics/removal, empty-column diagnostics, fixed-variable elimination, repeated-pass reductions, original-space slack recovery, and coefficient-range scaling diagnostics.
-- Python API branch-and-bound for small binary and bounded nonnegative integer MIPs.
+- Python API and `silo mip-solve` branch-and-bound for small binary and bounded nonnegative integer MIPs.
 - Solution JSON output with primal values, slacks, reduced costs, and basis status.
 
 The native solver path does not call external solvers.
 
 ## Current Limitations
 
-- CLI solve workflows are continuous LP only.
+- `silo solve` workflows are continuous LP only; MIP solving uses `silo mip-solve`.
 - Maximization models only.
 - Variables must have lower bound `0`.
 - Native LP backends do not support finite variable upper bounds directly.
-- MIP support is Python API only; no MIP CLI yet.
+- MIP support is limited to a small branch-and-bound reference path.
 - No cuts, heuristics, callbacks, or branch-and-cut yet.
 - Presolve is not enabled by default; solve-time presolve is opt-in.
 - No automatic scaling yet.
@@ -61,7 +61,7 @@ The native solver path does not call external solvers.
 - Phase 8: Stochastic and robust optimization extensions
 - Phase 9: Native backend
 
-Phase 5 starts from the branch-and-bound design note in [notes/15_branch_and_bound_design.md](notes/15_branch_and_bound_design.md) before MIP implementation. MIP CLI exposure is being designed separately in [notes/16_mip_cli_exposure_design.md](notes/16_mip_cli_exposure_design.md); no MIP CLI command is implemented yet.
+Phase 5 starts from the branch-and-bound design note in [notes/15_branch_and_bound_design.md](notes/15_branch_and_bound_design.md) before MIP implementation. MIP CLI exposure follows the design in [notes/16_mip_cli_exposure_design.md](notes/16_mip_cli_exposure_design.md).
 
 ## Installation
 
@@ -83,6 +83,7 @@ silo solve examples/json/production.json --solver revised
 silo compare examples/json/production.json
 silo presolve examples/json/production.json
 silo solve examples/json/fixed_var_recovery.json --presolve
+silo mip-solve examples/mip/binary_knapsack.json
 ```
 
 Write the same solution JSON to an ignored local output file:
@@ -95,7 +96,7 @@ Presolve recovery examples are available under `examples/json/`, including fixed
 
 See [Phase 4 regression checklist](docs/phase4_regression_checklist.md) for the current solve, presolve, and compare behavior matrix.
 
-MIP examples are available under `examples/mip/` and can be run through the Python `BranchAndBoundSolver` API.
+MIP examples are available under `examples/mip/` and can be run through `silo mip-solve` or the Python `BranchAndBoundSolver` API.
 
 The `outputs/` directory is for local runs and generated files there should not be committed.
 
@@ -112,6 +113,7 @@ pytest
 - [Presolve diagnostics CLI](docs/presolve_cli.md)
 - [Backend compare command](docs/backend_compare.md)
 - [MIP JSON examples](docs/mip_examples.md)
+- [MIP solve CLI](docs/mip_solve_cli.md)
 - [MIP CLI exposure design](notes/16_mip_cli_exposure_design.md)
 - [Phase 4 regression checklist](docs/phase4_regression_checklist.md)
 - [LP solver scope](docs/lp_solver.md)

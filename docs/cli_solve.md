@@ -6,6 +6,8 @@ For backend-to-backend diagnostics, use `silo compare MODEL_PATH`; see [Backend 
 
 For presolve and scaling diagnostics without solving the model, use `silo presolve MODEL_PATH`; see [Presolve Diagnostics CLI](presolve_cli.md).
 
+For supported MIP JSON models, use `silo mip-solve MODEL_PATH`; see [MIP Solve CLI](mip_solve_cli.md).
+
 For the current example-by-example solve behavior matrix, see [Phase 4 Regression Checklist](phase4_regression_checklist.md).
 
 ## Basic Command
@@ -32,7 +34,7 @@ silo solve examples/json/production.json --solver revised
 
 Both backends are native SILO implementations. No external solver is called. The `tableau` backend remains the default for now, while `revised` is available for comparison and future basis-oriented workflows.
 
-`silo solve` is still the continuous LP solve path. The `--solver` flag selects an LP backend, not a MIP algorithm. MIP CLI exposure is being designed separately in [MIP CLI Exposure Design Note](../notes/16_mip_cli_exposure_design.md); the planned command is not implemented yet.
+`silo solve` is still the continuous LP solve path. The `--solver` flag selects an LP backend, not a MIP algorithm. MIP solving uses the separate `silo mip-solve` command and selects the LP relaxation backend with `--lp-solver`.
 
 ## Optional Presolve Before Solving
 

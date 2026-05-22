@@ -18,6 +18,8 @@ Phase 5F adds checked-in MIP JSON examples and regression tests for the Python b
 
 Phase 5G drafts the MIP CLI exposure design note before implementing a command.
 
+Phase 5H exposes the first `silo mip-solve` CLI command with LP relaxation backend selection, node-limit handling, solution JSON output, and deterministic regression tests.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.
