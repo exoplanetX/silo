@@ -22,6 +22,8 @@ Phase 5H exposes the first `silo mip-solve` CLI command with LP relaxation backe
 
 Phase 5I adds a subprocess regression matrix for module and console-script MIP CLI invocation while confirming that `silo solve` remains the LP-only command path.
 
+Phase 5J designs the future MIP diagnostics output contract, keeping default `mip-solve` solution JSON compact while reserving opt-in summary diagnostics and optional node logs for later implementation tasks.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.
