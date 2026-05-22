@@ -29,6 +29,16 @@ REQUIRED_DETAILS_FIELDS = {
     "node_limit",
     "lp_solver",
 }
+REQUIRED_NODE_LOG_FIELDS = {
+    "node_id",
+    "depth",
+    "lp_status",
+    "lp_objective",
+    "prune_reason",
+    "branching_variable",
+    "incumbent_value",
+    "message",
+}
 
 
 def test_cli_mip_solve_binary_knapsack_default_backend(capsys) -> None:
@@ -147,6 +157,47 @@ def test_cli_mip_solve_details_reports_revised_lp_backend(capsys) -> None:
     assert payload["diagnostics"]["termination_reason"] == "optimality_proven"
 
 
+def test_cli_mip_solve_details_node_log_includes_stable_entries(capsys) -> None:
+    exit_code = main(
+        [
+            "mip-solve",
+            str(MIP_EXAMPLE_ROOT / "binary_knapsack.json"),
+            "--details",
+            "--node-log",
+        ]
+    )
+
+    payload = _json_stdout(capsys)
+    diagnostics = payload["diagnostics"]
+    node_log = diagnostics["node_log"]
+
+    assert exit_code == 0
+    assert set(diagnostics) == REQUIRED_DETAILS_FIELDS | {"node_log"}
+    assert diagnostics["termination_reason"] == "optimality_proven"
+    assert isinstance(node_log, list)
+    assert node_log
+    assert {entry["node_id"] for entry in node_log} == set(range(len(node_log)))
+    assert set(node_log[0]) == REQUIRED_NODE_LOG_FIELDS
+    assert node_log[0]["node_id"] == 0
+    assert node_log[0]["depth"] == 0
+    assert isinstance(node_log[0]["lp_status"], str)
+    assert isinstance(node_log[0]["prune_reason"], str)
+    assert "primal_values" not in node_log[0]
+    assert "basis_status" not in node_log[0]
+
+
+def test_cli_mip_solve_rejects_node_log_without_details(capsys) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        main(["mip-solve", str(MIP_EXAMPLE_ROOT / "binary_knapsack.json"), "--node-log"])
+
+    captured = capsys.readouterr()
+
+    assert exc_info.value.code == 2
+    assert captured.out == ""
+    assert "--node-log" in captured.err
+    assert "--details" in captured.err
+
+
 def test_cli_mip_solve_details_infeasible_returns_nonzero(capsys) -> None:
     exit_code = main(
         ["mip-solve", str(MIP_EXAMPLE_ROOT / "infeasible_binary.json"), "--details"]
@@ -162,6 +213,28 @@ def test_cli_mip_solve_details_infeasible_returns_nonzero(capsys) -> None:
     assert diagnostics["termination_reason"] == "infeasible"
     assert diagnostics["incumbent_value"] is None
     assert diagnostics["relative_gap"] is None
+
+
+def test_cli_mip_solve_details_node_log_infeasible_returns_nonzero(capsys) -> None:
+    exit_code = main(
+        [
+            "mip-solve",
+            str(MIP_EXAMPLE_ROOT / "infeasible_binary.json"),
+            "--details",
+            "--node-log",
+        ]
+    )
+
+    payload = _json_stdout(capsys)
+    solution = payload["solution"]
+    diagnostics = payload["diagnostics"]
+
+    assert exit_code == 1
+    assert solution["status"] == "infeasible"
+    assert diagnostics["termination_reason"] == "infeasible"
+    assert len(diagnostics["node_log"]) == 1
+    assert diagnostics["node_log"][0]["lp_status"] == "infeasible"
+    assert diagnostics["node_log"][0]["prune_reason"] == "lp_infeasible"
 
 
 def test_cli_mip_solve_node_limit_zero_returns_iteration_limit(capsys) -> None:
@@ -202,6 +275,28 @@ def test_cli_mip_solve_details_node_limit_zero_reports_node_limit(capsys) -> Non
     assert diagnostics["node_count"] == 0
     assert diagnostics["nodes_processed"] == 0
     assert diagnostics["nodes_created"] == 1
+
+
+def test_cli_mip_solve_details_node_log_node_limit_zero_has_empty_log(capsys) -> None:
+    exit_code = main(
+        [
+            "mip-solve",
+            str(MIP_EXAMPLE_ROOT / "binary_knapsack.json"),
+            "--node-limit",
+            "0",
+            "--details",
+            "--node-log",
+        ]
+    )
+
+    payload = _json_stdout(capsys)
+    solution = payload["solution"]
+    diagnostics = payload["diagnostics"]
+
+    assert exit_code == 1
+    assert solution["status"] == "iteration_limit"
+    assert diagnostics["termination_reason"] == "node_limit"
+    assert diagnostics["node_log"] == []
 
 
 def test_cli_mip_solve_writes_solution_json_to_output_file(tmp_path, capsys) -> None:
@@ -249,6 +344,33 @@ def test_cli_mip_solve_details_writes_wrapper_to_output_file(tmp_path, capsys) -
     assert set(payload) == {"solution", "diagnostics"}
     assert payload["solution"]["status"] == "optimal"
     assert payload["diagnostics"]["termination_reason"] == "optimality_proven"
+
+
+def test_cli_mip_solve_details_node_log_writes_wrapper_to_output_file(
+    tmp_path, capsys
+) -> None:
+    output_path = tmp_path / "nested" / "mip_node_log.json"
+
+    exit_code = main(
+        [
+            "mip-solve",
+            str(MIP_EXAMPLE_ROOT / "binary_knapsack.json"),
+            "--details",
+            "--node-log",
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert captured.out == ""
+    assert captured.err == ""
+    assert payload["solution"]["status"] == "optimal"
+    assert payload["diagnostics"]["node_log"]
+    assert set(payload["diagnostics"]["node_log"][0]) == REQUIRED_NODE_LOG_FIELDS
 
 
 def test_cli_mip_solve_missing_model_path_returns_error(capsys) -> None:

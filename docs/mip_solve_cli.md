@@ -65,6 +65,16 @@ lp_solver
 
 Detailed node logs are not emitted by `--details`.
 
+Add `--node-log` to include one entry per processed branch-and-bound node:
+
+```bash
+silo mip-solve examples/mip/binary_knapsack.json --details --node-log
+```
+
+`--node-log` requires `--details`. Each entry includes node id, depth, LP relaxation
+status and objective, prune reason, branching variable, incumbent value, and message. It
+does not include LP tableaux, bases, full relaxation models, or primal/dual vectors.
+
 ## Output File
 
 ```bash
@@ -79,6 +89,9 @@ silo mip-solve examples/mip/binary_knapsack.json -o outputs/knapsack_solution.js
 
 When `--details` is present, `--output` writes the wrapper JSON instead of the compact
 solution JSON.
+
+When both `--details` and `--node-log` are present, `--output` writes the wrapper JSON with
+`diagnostics.node_log`.
 
 Generated files under `outputs/` are local run artifacts and should not be committed.
 
@@ -114,4 +127,4 @@ Regression coverage exercises both `python -m silo.cli.main mip-solve` and the i
 - No callbacks.
 - No branch-and-cut.
 - No MIP presolve.
-- No detailed node-log JSON yet.
+- No LP tableau, basis, or full relaxation dumps in node-log JSON.

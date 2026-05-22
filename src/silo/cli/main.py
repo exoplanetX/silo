@@ -57,6 +57,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Emit MIP summary diagnostics. Used only by the mip-solve command.",
     )
     parser.add_argument(
+        "--node-log",
+        action="store_true",
+        help="Include MIP node-log diagnostics. Requires --details.",
+    )
+    parser.add_argument(
         "--presolve",
         action="store_true",
         help="Run presolve before solving. Used only by the solve command.",
@@ -73,6 +78,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 0
 
+    if args.node_log and args.command != "mip-solve":
+        parser.error("The --node-log option is only supported by mip-solve --details.")
+
     if args.command == "solve":
         if not args.path:
             parser.error("The solve command requires a model file path.")
@@ -84,6 +92,8 @@ def main(argv: list[str] | None = None) -> int:
                 "The mip-solve command uses --lp-solver; --solver is reserved for "
                 "the LP solve command."
             )
+        if args.node_log and not args.details:
+            parser.error("The mip-solve --node-log option requires --details.")
         if args.presolve:
             parser.error("The mip-solve command does not support --presolve.")
         if not args.path:
@@ -95,6 +105,7 @@ def main(argv: list[str] | None = None) -> int:
             lp_solver_name,
             args.node_limit,
             details=args.details,
+            node_log=args.node_log,
         )
 
     if args.command == "compare":

@@ -26,6 +26,8 @@ Phase 5J designs the future MIP diagnostics output contract, keeping default `mi
 
 Phase 5K implements the first opt-in `silo mip-solve --details` summary diagnostics wrapper while keeping the default compact solution JSON unchanged and leaving detailed node logs for later work.
 
+Phase 5L adds optional `silo mip-solve --details --node-log` output for stable per-node branch-and-bound diagnostics without changing search logic, default output, or summary-only diagnostics.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.

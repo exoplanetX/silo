@@ -33,6 +33,7 @@ def test_cli_accepts_mip_solve_command() -> None:
     assert args.node_limit == 10_000
     assert args.lp_solver is None
     assert not args.details
+    assert not args.node_log
 
 
 def test_cli_accepts_mip_solve_details_flag() -> None:
@@ -40,6 +41,15 @@ def test_cli_accepts_mip_solve_details_flag() -> None:
     args = parser.parse_args(["mip-solve", "model.json", "--details"])
     assert args.command == "mip-solve"
     assert args.details
+    assert not args.node_log
+
+
+def test_cli_accepts_mip_solve_node_log_flag() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["mip-solve", "model.json", "--details", "--node-log"])
+    assert args.command == "mip-solve"
+    assert args.details
+    assert args.node_log
 
 
 def test_cli_help_mentions_presolve(capsys) -> None:
@@ -62,6 +72,7 @@ def test_cli_help_mentions_mip_solve_options(capsys) -> None:
     assert "--lp-solver" in captured.out
     assert "--node-limit" in captured.out
     assert "--details" in captured.out
+    assert "--node-log" in captured.out
 
 
 def test_cli_rejects_unknown_command() -> None:

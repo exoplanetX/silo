@@ -34,6 +34,16 @@ DETAILS_FIELDS = {
     "node_limit",
     "lp_solver",
 }
+NODE_LOG_FIELDS = {
+    "node_id",
+    "depth",
+    "lp_status",
+    "lp_objective",
+    "prune_reason",
+    "branching_variable",
+    "incumbent_value",
+    "message",
+}
 
 ENTRYPOINTS = [
     pytest.param((sys.executable, "-m", "silo.cli.main"), id="python-module"),
@@ -106,6 +116,48 @@ def test_mip_solve_details_summary_for_knapsack(entrypoint: tuple[str, ...]) -> 
     assert diagnostics["node_limit"] == 10_000
     assert diagnostics["lp_solver"] == "tableau"
     assert "node_log" not in diagnostics
+
+
+@pytest.mark.parametrize("entrypoint", ENTRYPOINTS)
+def test_mip_solve_details_node_log_for_knapsack(entrypoint: tuple[str, ...]) -> None:
+    result = _run_cli(
+        entrypoint,
+        "mip-solve",
+        MIP_EXAMPLE_ROOT / "binary_knapsack.json",
+        "--details",
+        "--node-log",
+    )
+
+    payload = _json_payload(result)
+    diagnostics = payload["diagnostics"]
+    node_log = diagnostics["node_log"]
+
+    assert result.returncode == 0
+    assert set(payload) == {"solution", "diagnostics"}
+    assert set(payload["solution"]) == SOLUTION_FIELDS
+    assert set(diagnostics) == DETAILS_FIELDS | {"node_log"}
+    assert diagnostics["termination_reason"] == "optimality_proven"
+    assert node_log
+    assert set(node_log[0]) == NODE_LOG_FIELDS
+    assert isinstance(node_log[0]["lp_status"], str)
+    assert isinstance(node_log[0]["prune_reason"], str)
+    assert "primal_values" not in node_log[0]
+    assert "basis_status" not in node_log[0]
+
+
+@pytest.mark.parametrize("entrypoint", ENTRYPOINTS)
+def test_mip_solve_node_log_requires_details(entrypoint: tuple[str, ...]) -> None:
+    result = _run_cli(
+        entrypoint,
+        "mip-solve",
+        MIP_EXAMPLE_ROOT / "binary_knapsack.json",
+        "--node-log",
+    )
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "--node-log" in result.stderr
+    assert "--details" in result.stderr
 
 
 @pytest.mark.parametrize("entrypoint", ENTRYPOINTS)
