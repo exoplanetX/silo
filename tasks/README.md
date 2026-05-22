@@ -73,6 +73,23 @@ Meaning:
 
 means the first version of the third task block issued on 2026-05-19.
 
+### 3.1 Task ID Uniqueness
+
+The `YYYYMMDD-TT-RR` prefix identifies a specific issued task identity. Two different task slugs must not share the same `YYYYMMDD-TT-RR` prefix.
+
+The `RR` component is only for revisions of the same task block. A new unrelated task on the same date must use the next available `TT` value, starting again at `RR = 01`.
+
+Before creating a new task file, Codex must scan existing files under both:
+
+```text
+tasks/codex/
+tasks/reports/
+```
+
+For the intended `YYYYMMDD` date, Codex must identify already used `TT` values and exact `YYYYMMDD-TT-RR` prefixes. If the intended prefix already exists for a different slug, Codex must choose the next available `TT` rather than reusing the prefix.
+
+Existing historical collisions are task-system debt. They must not be repaired by renaming immutable task files unless the user explicitly requests task-file maintenance.
+
 For execution reports:
 
 ```text

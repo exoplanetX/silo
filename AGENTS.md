@@ -36,5 +36,8 @@
 - Push failure is non-fatal. If push fails, Codex must preserve the local commit and record the failure in the execution report.
 - If Codex discovers a broader issue, it should document the issue in the report instead of fixing it inside the current task.
 - If a task needs revision, create a new `tasks/codex/YYYYMMDD-TT-RR_slug.md` file with an incremented revision number.
+- Before creating a new task file, Codex must scan existing `tasks/codex/` and `tasks/reports/` filenames for the same date. It must not reuse an existing `YYYYMMDD-TT-RR` prefix for a different slug.
+- Use `RR` only for revisions of the same task block. Use the next available `TT` for a new unrelated task on the same date.
+- Treat historical task ID collisions as reportable task-system debt, not as permission to rename immutable task files.
 - If the task naming, folder rules, or SILO-DOS rules need to change, update `tasks/README.md` first or in the same commit.
 - Responsibility boundary: the user sets priorities and approves scope; ChatGPT or the user may design phase strategy and approve phase transitions; Codex executes one issued task at a time from local repository rules; GitHub stores synchronized commits and remote collaboration state, but is not the source of task interpretation.
