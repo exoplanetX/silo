@@ -28,6 +28,8 @@ Phase 5K implements the first opt-in `silo mip-solve --details` summary diagnost
 
 Phase 5L adds optional `silo mip-solve --details --node-log` output for stable per-node branch-and-bound diagnostics without changing search logic, default output, or summary-only diagnostics.
 
+Phase 5M documents the node-log CLI workflow, including stdout and `--output` examples, without changing solver behavior.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.

@@ -75,6 +75,24 @@ silo mip-solve examples/mip/binary_knapsack.json --details --node-log
 status and objective, prune reason, branching variable, incumbent value, and message. It
 does not include LP tableaux, bases, full relaxation models, or primal/dual vectors.
 
+A representative node-log entry has this shape:
+
+```json
+{
+  "node_id": 0,
+  "depth": 0,
+  "lp_status": "optimal",
+  "lp_objective": 24.0,
+  "prune_reason": "not_pruned",
+  "branching_variable": "item_3",
+  "incumbent_value": null,
+  "message": "Branched on first fractional integer-restricted variable."
+}
+```
+
+The exact node log is deterministic for the current implementation, but it should be
+treated as diagnostic trace output, not as a stable mathematical solution field.
+
 ## Output File
 
 ```bash
@@ -92,6 +110,10 @@ solution JSON.
 
 When both `--details` and `--node-log` are present, `--output` writes the wrapper JSON with
 `diagnostics.node_log`.
+
+```bash
+silo mip-solve examples/mip/binary_knapsack.json --details --node-log --output outputs/knapsack_node_log.json
+```
 
 Generated files under `outputs/` are local run artifacts and should not be committed.
 
