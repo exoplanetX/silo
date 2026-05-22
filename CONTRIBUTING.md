@@ -24,6 +24,19 @@ For local quality checks, use:
 python scripts/check_quality.py
 ```
 
+## AI/Codex-Assisted Development
+
+AI-assisted development must follow the repository task system.
+
+- `tasks/README.md` is the source of truth for task directory rules and SILO-DOS.
+- `AGENTS.md` defines agent-facing solver and workflow rules.
+- Long-term phase plans belong under `tasks/phases/`.
+- Issued Codex task contracts belong under `tasks/codex/`.
+- Execution reports belong under `tasks/reports/`.
+- Codex tasks should be atomic, scope-locked, and executed one at a time.
+- Do not modify existing issued task files unless the user explicitly requests task-file maintenance.
+- Pushes to GitHub should follow the task-declared Git mode or explicit user instruction.
+
 ## Module Boundaries
 
 Keep dependencies aligned with the project layering:
