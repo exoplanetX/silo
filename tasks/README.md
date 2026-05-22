@@ -103,3 +103,115 @@ tasks/codex/20260519-03-02_model-core.md
 If the task system itself needs to change in the future, `tasks/README.md` must be updated first or in the same commit.
 
 No future task-directory restructuring should be done without updating this rule file.
+
+## 6. SILO Development Operating System
+
+The SILO Development Operating System, abbreviated as SILO-DOS, is the operating protocol that governs how solver development knowledge is converted into controlled Codex tasks.
+
+SILO-DOS does not replace the folder roles, naming rules, revision rule, or rule-change rule above. It adds an execution layer on top of the existing `tasks/` convention:
+
+- `tasks/phases/` contains long-term development knowledge.
+- `tasks/codex/` contains immutable issued task contracts.
+- `tasks/reports/` contains execution memory.
+- `tasks/` must not be treated as a general notes folder.
+
+### 6.1 Phase-to-Task Rule
+
+A phase file is not itself a Codex task. A phase file contains goals, scope, expected files, tests, acceptance criteria, and development knowledge for a broader development phase.
+
+A Codex task must be traceable to one of the following:
+
+- a specific phase item;
+- an explicit maintenance need;
+- a user-approved process task.
+
+Only one atomic Codex task should be issued and executed at a time. If a phase item is too large to complete safely in one step, it must be split into multiple issued task files under `tasks/codex/`.
+
+### 6.2 Atomic Task Rule
+
+Each Codex task must solve exactly one primary problem. A task may include supporting documentation, tests, and reports, but those supporting changes must serve the same primary objective.
+
+Every issued Codex task should include:
+
+- task metadata;
+- objective;
+- phase reference;
+- task type;
+- scope lock;
+- allowed changes;
+- forbidden changes;
+- required tests or checks;
+- acceptance criteria;
+- stop conditions;
+- expected report path;
+- Git mode.
+
+If any of these fields are missing, Codex should infer the safest narrow interpretation from the task text and record the ambiguity in the execution report.
+
+### 6.3 Scope Lock Rule
+
+Codex must stay within the task objective and the allowed files. The allowed change list is a boundary, not a suggestion.
+
+If Codex discovers a broader issue while executing a task, it should document the issue in the report instead of fixing it within the same task. A broader issue should become a later atomic task unless the user explicitly expands the current task scope.
+
+Codex must not use a small task as an opportunity for unrelated cleanup, refactoring, formatting, solver behavior changes, or documentation rewrites.
+
+### 6.4 Git Mode Rule
+
+Each task should declare one Git mode:
+
+```text
+no-git
+local-commit
+push-on-success
+sync-only
+```
+
+The modes are:
+
+- `no-git`: modify files only; do not commit or push.
+- `local-commit`: commit locally after successful checks; do not push. This is the default mode.
+- `push-on-success`: commit locally and attempt one push only after successful checks.
+- `sync-only`: do not modify project files; only synchronize already committed local changes with the remote repository.
+
+Push failure is non-fatal. If a push fails, Codex must preserve the local commit, report the failure clearly, and record the failed push in the execution report.
+
+### 6.5 Execution Report Rule
+
+Every executed task must create a report under `tasks/reports/` using the matching task ID and slug:
+
+```text
+tasks/reports/YYYYMMDD-TT-RR_slug_report.md
+```
+
+The report should include:
+
+- task objective;
+- files changed;
+- checks or tests run;
+- results;
+- deviations from scope, if any;
+- Git status before and after;
+- local commit hash, if created;
+- push attempted or skipped;
+- unresolved issues;
+- next recommended atomic task.
+
+Reports must record execution memory. They must not revise the issued task contract.
+
+### 6.6 One-Step Execution Rule
+
+Codex must stop after completing one atomic task. It must not automatically continue to the next task, phase item, cleanup item, or follow-on implementation unless the user explicitly asks it to continue.
+
+The next recommended atomic task may be recorded in the report, but recommendation is not execution permission.
+
+### 6.7 Responsibility Boundary
+
+The intended responsibility split is:
+
+- The user may set priorities, approve task scope, request pushes, and resolve conflicts.
+- ChatGPT or the user may design phase strategy, revise high-level direction, and approve phase transitions.
+- Codex executes one task at a time according to issued task contracts and local repository rules.
+- GitHub stores synchronized commits and remote collaboration state; it is not the source of task interpretation.
+
+Codex should not depend on a live ChatGPT conversation to interpret task boundaries. It should rely on `tasks/README.md`, phase files, issued task files, prior reports, and explicit user instructions in the current Codex session.
