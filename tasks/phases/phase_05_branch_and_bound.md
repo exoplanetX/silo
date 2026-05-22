@@ -24,6 +24,8 @@ Phase 5I adds a subprocess regression matrix for module and console-script MIP C
 
 Phase 5J designs the future MIP diagnostics output contract, keeping default `mip-solve` solution JSON compact while reserving opt-in summary diagnostics and optional node logs for later implementation tasks.
 
+Phase 5K implements the first opt-in `silo mip-solve --details` summary diagnostics wrapper while keeping the default compact solution JSON unchanged and leaving detailed node logs for later work.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.

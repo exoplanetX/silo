@@ -22,6 +22,18 @@ SOLUTION_FIELDS = {
     "message",
 }
 COMPARE_FIELDS = {"model_path", "consistent", "tolerance", "checks", "tableau", "revised"}
+DETAILS_FIELDS = {
+    "node_count",
+    "nodes_processed",
+    "nodes_created",
+    "nodes_pruned",
+    "incumbent_value",
+    "best_bound",
+    "relative_gap",
+    "termination_reason",
+    "node_limit",
+    "lp_solver",
+}
 
 ENTRYPOINTS = [
     pytest.param((sys.executable, "-m", "silo.cli.main"), id="python-module"),
@@ -70,6 +82,33 @@ def test_mip_solve_revised_backend_for_knapsack(entrypoint: tuple[str, ...]) -> 
 
 
 @pytest.mark.parametrize("entrypoint", ENTRYPOINTS)
+def test_mip_solve_details_summary_for_knapsack(entrypoint: tuple[str, ...]) -> None:
+    result = _run_cli(
+        entrypoint,
+        "mip-solve",
+        MIP_EXAMPLE_ROOT / "binary_knapsack.json",
+        "--details",
+    )
+
+    payload = _json_payload(result)
+    solution = payload["solution"]
+    diagnostics = payload["diagnostics"]
+
+    assert result.returncode == 0
+    assert set(payload) == {"solution", "diagnostics"}
+    assert set(solution) == SOLUTION_FIELDS
+    assert set(diagnostics) == DETAILS_FIELDS
+    assert solution["status"] == "optimal"
+    assert solution["objective_value"] == pytest.approx(22.0)
+    assert diagnostics["node_count"] == diagnostics["nodes_processed"]
+    assert diagnostics["termination_reason"] == "optimality_proven"
+    assert diagnostics["relative_gap"] == pytest.approx(0.0)
+    assert diagnostics["node_limit"] == 10_000
+    assert diagnostics["lp_solver"] == "tableau"
+    assert "node_log" not in diagnostics
+
+
+@pytest.mark.parametrize("entrypoint", ENTRYPOINTS)
 def test_mip_solve_infeasible_example_returns_nonzero(entrypoint: tuple[str, ...]) -> None:
     result = _run_cli(entrypoint, "mip-solve", MIP_EXAMPLE_ROOT / "infeasible_binary.json")
 
@@ -79,6 +118,25 @@ def test_mip_solve_infeasible_example_returns_nonzero(entrypoint: tuple[str, ...
     assert set(payload) == SOLUTION_FIELDS
     assert payload["status"] == "infeasible"
     assert payload["objective_value"] is None
+
+
+@pytest.mark.parametrize("entrypoint", ENTRYPOINTS)
+def test_mip_solve_details_infeasible_example_returns_nonzero(
+    entrypoint: tuple[str, ...],
+) -> None:
+    result = _run_cli(
+        entrypoint,
+        "mip-solve",
+        MIP_EXAMPLE_ROOT / "infeasible_binary.json",
+        "--details",
+    )
+
+    payload = _json_payload(result)
+
+    assert result.returncode == 1
+    assert payload["solution"]["status"] == "infeasible"
+    assert payload["diagnostics"]["termination_reason"] == "infeasible"
+    assert payload["diagnostics"]["relative_gap"] is None
 
 
 @pytest.mark.parametrize("entrypoint", ENTRYPOINTS)

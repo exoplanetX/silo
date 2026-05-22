@@ -1,11 +1,13 @@
+import json
 import sys
 from pathlib import Path
+from typing import Any
 
 from silo.cli.solvers import create_solver
 from silo.core.status import SolverStatus
 from silo.io.json_reader import read_json_model
-from silo.io.solution_writer import solution_to_json, write_solution_json
-from silo.mip.branch_and_bound import BranchAndBoundSolver
+from silo.io.solution_writer import solution_to_dict, solution_to_json, write_solution_json
+from silo.mip.branch_and_bound import BranchAndBoundResult, BranchAndBoundSolver
 
 
 def mip_solve(
@@ -13,6 +15,7 @@ def mip_solve(
     output_path: str | None,
     lp_solver_name: str,
     node_limit: int,
+    details: bool = False,
 ) -> int:
     path = Path(model_path)
     if not path.exists():
@@ -29,15 +32,98 @@ def mip_solve(
         lp_solver=create_solver(lp_solver_name),
         node_limit=node_limit,
     )
-    solution = solver.solve(model)
+    result = solver.solve_with_details(model)
+    solution = result.solution
 
     try:
         if output_path:
-            write_solution_json(solution, output_path)
+            if details:
+                _write_details_json(result, output_path, lp_solver_name, node_limit)
+            else:
+                write_solution_json(solution, output_path)
         else:
-            print(solution_to_json(solution), end="")
+            if details:
+                print(details_to_json(result, lp_solver_name, node_limit), end="")
+            else:
+                print(solution_to_json(solution), end="")
     except OSError as exc:
         print(f"Error: failed to write solution: {exc}", file=sys.stderr)
         return 1
 
     return 0 if solution.status == SolverStatus.OPTIMAL else 1
+
+
+def details_to_dict(
+    result: BranchAndBoundResult,
+    lp_solver_name: str,
+    node_limit: int,
+) -> dict[str, Any]:
+    return {
+        "solution": solution_to_dict(result.solution),
+        "diagnostics": _diagnostics_to_dict(result, lp_solver_name, node_limit),
+    }
+
+
+def details_to_json(
+    result: BranchAndBoundResult,
+    lp_solver_name: str,
+    node_limit: int,
+) -> str:
+    return json.dumps(
+        details_to_dict(result, lp_solver_name, node_limit),
+        indent=2,
+        sort_keys=True,
+    ) + "\n"
+
+
+def _diagnostics_to_dict(
+    result: BranchAndBoundResult,
+    lp_solver_name: str,
+    node_limit: int,
+) -> dict[str, Any]:
+    return {
+        "node_count": result.nodes_processed,
+        "nodes_processed": result.nodes_processed,
+        "nodes_created": result.nodes_created,
+        "nodes_pruned": result.nodes_pruned,
+        "incumbent_value": result.incumbent_value,
+        "best_bound": result.best_bound,
+        "relative_gap": _relative_gap(result.best_bound, result.incumbent_value),
+        "termination_reason": _termination_reason(result.solution.status),
+        "node_limit": node_limit,
+        "lp_solver": lp_solver_name,
+    }
+
+
+def _relative_gap(best_bound: float | None, incumbent_value: float | None) -> float | None:
+    if best_bound is None or incumbent_value is None:
+        return None
+    return abs(best_bound - incumbent_value) / max(1.0, abs(incumbent_value))
+
+
+def _termination_reason(status: SolverStatus) -> str:
+    if status == SolverStatus.OPTIMAL:
+        return "optimality_proven"
+    if status == SolverStatus.INFEASIBLE:
+        return "infeasible"
+    if status == SolverStatus.UNBOUNDED:
+        return "unbounded"
+    if status == SolverStatus.ITERATION_LIMIT:
+        return "node_limit"
+    if status == SolverStatus.NUMERICAL_ISSUE:
+        return "numerical_issue"
+    return "error"
+
+
+def _write_details_json(
+    result: BranchAndBoundResult,
+    path: str | Path,
+    lp_solver_name: str,
+    node_limit: int,
+) -> None:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        details_to_json(result, lp_solver_name, node_limit),
+        encoding="utf-8",
+    )

@@ -52,6 +52,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Branch-and-bound node limit. Used only by the mip-solve command.",
     )
     parser.add_argument(
+        "--details",
+        action="store_true",
+        help="Emit MIP summary diagnostics. Used only by the mip-solve command.",
+    )
+    parser.add_argument(
         "--presolve",
         action="store_true",
         help="Run presolve before solving. Used only by the solve command.",
@@ -84,7 +89,13 @@ def main(argv: list[str] | None = None) -> int:
         if not args.path:
             parser.error("The mip-solve command requires a model file path.")
         lp_solver_name = args.lp_solver if args.lp_solver is not None else "tableau"
-        return mip_solve(args.path, args.output, lp_solver_name, args.node_limit)
+        return mip_solve(
+            args.path,
+            args.output,
+            lp_solver_name,
+            args.node_limit,
+            details=args.details,
+        )
 
     if args.command == "compare":
         if not args.path:

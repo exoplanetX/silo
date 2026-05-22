@@ -38,6 +38,33 @@ silo mip-solve examples/mip/binary_knapsack.json --node-limit 1000
 
 The value must be a nonnegative integer. If the search reaches the node limit before proving optimality, the command returns solution status `iteration_limit` and exit code `1`.
 
+## Summary Diagnostics
+
+The default output remains the compact solution JSON. Use `--details` to emit a wrapper
+with the compact solution plus branch-and-bound summary diagnostics:
+
+```bash
+silo mip-solve examples/mip/binary_knapsack.json --details
+```
+
+The wrapper has top-level `solution` and `diagnostics` objects. The `solution` object uses
+the same fields as default output. The `diagnostics` object includes:
+
+```text
+node_count
+nodes_processed
+nodes_created
+nodes_pruned
+incumbent_value
+best_bound
+relative_gap
+termination_reason
+node_limit
+lp_solver
+```
+
+Detailed node logs are not emitted by `--details`.
+
 ## Output File
 
 ```bash
@@ -49,6 +76,9 @@ The short form is also supported:
 ```bash
 silo mip-solve examples/mip/binary_knapsack.json -o outputs/knapsack_solution.json
 ```
+
+When `--details` is present, `--output` writes the wrapper JSON instead of the compact
+solution JSON.
 
 Generated files under `outputs/` are local run artifacts and should not be committed.
 
@@ -84,4 +114,4 @@ Regression coverage exercises both `python -m silo.cli.main mip-solve` and the i
 - No callbacks.
 - No branch-and-cut.
 - No MIP presolve.
-- No MIP detailed JSON or node-count JSON yet.
+- No detailed node-log JSON yet.
