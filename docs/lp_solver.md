@@ -48,7 +48,7 @@ SILO currently exposes two native LP backends through the CLI. The `tableau` bac
 
 The MIP layer now includes a deterministic LP relaxation builder for the first Phase 5 branch-and-bound scope. It converts binary and bounded nonnegative integer variables into continuous relaxation variables and represents their finite upper bounds as ordinary linear rows before calling an LP backend. This keeps the tableau and revised simplex solvers unchanged: they still receive only continuous maximization LPs with nonnegative variables and no direct finite variable upper bounds.
 
-The MIP layer now has a small Python `BranchAndBoundSolver` API for binary and bounded nonnegative integer examples. SILO still does not expose a MIP CLI path.
+The MIP layer now has a small Python `BranchAndBoundSolver` API and a separate `silo mip-solve` CLI command for supported binary and bounded nonnegative integer examples. The MIP command uses branch-and-bound and calls LP backends internally for continuous relaxations; tableau and revised simplex remain LP algorithms, not MIP algorithms.
 
 ## Revised Simplex Layer
 
