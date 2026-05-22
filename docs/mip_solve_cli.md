@@ -71,6 +71,9 @@ silo mip-solve examples/mip/infeasible_binary.json
 
 The infeasible example emits solution JSON with status `infeasible` and exits with code `1`.
 
+Regression coverage exercises both `python -m silo.cli.main mip-solve` and the installed
+`silo mip-solve` console script on the checked-in MIP examples.
+
 ## Current Limitations
 
 - Maximization only.

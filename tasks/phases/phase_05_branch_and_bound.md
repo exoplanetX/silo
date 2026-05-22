@@ -20,6 +20,8 @@ Phase 5G drafts the MIP CLI exposure design note before implementing a command.
 
 Phase 5H exposes the first `silo mip-solve` CLI command with LP relaxation backend selection, node-limit handling, solution JSON output, and deterministic regression tests.
 
+Phase 5I adds a subprocess regression matrix for module and console-script MIP CLI invocation while confirming that `silo solve` remains the LP-only command path.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.
