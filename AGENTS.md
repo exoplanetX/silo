@@ -23,10 +23,18 @@
 
 ## Task Management Rules
 
-- Long-term phase plans belong under `tasks/phases/`.
-- Issued Codex task prompts belong under `tasks/codex/`.
-- Optional execution reports belong under `tasks/reports/`.
+- `tasks/README.md` is the source of truth for task directory rules and the SILO Development Operating System (SILO-DOS). AI coding agents must read `tasks/README.md` before issuing or executing task files.
+- Long-term development knowledge belongs under `tasks/phases/`.
+- Issued Codex task contracts belong under `tasks/codex/`.
+- Execution memory belongs under `tasks/reports/`.
 - Files under `tasks/codex/` are immutable after creation. Coding agents may read them, but must not edit, rename, delete, or move existing files under `tasks/codex/` unless the user explicitly asks for task-file maintenance.
+- Each Codex task must be atomic and solve exactly one primary problem.
+- Each task must obey its scope lock, allowed changes, forbidden changes, stop conditions, required checks, acceptance criteria, expected report path, and Git mode.
+- Codex must stop after one atomic task. It must not automatically continue to the next task, enter a new phase, or expand task scope without explicit user instruction.
+- Default Git mode is `local-commit` unless the issued task states otherwise.
+- Codex must not push to GitHub unless the task Git mode is `push-on-success`, the task is `sync-only`, or the user explicitly requests a push.
+- Push failure is non-fatal. If push fails, Codex must preserve the local commit and record the failure in the execution report.
+- If Codex discovers a broader issue, it should document the issue in the report instead of fixing it inside the current task.
 - If a task needs revision, create a new `tasks/codex/YYYYMMDD-TT-RR_slug.md` file with an incremented revision number.
-- If an execution report is needed, create it under `tasks/reports/` instead of modifying the issued task file.
-- If the task naming or folder rules need to change, update `tasks/README.md` first or in the same commit.
+- If the task naming, folder rules, or SILO-DOS rules need to change, update `tasks/README.md` first or in the same commit.
+- Responsibility boundary: the user sets priorities and approves scope; ChatGPT or the user may design phase strategy and approve phase transitions; Codex executes one issued task at a time from local repository rules; GitHub stores synchronized commits and remote collaboration state, but is not the source of task interpretation.
