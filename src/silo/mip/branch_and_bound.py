@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 from math import isinf
 
@@ -5,6 +6,14 @@ from silo.core.enums import OptimizationSense, VariableType
 from silo.core.model import Model
 from silo.core.solution import Solution
 from silo.core.status import SolverStatus
+from silo.cuts.callbacks import (
+    CallbackEvent,
+    CallbackHook,
+    CutCallback,
+    dispatch_callback_events,
+)
+from silo.cuts.cut_pool import CutPool
+from silo.cuts.separator import Separator, SeparatorContext, separate_cuts
 from silo.lp.base import LPSolver
 from silo.lp.simplex.tableau import TableauSimplexSolver
 from silo.mip.branching import (
@@ -38,11 +47,22 @@ class BranchAndBoundSolver:
         self,
         lp_solver: LPSolver | None = None,
         node_limit: int = 10_000,
+        separator: Separator | None = None,
+        callbacks: Iterable[CutCallback] | None = None,
     ) -> None:
         if node_limit < 0:
             raise ValueError("Node limit must be nonnegative.")
+        if separator is not None and not isinstance(separator, Separator):
+            raise TypeError("Branch-and-bound separator must satisfy the Separator protocol.")
         self.lp_solver = lp_solver if lp_solver is not None else TableauSimplexSolver()
         self.node_limit = node_limit
+        self.separator = separator
+        self.callbacks = tuple(callbacks) if callbacks is not None else ()
+        for callback in self.callbacks:
+            if not isinstance(callback, CutCallback):
+                raise TypeError(
+                    "Branch-and-bound callbacks must satisfy the CutCallback protocol."
+                )
 
     def solve(self, model: Model) -> Solution:
         return self.solve_with_details(model).solution
@@ -51,9 +71,11 @@ class BranchAndBoundSolver:
         try:
             integer_variable_names = _validate_supported_mip_scope(model)
         except ValueError as exc:
-            return _terminal_result(
-                Solution(status=SolverStatus.ERROR, message=str(exc)),
-                status_message=str(exc),
+            return self._complete_result(
+                _terminal_result(
+                    Solution(status=SolverStatus.ERROR, message=str(exc)),
+                    status_message=str(exc),
+                )
             )
 
         tree = SearchTree(open_nodes=[root_node()])
@@ -65,12 +87,22 @@ class BranchAndBoundSolver:
         nodes_pruned = 0
         best_bound: float | None = None
         variable_names = tuple(model.variable_names())
+        cut_pool = (
+            CutPool(variable_order=variable_names)
+            if self.separator is not None
+            else None
+        )
 
         while tree.open_nodes and nodes_processed < self.node_limit:
             node = tree.pop()
             if node is None:
                 break
             nodes_processed += 1
+            self._dispatch_basic_node_event(
+                hook=CallbackHook.BEFORE_NODE_SOLVE,
+                node=node,
+                incumbent=incumbent,
+            )
 
             try:
                 relaxation = build_lp_relaxation(
@@ -80,20 +112,23 @@ class BranchAndBoundSolver:
             except ValueError as exc:
                 solution = Solution(status=SolverStatus.ERROR, message=str(exc))
                 logs.append(_log_error(node, solution))
-                return BranchAndBoundResult(
-                    solution=solution,
-                    nodes_processed=nodes_processed,
-                    nodes_created=nodes_created,
-                    nodes_pruned=nodes_pruned,
-                    incumbent_value=incumbent.objective_value,
-                    best_bound=best_bound,
-                    log=tuple(logs),
-                    status_message=solution.message,
+                return self._complete_result(
+                    BranchAndBoundResult(
+                        solution=solution,
+                        nodes_processed=nodes_processed,
+                        nodes_created=nodes_created,
+                        nodes_pruned=nodes_pruned,
+                        incumbent_value=incumbent.objective_value,
+                        best_bound=best_bound,
+                        log=tuple(logs),
+                        status_message=solution.message,
+                    )
                 )
 
             lp_solution = self.lp_solver.solve(relaxation.model)
             if lp_solution.objective_value is not None:
                 best_bound = _max_optional(best_bound, lp_solution.objective_value)
+            self._dispatch_lp_relaxation_event(node, lp_solution, incumbent)
 
             if lp_solution.status == SolverStatus.INFEASIBLE:
                 nodes_pruned += 1
@@ -105,6 +140,12 @@ class BranchAndBoundSolver:
                         incumbent_value=incumbent.objective_value,
                         message="LP relaxation is infeasible.",
                     )
+                )
+                self._dispatch_node_prune_event(
+                    node=node,
+                    lp_solution=lp_solution,
+                    prune_reason=PruneReason.LP_INFEASIBLE,
+                    incumbent=incumbent,
                 )
                 continue
 
@@ -123,29 +164,39 @@ class BranchAndBoundSolver:
                         message=solution.message,
                     )
                 )
-                return BranchAndBoundResult(
-                    solution=solution,
-                    nodes_processed=nodes_processed,
-                    nodes_created=nodes_created,
-                    nodes_pruned=nodes_pruned,
-                    incumbent_value=incumbent.objective_value,
-                    best_bound=best_bound,
-                    log=tuple(logs),
-                    status_message=solution.message,
+                self._dispatch_node_prune_event(
+                    node=node,
+                    lp_solution=lp_solution,
+                    prune_reason=PruneReason.UNBOUNDED,
+                    incumbent=incumbent,
+                )
+                return self._complete_result(
+                    BranchAndBoundResult(
+                        solution=solution,
+                        nodes_processed=nodes_processed,
+                        nodes_created=nodes_created,
+                        nodes_pruned=nodes_pruned,
+                        incumbent_value=incumbent.objective_value,
+                        best_bound=best_bound,
+                        log=tuple(logs),
+                        status_message=solution.message,
+                    )
                 )
 
             if lp_solution.status in (SolverStatus.ERROR, SolverStatus.NUMERICAL_ISSUE):
                 solution = Solution(status=lp_solution.status, message=lp_solution.message)
                 logs.append(_log_error(node, solution))
-                return BranchAndBoundResult(
-                    solution=solution,
-                    nodes_processed=nodes_processed,
-                    nodes_created=nodes_created,
-                    nodes_pruned=nodes_pruned,
-                    incumbent_value=incumbent.objective_value,
-                    best_bound=best_bound,
-                    log=tuple(logs),
-                    status_message=solution.message,
+                return self._complete_result(
+                    BranchAndBoundResult(
+                        solution=solution,
+                        nodes_processed=nodes_processed,
+                        nodes_created=nodes_created,
+                        nodes_pruned=nodes_pruned,
+                        incumbent_value=incumbent.objective_value,
+                        best_bound=best_bound,
+                        log=tuple(logs),
+                        status_message=solution.message,
+                    )
                 )
 
             if lp_solution.status != SolverStatus.OPTIMAL:
@@ -154,15 +205,43 @@ class BranchAndBoundSolver:
                     message=f"Unexpected LP relaxation status: {lp_solution.status.value}",
                 )
                 logs.append(_log_error(node, solution))
-                return BranchAndBoundResult(
-                    solution=solution,
-                    nodes_processed=nodes_processed,
-                    nodes_created=nodes_created,
-                    nodes_pruned=nodes_pruned,
-                    incumbent_value=incumbent.objective_value,
-                    best_bound=best_bound,
-                    log=tuple(logs),
-                    status_message=solution.message,
+                return self._complete_result(
+                    BranchAndBoundResult(
+                        solution=solution,
+                        nodes_processed=nodes_processed,
+                        nodes_created=nodes_created,
+                        nodes_pruned=nodes_pruned,
+                        incumbent_value=incumbent.objective_value,
+                        best_bound=best_bound,
+                        log=tuple(logs),
+                        status_message=solution.message,
+                    )
+                )
+
+            try:
+                separator_error = self._run_noop_separator_boundary(
+                    variable_names=variable_names,
+                    node=node,
+                    lp_solution=lp_solution,
+                    incumbent=incumbent,
+                    cut_pool=cut_pool,
+                )
+            except (TypeError, ValueError) as exc:
+                separator_error = str(exc)
+            if separator_error is not None:
+                solution = Solution(status=SolverStatus.ERROR, message=separator_error)
+                logs.append(_log_error(node, solution))
+                return self._complete_result(
+                    BranchAndBoundResult(
+                        solution=solution,
+                        nodes_processed=nodes_processed,
+                        nodes_created=nodes_created,
+                        nodes_pruned=nodes_pruned,
+                        incumbent_value=incumbent.objective_value,
+                        best_bound=best_bound,
+                        log=tuple(logs),
+                        status_message=solution.message,
+                    )
                 )
 
             if _is_bound_dominated(lp_solution, incumbent):
@@ -176,6 +255,12 @@ class BranchAndBoundSolver:
                         message="LP bound cannot improve the incumbent.",
                     )
                 )
+                self._dispatch_node_prune_event(
+                    node=node,
+                    lp_solution=lp_solution,
+                    prune_reason=PruneReason.BOUND_DOMINATED,
+                    incumbent=incumbent,
+                )
                 continue
 
             try:
@@ -187,21 +272,24 @@ class BranchAndBoundSolver:
             except ValueError as exc:
                 solution = Solution(status=SolverStatus.ERROR, message=str(exc))
                 logs.append(_log_error(node, solution))
-                return BranchAndBoundResult(
-                    solution=solution,
-                    nodes_processed=nodes_processed,
-                    nodes_created=nodes_created,
-                    nodes_pruned=nodes_pruned,
-                    incumbent_value=incumbent.objective_value,
-                    best_bound=best_bound,
-                    log=tuple(logs),
-                    status_message=solution.message,
+                return self._complete_result(
+                    BranchAndBoundResult(
+                        solution=solution,
+                        nodes_processed=nodes_processed,
+                        nodes_created=nodes_created,
+                        nodes_pruned=nodes_pruned,
+                        incumbent_value=incumbent.objective_value,
+                        best_bound=best_bound,
+                        log=tuple(logs),
+                        status_message=solution.message,
+                    )
                 )
 
             if branching_variable is None:
                 nodes_pruned += 1
                 candidate = _mip_candidate_solution(lp_solution, integer_variable_names)
                 incumbent = incumbent.update(candidate)
+                self._dispatch_incumbent_update_event(node, lp_solution, incumbent)
                 logs.append(
                     _log_node(
                         node=node,
@@ -210,6 +298,12 @@ class BranchAndBoundSolver:
                         incumbent_value=incumbent.objective_value,
                         message="LP relaxation solution is integer feasible.",
                     )
+                )
+                self._dispatch_node_prune_event(
+                    node=node,
+                    lp_solution=lp_solution,
+                    prune_reason=PruneReason.INTEGER_FEASIBLE,
+                    incumbent=incumbent,
                 )
                 continue
 
@@ -224,6 +318,7 @@ class BranchAndBoundSolver:
             # Stack is LIFO, so push right first to process left first.
             tree.push(right_child)
             tree.push(left_child)
+            self._dispatch_child_creation_event(node, lp_solution, branching_variable, incumbent)
             logs.append(
                 _log_node(
                     node=node,
@@ -237,44 +332,231 @@ class BranchAndBoundSolver:
 
         if tree.open_nodes:
             solution = _node_limit_solution(incumbent)
-            return BranchAndBoundResult(
-                solution=solution,
-                nodes_processed=nodes_processed,
-                nodes_created=nodes_created,
-                nodes_pruned=nodes_pruned,
-                incumbent_value=incumbent.objective_value,
-                best_bound=best_bound,
-                log=tuple(logs),
-                status_message=solution.message,
+            return self._complete_result(
+                BranchAndBoundResult(
+                    solution=solution,
+                    nodes_processed=nodes_processed,
+                    nodes_created=nodes_created,
+                    nodes_pruned=nodes_pruned,
+                    incumbent_value=incumbent.objective_value,
+                    best_bound=best_bound,
+                    log=tuple(logs),
+                    status_message=solution.message,
+                )
             )
 
         if incumbent.solution is not None:
             solution = _final_optimal_solution(incumbent.solution)
-            return BranchAndBoundResult(
-                solution=solution,
-                nodes_processed=nodes_processed,
-                nodes_created=nodes_created,
-                nodes_pruned=nodes_pruned,
-                incumbent_value=solution.objective_value,
-                best_bound=solution.objective_value,
-                log=tuple(logs),
-                status_message=solution.message,
+            return self._complete_result(
+                BranchAndBoundResult(
+                    solution=solution,
+                    nodes_processed=nodes_processed,
+                    nodes_created=nodes_created,
+                    nodes_pruned=nodes_pruned,
+                    incumbent_value=solution.objective_value,
+                    best_bound=solution.objective_value,
+                    log=tuple(logs),
+                    status_message=solution.message,
+                )
             )
 
         solution = Solution(
             status=SolverStatus.INFEASIBLE,
             message="Branch-and-bound proved the MIP infeasible.",
         )
-        return BranchAndBoundResult(
-            solution=solution,
-            nodes_processed=nodes_processed,
-            nodes_created=nodes_created,
-            nodes_pruned=nodes_pruned,
-            incumbent_value=None,
-            best_bound=best_bound,
-            log=tuple(logs),
-            status_message=solution.message,
+        return self._complete_result(
+            BranchAndBoundResult(
+                solution=solution,
+                nodes_processed=nodes_processed,
+                nodes_created=nodes_created,
+                nodes_pruned=nodes_pruned,
+                incumbent_value=None,
+                best_bound=best_bound,
+                log=tuple(logs),
+                status_message=solution.message,
+            )
         )
+
+    def _run_noop_separator_boundary(
+        self,
+        *,
+        variable_names: tuple[str, ...],
+        node: MIPNode,
+        lp_solution: Solution,
+        incumbent: Incumbent,
+        cut_pool: CutPool | None,
+    ) -> str | None:
+        if self.separator is None:
+            return None
+        relaxation_values = {
+            variable_name: lp_solution.primal_values[variable_name]
+            for variable_name in variable_names
+            if variable_name in lp_solution.primal_values
+        }
+        context = SeparatorContext(
+            variable_names=variable_names,
+            node_id=node.id,
+            relaxation_values=relaxation_values,
+            cut_pool=cut_pool,
+        )
+        candidates = separate_cuts(self.separator, context)
+        cut_ids = tuple(
+            candidate.metadata.cut_id
+            for candidate in candidates
+            if candidate.metadata.cut_id is not None
+        )
+        if self.callbacks:
+            self._dispatch_callback_event(
+                CallbackEvent(
+                    hook=CallbackHook.AFTER_CANDIDATE_CUT_SEPARATION,
+                    node_id=node.id,
+                    depth=node.depth,
+                    lp_status=lp_solution.status.value,
+                    lp_objective=lp_solution.objective_value,
+                    incumbent_objective=incumbent.objective_value,
+                    cut_count=len(candidates),
+                    cut_ids=cut_ids,
+                )
+            )
+        if candidates:
+            return (
+                "Branch-and-bound no-op cut integration does not materialize generated "
+                "cuts."
+            )
+        if self.callbacks:
+            self._dispatch_callback_event(
+                CallbackEvent(
+                    hook=CallbackHook.AFTER_CUT_POOL_UPDATE,
+                    node_id=node.id,
+                    depth=node.depth,
+                    lp_status=lp_solution.status.value,
+                    lp_objective=lp_solution.objective_value,
+                    incumbent_objective=incumbent.objective_value,
+                    cut_count=len(cut_pool) if cut_pool is not None else 0,
+                )
+            )
+        return None
+
+    def _dispatch_basic_node_event(
+        self,
+        *,
+        hook: CallbackHook,
+        node: MIPNode,
+        incumbent: Incumbent,
+    ) -> None:
+        if not self.callbacks:
+            return
+        self._dispatch_callback_event(
+            CallbackEvent(
+                hook=hook,
+                node_id=node.id,
+                depth=node.depth,
+                incumbent_objective=incumbent.objective_value,
+            )
+        )
+
+    def _dispatch_lp_relaxation_event(
+        self,
+        node: MIPNode,
+        lp_solution: Solution,
+        incumbent: Incumbent,
+    ) -> None:
+        if not self.callbacks:
+            return
+        self._dispatch_callback_event(
+            CallbackEvent(
+                hook=CallbackHook.AFTER_LP_RELAXATION,
+                node_id=node.id,
+                depth=node.depth,
+                lp_status=lp_solution.status.value,
+                lp_objective=lp_solution.objective_value,
+                incumbent_objective=incumbent.objective_value,
+            )
+        )
+
+    def _dispatch_incumbent_update_event(
+        self,
+        node: MIPNode,
+        lp_solution: Solution,
+        incumbent: Incumbent,
+    ) -> None:
+        if not self.callbacks:
+            return
+        self._dispatch_callback_event(
+            CallbackEvent(
+                hook=CallbackHook.AFTER_INCUMBENT_UPDATE,
+                node_id=node.id,
+                depth=node.depth,
+                lp_status=lp_solution.status.value,
+                lp_objective=lp_solution.objective_value,
+                incumbent_objective=incumbent.objective_value,
+            )
+        )
+
+    def _dispatch_node_prune_event(
+        self,
+        *,
+        node: MIPNode,
+        lp_solution: Solution,
+        prune_reason: PruneReason,
+        incumbent: Incumbent,
+    ) -> None:
+        if not self.callbacks:
+            return
+        self._dispatch_callback_event(
+            CallbackEvent(
+                hook=CallbackHook.AFTER_NODE_PRUNE,
+                node_id=node.id,
+                depth=node.depth,
+                lp_status=lp_solution.status.value,
+                lp_objective=lp_solution.objective_value,
+                prune_reason=prune_reason.value,
+                incumbent_objective=incumbent.objective_value,
+            )
+        )
+
+    def _dispatch_child_creation_event(
+        self,
+        node: MIPNode,
+        lp_solution: Solution,
+        branching_variable: str,
+        incumbent: Incumbent,
+    ) -> None:
+        if not self.callbacks:
+            return
+        self._dispatch_callback_event(
+            CallbackEvent(
+                hook=CallbackHook.AFTER_CHILD_CREATION,
+                node_id=node.id,
+                depth=node.depth,
+                lp_status=lp_solution.status.value,
+                lp_objective=lp_solution.objective_value,
+                branching_variable=branching_variable,
+                incumbent_objective=incumbent.objective_value,
+                diagnostics={"children_created": 2},
+            )
+        )
+
+    def _complete_result(self, result: BranchAndBoundResult) -> BranchAndBoundResult:
+        if not self.callbacks:
+            return result
+        self._dispatch_callback_event(
+            CallbackEvent(
+                hook=CallbackHook.SOLVE_COMPLETE,
+                solver_status=result.solution.status.value,
+                incumbent_objective=result.incumbent_value,
+                diagnostics={
+                    "nodes_processed": result.nodes_processed,
+                    "nodes_created": result.nodes_created,
+                    "nodes_pruned": result.nodes_pruned,
+                },
+            )
+        )
+        return result
+
+    def _dispatch_callback_event(self, event: CallbackEvent) -> None:
+        if self.callbacks:
+            dispatch_callback_events(self.callbacks, (event,))
 
 
 def _validate_supported_mip_scope(model: Model) -> tuple[str, ...]:
