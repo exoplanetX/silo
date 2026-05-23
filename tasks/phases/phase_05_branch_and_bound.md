@@ -32,6 +32,8 @@ Phase 5M documents the node-log CLI workflow, including stdout and `--output` ex
 
 Phase 5N records a completion audit in `tasks/reports/20260524-01-01_phase5-completion-audit_report.md`; it recommends user closure review before any roadmap status change or Phase 6 transition.
 
+Phase 5O records explicit user approval to close Phase 5 for the current minimal branch-and-bound scope; this bookkeeping points to the completion audit and does not start Phase 6.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.

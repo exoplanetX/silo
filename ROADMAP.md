@@ -62,7 +62,7 @@ Acceptance criteria: presolve transformations are deterministic, documented, and
 
 ## Phase 5: MIP Branch-and-Bound
 
-Status: in progress; branch-and-bound design drafted in [`notes/15_branch_and_bound_design.md`](notes/15_branch_and_bound_design.md), with CLI exposure design drafted in [`notes/16_mip_cli_exposure_design.md`](notes/16_mip_cli_exposure_design.md).
+Status: complete for the current minimal branch-and-bound scope; advanced MIP features remain future work, and Phase 6 has not been started.
 
 Goal: implement a minimal branch-and-bound layer over LP relaxation solves.
 
