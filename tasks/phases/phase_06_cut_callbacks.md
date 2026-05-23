@@ -6,6 +6,8 @@ Define a conservative cut and callback layer that can be enabled experimentally 
 
 Phase 6A records the cut-generation and callback boundary design in `notes/18_cut_callback_boundary_design.md`; it is design-only and includes no implementation.
 
+Phase 6B adds immutable cut candidate and cut metadata dataclasses with validation and canonical-key tests; it does not implement cut pools, separators, callbacks, or branch-and-bound integration.
+
 ## Scope
 
 This phase introduces separators, a cut pool, duplicate handling, optional callback hooks, and tests for cut lifecycle behavior.
