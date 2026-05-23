@@ -1,4 +1,4 @@
-"""Cut separation and cut-pool placeholders."""
+"""Cut separation and cut-pool utilities."""
 
 from silo.cuts.candidate import (
     CutActivityState,
@@ -6,10 +6,13 @@ from silo.cuts.candidate import (
     CutMetadata,
     CutValidityScope,
 )
+from silo.cuts.cut_pool import CutPool, CutPoolAddResult
 
 __all__ = [
     "CutActivityState",
     "CutCandidate",
     "CutMetadata",
+    "CutPool",
+    "CutPoolAddResult",
     "CutValidityScope",
 ]

@@ -8,6 +8,8 @@ Phase 6A records the cut-generation and callback boundary design in `notes/18_cu
 
 Phase 6B adds immutable cut candidate and cut metadata dataclasses with validation and canonical-key tests; it does not implement cut pools, separators, callbacks, or branch-and-bound integration.
 
+Phase 6C adds a deterministic in-memory cut pool with duplicate detection, activation queries, and node-local scope clearing tests; it still does not implement separators, callbacks, or branch-and-bound integration.
+
 ## Scope
 
 This phase introduces separators, a cut pool, duplicate handling, optional callback hooks, and tests for cut lifecycle behavior.
