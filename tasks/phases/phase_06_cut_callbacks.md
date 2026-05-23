@@ -12,6 +12,8 @@ Phase 6C adds a deterministic in-memory cut pool with duplicate detection, activ
 
 Phase 6D adds a no-op separator boundary with separator protocol tests; it does not implement real cut families, callbacks, or branch-and-bound integration.
 
+Phase 6E adds read-only callback event records and no-op callback dispatch tests; it does not integrate callbacks into branch-and-bound or change solver behavior.
+
 ## Scope
 
 This phase introduces separators, a cut pool, duplicate handling, optional callback hooks, and tests for cut lifecycle behavior.
