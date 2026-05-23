@@ -18,6 +18,7 @@ from silo.cuts.separator import (
     NoOpSeparator,
     Separator,
     SeparatorContext,
+    ToyUpperBoundSeparator,
     separate_cuts,
 )
 
@@ -35,6 +36,7 @@ __all__ = [
     "NoOpSeparator",
     "Separator",
     "SeparatorContext",
+    "ToyUpperBoundSeparator",
     "dispatch_callback_events",
     "separate_cuts",
 ]

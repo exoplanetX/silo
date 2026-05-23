@@ -16,6 +16,8 @@ Phase 6E adds read-only callback event records and no-op callback dispatch tests
 
 Phase 6F adds optional no-op separator and callback integration points to branch-and-bound behind disabled defaults, with no-regression tests proving default behavior remains unchanged; it does not materialize cuts or implement real cut families.
 
+Phase 6G adds a deterministic toy upper-bound separator for tiny documented fixtures; it does not integrate the separator into default branch-and-bound behavior or make performance claims.
+
 ## Scope
 
 This phase introduces separators, a cut pool, duplicate handling, optional callback hooks, and tests for cut lifecycle behavior.

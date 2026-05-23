@@ -6,7 +6,13 @@ from math import isfinite
 from types import MappingProxyType
 from typing import Protocol, runtime_checkable
 
-from silo.cuts.candidate import CutCandidate
+from silo.core.enums import ConstraintSense
+from silo.cuts.candidate import (
+    DEFAULT_CUT_TOLERANCE,
+    CutCandidate,
+    CutMetadata,
+    CutValidityScope,
+)
 from silo.cuts.cut_pool import CutPool
 
 
@@ -59,6 +65,67 @@ class NoOpSeparator:
         if not isinstance(context, SeparatorContext):
             raise TypeError("NoOpSeparator requires a SeparatorContext.")
         return ()
+
+
+@dataclass(frozen=True)
+class ToyUpperBoundSeparator:
+    variable_name: str
+    upper_bound: float
+    name: str = "toy_upper_bound"
+    tolerance: float = DEFAULT_CUT_TOLERANCE
+
+    def __post_init__(self) -> None:
+        name = self.name.strip()
+        if not name:
+            raise ValueError("Separator name must not be empty.")
+        object.__setattr__(self, "name", name)
+
+        variable_name = self.variable_name.strip()
+        if not variable_name:
+            raise ValueError("Toy upper-bound separator variable name must not be empty.")
+        object.__setattr__(self, "variable_name", variable_name)
+
+        upper_bound = float(self.upper_bound)
+        if not isfinite(upper_bound):
+            raise ValueError("Toy upper-bound separator upper bound must be finite.")
+        object.__setattr__(self, "upper_bound", upper_bound)
+
+        tolerance = float(self.tolerance)
+        if not isfinite(tolerance) or tolerance <= 0.0:
+            raise ValueError("Toy upper-bound separator tolerance must be positive and finite.")
+        object.__setattr__(self, "tolerance", tolerance)
+
+    def separate(self, context: SeparatorContext) -> tuple[CutCandidate, ...]:
+        if not isinstance(context, SeparatorContext):
+            raise TypeError("ToyUpperBoundSeparator requires a SeparatorContext.")
+        if self.variable_name not in context.variable_names:
+            raise ValueError(
+                "Toy upper-bound separator variable must be present in context variable names."
+            )
+        if self.variable_name not in context.relaxation_values:
+            return ()
+
+        value = context.relaxation_values[self.variable_name]
+        if value <= self.upper_bound + self.tolerance:
+            return ()
+
+        return (
+            CutCandidate(
+                coefficients={self.variable_name: 1.0},
+                sense=ConstraintSense.LE,
+                rhs=self.upper_bound,
+                metadata=CutMetadata(
+                    source=self.name,
+                    scope=CutValidityScope.GLOBAL,
+                    cut_id=f"{self.name}:{self.variable_name}:upper_bound",
+                    tolerance=self.tolerance,
+                    message=(
+                        "Toy upper-bound cut; valid only for fixtures where the "
+                        "configured upper bound is documented as globally valid."
+                    ),
+                ),
+            ),
+        )
 
 
 def separate_cuts(
