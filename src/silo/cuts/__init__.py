@@ -7,6 +7,12 @@ from silo.cuts.candidate import (
     CutValidityScope,
 )
 from silo.cuts.cut_pool import CutPool, CutPoolAddResult
+from silo.cuts.separator import (
+    NoOpSeparator,
+    Separator,
+    SeparatorContext,
+    separate_cuts,
+)
 
 __all__ = [
     "CutActivityState",
@@ -15,4 +21,8 @@ __all__ = [
     "CutPool",
     "CutPoolAddResult",
     "CutValidityScope",
+    "NoOpSeparator",
+    "Separator",
+    "SeparatorContext",
+    "separate_cuts",
 ]
