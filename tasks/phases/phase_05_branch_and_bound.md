@@ -30,6 +30,8 @@ Phase 5L adds optional `silo mip-solve --details --node-log` output for stable p
 
 Phase 5M documents the node-log CLI workflow, including stdout and `--output` examples, without changing solver behavior.
 
+Phase 5N records a completion audit in `tasks/reports/20260524-01-01_phase5-completion-audit_report.md`; it recommends user closure review before any roadmap status change or Phase 6 transition.
+
 ## Scope
 
 This phase covers node representation, incumbent management, branching decisions, node selection, LP relaxation calls, pruning, and final MIP status.
