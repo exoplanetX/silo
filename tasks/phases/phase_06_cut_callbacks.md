@@ -18,6 +18,8 @@ Phase 6F adds optional no-op separator and callback integration points to branch
 
 Phase 6G adds a deterministic toy upper-bound separator for tiny documented fixtures; it does not integrate the separator into default branch-and-bound behavior or make performance claims.
 
+Phase 6H audits the conservative cut/callback boundary completion status in `tasks/reports/20260524-11-01_phase6-completion-audit_report.md`; it does not close Phase 6 or start Phase 7.
+
 ## Scope
 
 This phase introduces separators, a cut pool, duplicate handling, optional callback hooks, and tests for cut lifecycle behavior.
