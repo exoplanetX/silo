@@ -20,6 +20,8 @@ Phase 6G adds a deterministic toy upper-bound separator for tiny documented fixt
 
 Phase 6H audits the conservative cut/callback boundary completion status in `tasks/reports/20260524-11-01_phase6-completion-audit_report.md`; it does not close Phase 6 or start Phase 7.
 
+Phase 6I records explicit user approval to close Phase 6 for the current conservative cut/callback boundary scope; this bookkeeping points to the completion audit and does not start Phase 7.
+
 ## Scope
 
 This phase introduces separators, a cut pool, duplicate handling, optional callback hooks, and tests for cut lifecycle behavior.

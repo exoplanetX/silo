@@ -62,7 +62,7 @@ Acceptance criteria: presolve transformations are deterministic, documented, and
 
 ## Phase 5: MIP Branch-and-Bound
 
-Status: complete for the current minimal branch-and-bound scope; advanced MIP features remain future work, and Phase 6 has not been started.
+Status: complete for the current minimal branch-and-bound scope; advanced MIP features remain future work.
 
 Goal: implement a minimal branch-and-bound layer over LP relaxation solves.
 
@@ -75,6 +75,8 @@ Acceptance criteria: pure branch-and-bound solves small MIP fixtures without cut
 Phase 5 begins with the branch-and-bound design note before implementation and a separate CLI exposure note before adding a public MIP command.
 
 ## Phase 6: Cut Generation and Callbacks
+
+Status: complete for the current conservative cut/callback boundary scope; real cut families, cut materialization into LP relaxations, lazy constraints, mutation callbacks, public CLI/schema exposure, branch-and-cut performance, and decomposition remain future work. Phase 7 has not been started.
 
 Goal: separate cut management from the MIP tree and define a conservative callback boundary.
 
