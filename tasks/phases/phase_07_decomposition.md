@@ -6,6 +6,8 @@ Add educational master-subproblem abstractions for decomposition methods after t
 
 Phase 7A records the decomposition boundary design in `notes/19_decomposition_boundary_design.md`; it is design-only and includes no implementation.
 
+Phase 7B upgrades the existing decomposition placeholder modules with immutable master/subproblem context and result records plus validation tests; it does not implement Benders or column-generation solve loops.
+
 ## Scope
 
 This phase covers master problem wrappers, subproblem wrappers, Benders-style iteration structure, column-generation iteration structure, and small examples that expose decomposition logic.
