@@ -18,6 +18,8 @@ Phase 7F adds immutable column candidate records with validation, deterministic 
 
 Phase 7G adds a no-op decomposition driver boundary that records one deterministic iteration in a run summary; it does not accept models, call LP/MIP solvers, or implement Benders/column-generation solve loops.
 
+Phase 7H adds a toy fixture-only Benders-style driver with deterministic no-cut, duplicate-cut, and iteration-limit stopping tests; it does not implement a general Benders solver, call LP/MIP solvers, or materialize cuts.
+
 ## Scope
 
 This phase covers master problem wrappers, subproblem wrappers, Benders-style iteration structure, column-generation iteration structure, and small examples that expose decomposition logic.

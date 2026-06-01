@@ -21,6 +21,11 @@ from silo.decomposition.subproblem import (
     SubproblemContext,
     SubproblemResult,
 )
+from silo.decomposition.toy_benders import (
+    ToyBendersCutSpec,
+    ToyBendersDriver,
+    ToyBendersIterationFixture,
+)
 
 __all__ = [
     "BendersCutCandidate",
@@ -39,4 +44,7 @@ __all__ = [
     "Subproblem",
     "SubproblemContext",
     "SubproblemResult",
+    "ToyBendersCutSpec",
+    "ToyBendersDriver",
+    "ToyBendersIterationFixture",
 ]
