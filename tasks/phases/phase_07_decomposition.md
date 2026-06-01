@@ -16,6 +16,8 @@ Phase 7E adds immutable Benders cut type and candidate records with validation a
 
 Phase 7F adds immutable column candidate records with validation, deterministic canonical-key tests, and reduced-cost convention tests; it does not implement pricing logic, column-generation solve loops, or LP/MIP solver calls.
 
+Phase 7G adds a no-op decomposition driver boundary that records one deterministic iteration in a run summary; it does not accept models, call LP/MIP solvers, or implement Benders/column-generation solve loops.
+
 ## Scope
 
 This phase covers master problem wrappers, subproblem wrappers, Benders-style iteration structure, column-generation iteration structure, and small examples that expose decomposition logic.
