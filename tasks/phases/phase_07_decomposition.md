@@ -12,6 +12,8 @@ Phase 7C adds immutable decomposition method, termination-reason, iteration-log,
 
 Phase 7D adds boundary smoke tests confirming placeholder Benders and column-generation solvers remain no-op `not_solved` boundaries while decomposition logging records stay separate from public `Solution` schemas and lower layers do not import decomposition.
 
+Phase 7E adds immutable Benders cut type and candidate records with validation and deterministic canonical-key tests; it does not implement Benders cut generation, solve loops, LP/MIP solver calls, or cut materialization.
+
 ## Scope
 
 This phase covers master problem wrappers, subproblem wrappers, Benders-style iteration structure, column-generation iteration structure, and small examples that expose decomposition logic.

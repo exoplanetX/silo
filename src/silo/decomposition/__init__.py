@@ -1,6 +1,7 @@
 """Master-subproblem decomposition boundary records."""
 
 from silo.decomposition.benders import BendersSolver
+from silo.decomposition.benders_cut import BendersCutCandidate, BendersCutType
 from silo.decomposition.column_generation import ColumnGenerationSolver
 from silo.decomposition.logging import (
     DecompositionIterationLog,
@@ -20,6 +21,8 @@ from silo.decomposition.subproblem import (
 )
 
 __all__ = [
+    "BendersCutCandidate",
+    "BendersCutType",
     "BendersSolver",
     "ColumnGenerationSolver",
     "DecompositionIterationLog",
