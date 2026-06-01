@@ -14,6 +14,8 @@ Phase 7D adds boundary smoke tests confirming placeholder Benders and column-gen
 
 Phase 7E adds immutable Benders cut type and candidate records with validation and deterministic canonical-key tests; it does not implement Benders cut generation, solve loops, LP/MIP solver calls, or cut materialization.
 
+Phase 7F adds immutable column candidate records with validation, deterministic canonical-key tests, and reduced-cost convention tests; it does not implement pricing logic, column-generation solve loops, or LP/MIP solver calls.
+
 ## Scope
 
 This phase covers master problem wrappers, subproblem wrappers, Benders-style iteration structure, column-generation iteration structure, and small examples that expose decomposition logic.

@@ -2,6 +2,7 @@
 
 from silo.decomposition.benders import BendersSolver
 from silo.decomposition.benders_cut import BendersCutCandidate, BendersCutType
+from silo.decomposition.column_candidate import ColumnCandidate
 from silo.decomposition.column_generation import ColumnGenerationSolver
 from silo.decomposition.logging import (
     DecompositionIterationLog,
@@ -24,6 +25,7 @@ __all__ = [
     "BendersCutCandidate",
     "BendersCutType",
     "BendersSolver",
+    "ColumnCandidate",
     "ColumnGenerationSolver",
     "DecompositionIterationLog",
     "DecompositionMethod",
