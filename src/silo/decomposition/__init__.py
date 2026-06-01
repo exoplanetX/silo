@@ -2,6 +2,12 @@
 
 from silo.decomposition.benders import BendersSolver
 from silo.decomposition.column_generation import ColumnGenerationSolver
+from silo.decomposition.logging import (
+    DecompositionIterationLog,
+    DecompositionMethod,
+    DecompositionRunSummary,
+    DecompositionTerminationReason,
+)
 from silo.decomposition.master import (
     MasterProblem,
     MasterProblemContext,
@@ -16,6 +22,10 @@ from silo.decomposition.subproblem import (
 __all__ = [
     "BendersSolver",
     "ColumnGenerationSolver",
+    "DecompositionIterationLog",
+    "DecompositionMethod",
+    "DecompositionRunSummary",
+    "DecompositionTerminationReason",
     "MasterProblem",
     "MasterProblemContext",
     "MasterProblemResult",

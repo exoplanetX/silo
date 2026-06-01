@@ -8,6 +8,8 @@ Phase 7A records the decomposition boundary design in `notes/19_decomposition_bo
 
 Phase 7B upgrades the existing decomposition placeholder modules with immutable master/subproblem context and result records plus validation tests; it does not implement Benders or column-generation solve loops.
 
+Phase 7C adds immutable decomposition method, termination-reason, iteration-log, and run-summary records with validation tests; it does not implement Benders or column-generation solve loops or call LP/MIP solvers.
+
 ## Scope
 
 This phase covers master problem wrappers, subproblem wrappers, Benders-style iteration structure, column-generation iteration structure, and small examples that expose decomposition logic.
