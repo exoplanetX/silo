@@ -18,6 +18,8 @@ Phase 8F adds immutable deterministic-equivalent diagnostic/result records for s
 
 Phase 8G adds a tiny deterministic-equivalent builder path for continuous LP fixtures with objective and RHS overrides only; it rejects scenario-dependent variables, does not generate nonanticipativity constraints, does not call solvers, and does not change CLI or JSON schemas.
 
+Phase 8H adds immutable interval and box uncertainty-set records with validation tests for targets, bounds, nominal values, deterministic ordering, metadata, and package-boundary isolation; it does not implement robust model wrappers or robust counterpart transformations.
+
 ## Scope
 
 This phase covers scenario data, stochastic model wrappers, robust model wrappers, uncertainty sets, deterministic equivalents, and small transformation examples.
