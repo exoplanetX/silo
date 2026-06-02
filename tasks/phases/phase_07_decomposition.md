@@ -24,6 +24,8 @@ Phase 7I adds a toy fixture-only column-generation-style driver with determinist
 
 Phase 7J adds checked-in educational examples for the existing toy Benders and toy column-generation drivers; it does not modify solver source code, tests, CLI behavior, JSON schemas, or LP/MIP behavior.
 
+Phase 7K records a completion audit for the conservative decomposition boundary and recommends user closure review; it does not close Phase 7 or start Phase 8.
+
 ## Scope
 
 This phase covers master problem wrappers, subproblem wrappers, Benders-style iteration structure, column-generation iteration structure, and small examples that expose decomposition logic.
