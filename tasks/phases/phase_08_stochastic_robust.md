@@ -14,6 +14,8 @@ Phase 8D adds immutable stochastic model wrapper records for a validated base mo
 
 Phase 8E adds deterministic naming-convention helpers for scenario variables, scenario constraints, and nonanticipativity constraints; it does not build deterministic equivalents, expose new public package exports, or change solver/CLI/schema behavior.
 
+Phase 8F adds immutable deterministic-equivalent diagnostic/result records for scenario ids, generated dimensions, probability metadata, objective aggregation convention, naming convention, and result pairing; it does not construct deterministic-equivalent models or change the placeholder builder behavior.
+
 ## Scope
 
 This phase covers scenario data, stochastic model wrappers, robust model wrappers, uncertainty sets, deterministic equivalents, and small transformation examples.
