@@ -22,6 +22,8 @@ Phase 8H adds immutable interval and box uncertainty-set records with validation
 
 Phase 8I adds immutable robust model wrapper records that pair a validated base model with an uncertainty set and assumption metadata; it does not implement robust counterpart transformations, solver calls, CLI behavior, or JSON schemas.
 
+Phase 8J adds a toy robust counterpart transformation for interval RHS uncertainty on continuous LP fixtures; it supports only documented RHS worst-case conventions, does not call solvers, does not expose public CLI or JSON schema behavior, and does not close Phase 8.
+
 ## Scope
 
 This phase covers scenario data, stochastic model wrappers, robust model wrappers, uncertainty sets, deterministic equivalents, and small transformation examples.

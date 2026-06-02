@@ -21,7 +21,10 @@ def test_uncertainty_package_does_not_expose_transformation_placeholders() -> No
         "StochasticModel",
         "RobustModel",
         "UncertaintySet",
+        "RobustCounterpartDiagnostics",
+        "RobustCounterpartResult",
         "build_deterministic_equivalent",
+        "build_robust_counterpart",
     }
 
     assert transformation_names.isdisjoint(uncertainty.__all__)
