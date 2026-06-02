@@ -16,6 +16,8 @@ Phase 8E adds deterministic naming-convention helpers for scenario variables, sc
 
 Phase 8F adds immutable deterministic-equivalent diagnostic/result records for scenario ids, generated dimensions, probability metadata, objective aggregation convention, naming convention, and result pairing; it does not construct deterministic-equivalent models or change the placeholder builder behavior.
 
+Phase 8G adds a tiny deterministic-equivalent builder path for continuous LP fixtures with objective and RHS overrides only; it rejects scenario-dependent variables, does not generate nonanticipativity constraints, does not call solvers, and does not change CLI or JSON schemas.
+
 ## Scope
 
 This phase covers scenario data, stochastic model wrappers, robust model wrappers, uncertainty sets, deterministic equivalents, and small transformation examples.

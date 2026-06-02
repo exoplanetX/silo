@@ -4,10 +4,17 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from math import isfinite
 
+from silo.core.constraint import Constraint
+from silo.core.enums import VariableType
 from silo.core.model import Model
+from silo.core.objective import Objective
+from silo.core.variable import Variable
 from silo.uncertainty.naming import (
     NONANTICIPATIVITY_PREFIX,
     SCENARIO_COMPONENT_DELIMITER,
+)
+from silo.uncertainty.naming import (
+    scenario_constraint_name as make_row_name,
 )
 from silo.uncertainty.scenario import (
     DEFAULT_PROBABILITY_TOLERANCE,
@@ -120,8 +127,162 @@ class DeterministicEquivalentResult:
             raise TypeError("message must be a string.")
 
 
-def build_deterministic_equivalent(model: StochasticModel) -> Model:
-    return model.base_model
+def build_deterministic_equivalent(
+    model: StochasticModel,
+) -> Model | DeterministicEquivalentResult:
+    if not isinstance(model, StochasticModel):
+        raise TypeError("model must be a StochasticModel.")
+    if not _has_transformation_request(model):
+        return model.base_model
+
+    _validate_tiny_builder_scope(model)
+
+    base_model = model.base_model
+    declared_constraints = set(model.scenario_dependent_constraints)
+    generated_constraint_names = _generated_constraint_names(model)
+    shared_constraints = [
+        _copy_constraint(constraint)
+        for constraint in base_model.constraints
+        if constraint.name not in declared_constraints
+    ]
+    scenario_constraints = _build_scenario_constraints(model, generated_constraint_names)
+    result_model = Model(
+        name=f"{base_model.name}_deterministic_equivalent",
+        variables=[_copy_variable(variable) for variable in base_model.variables],
+        constraints=[*shared_constraints, *scenario_constraints],
+        objective=_build_expected_value_objective(model),
+    )
+    diagnostics = DeterministicEquivalentDiagnostics(
+        scenario_ids=model.scenario_ids,
+        generated_variables=0,
+        generated_constraints=len(scenario_constraints),
+        nonanticipativity_constraints=0,
+        probability_total=model.scenarios.probability_total,
+        probability_tolerance=model.scenarios.probability_tolerance,
+        metadata={"builder": "tiny_objective_rhs"},
+        message="Tiny objective/RHS deterministic-equivalent transformation.",
+    )
+    return DeterministicEquivalentResult(
+        model=result_model,
+        diagnostics=diagnostics,
+        message="Tiny deterministic-equivalent result.",
+    )
+
+
+def _has_transformation_request(model: StochasticModel) -> bool:
+    if model.scenario_dependent_variables or model.scenario_dependent_constraints:
+        return True
+    return any(
+        scenario.objective_coefficients
+        or scenario.rhs_values
+        or scenario.constraint_coefficients
+        for scenario in model.scenarios.scenarios
+    )
+
+
+def _validate_tiny_builder_scope(model: StochasticModel) -> None:
+    if model.scenario_dependent_variables:
+        raise ValueError("scenario-dependent variables are not supported yet.")
+    for variable in model.base_model.variables:
+        if variable.var_type != VariableType.CONTINUOUS:
+            raise ValueError("deterministic equivalents currently support continuous LPs only.")
+
+    variable_names = set(model.base_model.variable_names())
+    constraint_names = {constraint.name for constraint in model.base_model.constraints}
+    declared_constraints = set(model.scenario_dependent_constraints)
+
+    for scenario in model.scenarios.scenarios:
+        objective_overrides = dict(scenario.objective_coefficients)
+        rhs_overrides = dict(scenario.rhs_values)
+        if scenario.constraint_coefficients:
+            raise ValueError("constraint coefficient overrides are not supported yet.")
+        for variable_name in objective_overrides:
+            if variable_name not in variable_names:
+                raise ValueError(f"Unknown objective override variable: {variable_name}")
+        for constraint_name in rhs_overrides:
+            if constraint_name not in constraint_names:
+                raise ValueError(f"Unknown RHS override constraint: {constraint_name}")
+            if constraint_name not in declared_constraints:
+                raise ValueError(
+                    "RHS overrides must target declared scenario-dependent constraints: "
+                    f"{constraint_name}"
+                )
+
+
+def _generated_constraint_names(model: StochasticModel) -> dict[tuple[str, str], str]:
+    existing_shared_constraints = {
+        constraint.name
+        for constraint in model.base_model.constraints
+        if constraint.name not in model.scenario_dependent_constraints
+    }
+    generated: dict[tuple[str, str], str] = {}
+    seen: set[str] = set(existing_shared_constraints)
+    for constraint_name in model.scenario_dependent_constraints:
+        for scenario_id in model.scenario_ids:
+            generated_name = make_row_name(constraint_name, scenario_id)
+            if generated_name in seen:
+                raise ValueError(f"Generated constraint name collides: {generated_name}")
+            seen.add(generated_name)
+            generated[(constraint_name, scenario_id)] = generated_name
+    return generated
+
+
+def _build_scenario_constraints(
+    model: StochasticModel,
+    generated_names: Mapping[tuple[str, str], str],
+) -> list[Constraint]:
+    base_constraints = {constraint.name: constraint for constraint in model.base_model.constraints}
+    constraints: list[Constraint] = []
+    for constraint_name in model.scenario_dependent_constraints:
+        base_constraint = base_constraints[constraint_name]
+        for scenario in model.scenarios.scenarios:
+            rhs_overrides = dict(scenario.rhs_values)
+            constraints.append(
+                Constraint(
+                    name=generated_names[(constraint_name, scenario.name)],
+                    coefficients=dict(base_constraint.coefficients),
+                    sense=base_constraint.sense,
+                    rhs=rhs_overrides.get(constraint_name, base_constraint.rhs),
+                )
+            )
+    return constraints
+
+
+def _build_expected_value_objective(model: StochasticModel) -> Objective:
+    base_coefficients = dict(model.base_model.objective.coefficients)
+    coefficients: dict[str, float] = {}
+    for variable_name in model.base_model.variable_names():
+        expected_coefficient = 0.0
+        base_coefficient = float(base_coefficients.get(variable_name, 0.0))
+        for scenario in model.scenarios.scenarios:
+            objective_overrides = dict(scenario.objective_coefficients)
+            expected_coefficient += scenario.probability * float(
+                objective_overrides.get(variable_name, base_coefficient)
+            )
+        if expected_coefficient != 0.0:
+            coefficients[variable_name] = expected_coefficient
+    return Objective(
+        coefficients=coefficients,
+        sense=model.base_model.objective.sense,
+        constant=model.base_model.objective.constant,
+    )
+
+
+def _copy_variable(variable: Variable) -> Variable:
+    return Variable(
+        name=variable.name,
+        bounds=variable.bounds,
+        var_type=variable.var_type,
+    )
+
+
+def _copy_constraint(constraint: Constraint) -> Constraint:
+    return Constraint(
+        name=constraint.name,
+        coefficients=dict(constraint.coefficients),
+        sense=constraint.sense,
+        rhs=constraint.rhs,
+    )
 
 
 def _normalize_scenario_ids(values: Sequence[str]) -> tuple[str, ...]:
