@@ -1,5 +1,7 @@
 # Phase 9: Native Backend
 
+Phase 9A records the native backend boundary design in `notes/21_native_backend_boundary_design.md`; it is planning-only and includes no implementation.
+
 ## Goal
 
 Prepare selected solver kernels for a future native backend while preserving Python reference behavior as the source of truth.
