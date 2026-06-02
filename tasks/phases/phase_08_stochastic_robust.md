@@ -4,6 +4,8 @@
 
 Represent stochastic and robust optimization models as explicit transformations into deterministic model objects.
 
+Phase 8A records the uncertainty boundary design in `notes/20_uncertainty_boundary_design.md`; it is planning-only and includes no implementation.
+
 ## Scope
 
 This phase covers scenario data, stochastic model wrappers, robust model wrappers, uncertainty sets, deterministic equivalents, and small transformation examples.
