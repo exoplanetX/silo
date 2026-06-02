@@ -10,6 +10,8 @@ Phase 8B adds immutable finite-scenario records and validation tests for ids, pr
 
 Phase 8C adds uncertainty boundary smoke tests for public exports, lower-layer dependency direction, solver-layer imports, CLI exposure, and `Solution` schema separation; it does not implement new uncertainty behavior.
 
+Phase 8D adds immutable stochastic model wrapper records for a validated base model, finite scenario collection, first-stage declarations, and scenario-dependent declarations; it does not build deterministic equivalents, robust wrappers, uncertainty sets, examples, CLI behavior, or JSON schemas.
+
 ## Scope
 
 This phase covers scenario data, stochastic model wrappers, robust model wrappers, uncertainty sets, deterministic equivalents, and small transformation examples.
