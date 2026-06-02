@@ -26,6 +26,11 @@ from silo.decomposition.toy_benders import (
     ToyBendersDriver,
     ToyBendersIterationFixture,
 )
+from silo.decomposition.toy_column_generation import (
+    ToyColumnCandidateSpec,
+    ToyColumnGenerationDriver,
+    ToyColumnGenerationIterationFixture,
+)
 
 __all__ = [
     "BendersCutCandidate",
@@ -47,4 +52,7 @@ __all__ = [
     "ToyBendersCutSpec",
     "ToyBendersDriver",
     "ToyBendersIterationFixture",
+    "ToyColumnCandidateSpec",
+    "ToyColumnGenerationDriver",
+    "ToyColumnGenerationIterationFixture",
 ]

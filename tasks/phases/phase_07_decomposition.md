@@ -20,6 +20,8 @@ Phase 7G adds a no-op decomposition driver boundary that records one determinist
 
 Phase 7H adds a toy fixture-only Benders-style driver with deterministic no-cut, duplicate-cut, and iteration-limit stopping tests; it does not implement a general Benders solver, call LP/MIP solvers, or materialize cuts.
 
+Phase 7I adds a toy fixture-only column-generation-style driver with deterministic no-improving-column, duplicate-column, and iteration-limit stopping tests; it does not implement general column generation, branch-and-price, restricted-master solves, or LP/MIP solver calls.
+
 ## Scope
 
 This phase covers master problem wrappers, subproblem wrappers, Benders-style iteration structure, column-generation iteration structure, and small examples that expose decomposition logic.
