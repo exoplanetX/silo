@@ -1,5 +1,7 @@
 # Phase 8: Stochastic and Robust Optimization Extensions
 
+Status: complete for the current conservative stochastic/robust transformation boundary scope.
+
 ## Goal
 
 Represent stochastic and robust optimization models as explicit transformations into deterministic model objects.
@@ -24,9 +26,15 @@ Phase 8I adds immutable robust model wrapper records that pair a validated base 
 
 Phase 8J adds a toy robust counterpart transformation for interval RHS uncertainty on continuous LP fixtures; it supports only documented RHS worst-case conventions, does not call solvers, does not expose public CLI or JSON schema behavior, and does not close Phase 8.
 
+Phase 8K adds checked-in toy uncertainty transformation examples for one stochastic deterministic-equivalent fixture and one robust interval-RHS counterpart fixture; it does not change source code, tests, CLI behavior, JSON schemas, or Phase 9 status.
+
 ## Scope
 
 This phase covers scenario data, stochastic model wrappers, robust model wrappers, uncertainty sets, deterministic equivalents, and small transformation examples.
+
+## Completed Conservative Scope
+
+The current Phase 8 scope is complete for records, wrappers, deterministic naming, diagnostics/results, tiny stochastic deterministic-equivalent transformation, tiny interval-RHS robust counterpart transformation, boundary checks, and checked-in uncertainty examples.
 
 ## Expected Files
 
@@ -48,6 +56,17 @@ Add tests for scenario validation, probability checks, deterministic equivalent 
 ## Do Not Do
 
 Do not create a separate stochastic solver. Do not implement advanced distributionally robust or chance-constrained models without a clear mathematical specification.
+
+## Deferred Future Work
+
+- Scenario-dependent variable replication.
+- Nonanticipativity constraint generation.
+- Constraint coefficient override transformations.
+- Objective, coefficient, and budgeted robust uncertainty transformations.
+- Automatic robust dualization, conic robust counterparts, chance constraints, and distributionally robust optimization.
+- Public CLI or JSON schema exposure for uncertainty models.
+- LP/MIP solver integration or production-grade stochastic/robust optimization behavior.
+- Phase 9 native backend planning or implementation.
 
 ## Acceptance Criteria
 

@@ -100,6 +100,8 @@ Acceptance criteria: decomposition examples expose the algorithmic structure wit
 
 ## Phase 8: Stochastic and Robust Optimization Extensions
 
+Status: complete for the current conservative stochastic/robust transformation boundary scope; scenario-dependent variables, nonanticipativity generation, broader robust counterparts, public CLI/schema exposure, solver integration, and production-grade uncertainty optimization remain future work.
+
 Goal: represent uncertainty first as model transformation, not as a separate black-box solver.
 
 Core modules: `uncertainty.scenario`, `stochastic_model`, `robust_model`, `uncertainty_set`, and `deterministic_equivalent`.
