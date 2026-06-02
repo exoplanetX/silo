@@ -20,6 +20,8 @@ Phase 8G adds a tiny deterministic-equivalent builder path for continuous LP fix
 
 Phase 8H adds immutable interval and box uncertainty-set records with validation tests for targets, bounds, nominal values, deterministic ordering, metadata, and package-boundary isolation; it does not implement robust model wrappers or robust counterpart transformations.
 
+Phase 8I adds immutable robust model wrapper records that pair a validated base model with an uncertainty set and assumption metadata; it does not implement robust counterpart transformations, solver calls, CLI behavior, or JSON schemas.
+
 ## Scope
 
 This phase covers scenario data, stochastic model wrappers, robust model wrappers, uncertainty sets, deterministic equivalents, and small transformation examples.
