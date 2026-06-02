@@ -76,7 +76,7 @@ Phase 5 begins with the branch-and-bound design note before implementation and a
 
 ## Phase 6: Cut Generation and Callbacks
 
-Status: complete for the current conservative cut/callback boundary scope; real cut families, cut materialization into LP relaxations, lazy constraints, mutation callbacks, public CLI/schema exposure, branch-and-cut performance, and decomposition remain future work. Phase 7 has not been started.
+Status: complete for the current conservative cut/callback boundary scope; real cut families, cut materialization into LP relaxations, lazy constraints, mutation callbacks, public CLI/schema exposure, branch-and-cut performance, and deeper cut/decomposition integration remain future work outside Phase 6.
 
 Goal: separate cut management from the MIP tree and define a conservative callback boundary.
 
@@ -87,6 +87,8 @@ Expected tests: cut validity checks, duplicate cuts, cut-pool lifecycle, and no-
 Acceptance criteria: cut modules can be enabled experimentally without changing core model conventions.
 
 ## Phase 7: Decomposition Layer
+
+Status: complete for the current conservative decomposition boundary scope; production Benders, production column generation, branch-and-price, LP/MIP solve-loop integration, public CLI/schema exposure, and industrial decomposition performance remain future work.
 
 Goal: add educational decomposition abstractions for master-subproblem methods.
 

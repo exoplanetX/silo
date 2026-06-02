@@ -4,6 +4,8 @@
 
 Add educational master-subproblem abstractions for decomposition methods after the LP and MIP layers have stable interfaces.
 
+Status: complete for the current conservative decomposition boundary scope.
+
 Phase 7A records the decomposition boundary design in `notes/19_decomposition_boundary_design.md`; it is design-only and includes no implementation.
 
 Phase 7B upgrades the existing decomposition placeholder modules with immutable master/subproblem context and result records plus validation tests; it does not implement Benders or column-generation solve loops.
@@ -25,6 +27,8 @@ Phase 7I adds a toy fixture-only column-generation-style driver with determinist
 Phase 7J adds checked-in educational examples for the existing toy Benders and toy column-generation drivers; it does not modify solver source code, tests, CLI behavior, JSON schemas, or LP/MIP behavior.
 
 Phase 7K records a completion audit for the conservative decomposition boundary and recommends user closure review; it does not close Phase 7 or start Phase 8.
+
+Phase 7L closes Phase 7 for the current conservative decomposition boundary scope; it does not start Phase 8 or authorize Phase 8 planning or implementation work.
 
 ## Scope
 
