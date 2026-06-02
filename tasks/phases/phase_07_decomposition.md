@@ -22,6 +22,8 @@ Phase 7H adds a toy fixture-only Benders-style driver with deterministic no-cut,
 
 Phase 7I adds a toy fixture-only column-generation-style driver with deterministic no-improving-column, duplicate-column, and iteration-limit stopping tests; it does not implement general column generation, branch-and-price, restricted-master solves, or LP/MIP solver calls.
 
+Phase 7J adds checked-in educational examples for the existing toy Benders and toy column-generation drivers; it does not modify solver source code, tests, CLI behavior, JSON schemas, or LP/MIP behavior.
+
 ## Scope
 
 This phase covers master problem wrappers, subproblem wrappers, Benders-style iteration structure, column-generation iteration structure, and small examples that expose decomposition logic.
