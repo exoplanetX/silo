@@ -336,15 +336,10 @@ The local mirror includes `.silo-dos/`, `tasks/README.md`, `AGENTS.md`, `ROADMAP
 If the local mirror lacks a strategic answer, Research Brain may propose a route. If the
 route crosses L2/L3 gates or conflicts with repository files, the user must decide.
 
-## Current Recommended Action
+## Current Authorized Maintenance — 2026-10-10
 
-No immediate implementation task is required.
+The user explicitly approved baseline organization followed by the presolve and MIP status-correctness repairs discovered in the restart audit. These are maintenance of the existing solver scope; native remains deferred, Phase 9 stays open/parked, and Phase 10 has not started.
 
-Recommended next process action, only when requested:
+Execute the three authorized tasks sequentially with separate contracts, reports and local commits. No push was requested. Local-ahead state produced by this approved sequence does not require repeated approval. Preserve unrelated work and do not expand into new capabilities or phase changes.
 
-```text
-Create .silo-dos/technical_route.md with the current Phase 9 parked corridor and the
-conditions for Phase 9 closure or Phase 10 planning.
-```
-
-Do not issue or execute that follow-up automatically.
+See `docs/development_restart.md` and matching `tasks/reports/20261010-*` for current evidence. Older create-file suggestions for existing local mirror files are superseded. After completing the authorized repairs, report next-step recommendations and stop.

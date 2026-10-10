@@ -31,3 +31,6 @@ Thumbs.db
 
 # Local task prompt used to initialize the scaffold.
 /tasks/createproject.md
+
+# Local historical discussion archive; see docs/development_restart.md.
+/resfs/

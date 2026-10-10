@@ -59,7 +59,7 @@ def _normalize_label(value: str, label: str) -> str:
 
 
 def _normalize_rows(rows: Sequence[Sequence[float]]) -> TableauRatioRows:
-    if isinstance(rows, (str, bytes)) or not isinstance(rows, Sequence):
+    if isinstance(rows, str | bytes) or not isinstance(rows, Sequence):
         raise TypeError("rows must be a sequence of row sequences.")
     if not rows:
         raise ValueError("rows must not be empty.")
@@ -67,7 +67,7 @@ def _normalize_rows(rows: Sequence[Sequence[float]]) -> TableauRatioRows:
     normalized_rows: list[tuple[float, ...]] = []
     row_width: int | None = None
     for row_index, row in enumerate(rows):
-        if isinstance(row, (str, bytes)) or not isinstance(row, Sequence):
+        if isinstance(row, str | bytes) or not isinstance(row, Sequence):
             raise TypeError("each row must be a sequence of numeric values.")
         if not row:
             raise ValueError("rows must not contain empty rows.")

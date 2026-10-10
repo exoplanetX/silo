@@ -264,37 +264,10 @@ Before any native implementation task:
    approved.
 8. The task must stop after one atomic implementation step.
 
-## Candidate Next Process Tasks
+## Current Authorized Maintenance — 2026-10-10
 
-These are candidate tasks only:
+The user explicitly approved baseline organization followed by the presolve and MIP status-correctness repairs discovered in the restart audit. These are maintenance of the existing solver scope; native remains deferred, Phase 9 stays open/parked, and Phase 10 has not started.
 
-1. Create `.silo-dos/decision_log.md` from existing phase and native-defer decisions.
-2. Create `.silo-dos/remote_sync_proof.md` to standardize push/sync reporting.
-3. Create `.silo-dos/experience_map.md` from recent reports.
-4. Create `.silo-dos/standing_approval_profile.md` from the project profile and v0.3
-   approval patterns.
-5. Create `.silo-dos/self_evolution.md` to define process-upgrade mechanics.
-6. Draft a local skill v0.4 upgrade task that reads `.silo-dos/` local mirror files.
-7. Run a Phase 9 closure-readiness audit if the user wants to close Phase 9.
-8. Run Mode C Phase 10 planning if the user explicitly approves Phase 10 planning.
+Execute the three authorized tasks sequentially with separate contracts, reports and local commits. No push was requested. Local-ahead state produced by this approved sequence does not require repeated approval. Preserve unrelated work and do not expand into new capabilities or phase changes.
 
-Do not issue or execute any candidate automatically.
-
-## Current Recommended Action
-
-No immediate implementation task is required.
-
-Recommended next process action, only when requested:
-
-```text
-Create .silo-dos/decision_log.md from durable phase and native-defer decisions.
-```
-
-Alternative useful process action:
-
-```text
-Create .silo-dos/remote_sync_proof.md to make push status and ahead/behind state
-reporting consistent.
-```
-
-The project may also remain parked with no new task.
+See `docs/development_restart.md` and matching `tasks/reports/20261010-*` for current evidence. Older create-file suggestions for existing local mirror files are superseded. After completing the authorized repairs, report next-step recommendations and stop.

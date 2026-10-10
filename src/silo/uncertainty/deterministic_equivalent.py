@@ -286,7 +286,7 @@ def _copy_constraint(constraint: Constraint) -> Constraint:
 
 
 def _normalize_scenario_ids(values: Sequence[str]) -> tuple[str, ...]:
-    if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+    if isinstance(values, str | bytes) or not isinstance(values, Sequence):
         raise TypeError("scenario ids must be a sequence of strings.")
 
     normalized: list[str] = []
@@ -339,7 +339,7 @@ def _normalize_metadata(values: Mapping[str, MetadataValue]) -> MetadataItems:
         label = _normalize_nonempty_text(key, "metadata key")
         if isinstance(value, float) and not isfinite(value):
             raise ValueError("metadata float values must be finite.")
-        if not isinstance(value, (str, int, float, bool, type(None))):
+        if not isinstance(value, str | int | float | bool | type(None)):
             raise TypeError("metadata values must be scalar strings, numbers, bools, or None.")
         normalized.append((label, value))
     return tuple(sorted(normalized))

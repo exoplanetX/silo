@@ -173,7 +173,7 @@ def _normalize_metadata(values: Mapping[str, MetadataValue]) -> MetadataItems:
             raise ValueError("metadata keys must be nonempty strings.")
         if isinstance(value, float) and not isfinite(value):
             raise ValueError("metadata float values must be finite.")
-        if not isinstance(value, (str, int, float, bool, type(None))):
+        if not isinstance(value, str | int | float | bool | type(None)):
             raise TypeError("metadata values must be scalar strings, numbers, bools, or None.")
         normalized.append((key, value))
     return tuple(sorted(normalized))

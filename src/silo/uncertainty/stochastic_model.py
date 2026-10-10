@@ -92,7 +92,7 @@ def _normalize_scenario_set(value: ScenarioSet | Sequence[Scenario]) -> Scenario
 
 
 def _normalize_name_sequence(values: Sequence[str], label: str) -> NameItems:
-    if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+    if isinstance(values, str | bytes) or not isinstance(values, Sequence):
         raise TypeError(f"{label} must be a sequence of names.")
 
     normalized: list[str] = []
@@ -147,7 +147,7 @@ def _normalize_metadata(values: Mapping[str, MetadataValue]) -> MetadataItems:
         label = _normalize_name(key, "metadata key")
         if isinstance(value, float) and not isfinite(value):
             raise ValueError("metadata float values must be finite.")
-        if not isinstance(value, (str, int, float, bool, type(None))):
+        if not isinstance(value, str | int | float | bool | type(None)):
             raise TypeError("metadata values must be scalar strings, numbers, bools, or None.")
         normalized.append((label, value))
     return tuple(sorted(normalized))

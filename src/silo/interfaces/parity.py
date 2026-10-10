@@ -116,7 +116,7 @@ def _normalize_primal_values(
 ) -> PrimalValueItems:
     if isinstance(values, Mapping):
         items = tuple(values.items())
-    elif isinstance(values, Sequence) and not isinstance(values, (str, bytes)):
+    elif isinstance(values, Sequence) and not isinstance(values, str | bytes):
         items = tuple(values)
     else:
         raise TypeError("primal values must be a mapping or sequence of pairs.")
@@ -124,7 +124,7 @@ def _normalize_primal_values(
     normalized: list[tuple[str, float]] = []
     seen: set[str] = set()
     for item in items:
-        if not isinstance(item, Sequence) or isinstance(item, (str, bytes)):
+        if not isinstance(item, Sequence) or isinstance(item, str | bytes):
             raise TypeError("primal value entries must be pairs.")
         if len(item) != 2:
             raise ValueError("primal value entries must contain two items.")
