@@ -1,9 +1,10 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
-from math import isinf
+from math import isfinite, isinf
 
-from silo.core.enums import OptimizationSense, VariableType
+from silo.core.enums import ConstraintSense, OptimizationSense, VariableType
 from silo.core.model import Model
+from silo.core.objective import Objective
 from silo.core.solution import Solution
 from silo.core.status import SolverStatus
 from silo.cuts.callbacks import (
@@ -26,6 +27,7 @@ from silo.mip.logging import NodeLogEntry, PruneReason
 from silo.mip.node import MIPNode, make_child_node, root_node
 from silo.mip.relaxation import build_lp_relaxation
 from silo.mip.tree import NodeIdGenerator, SearchTree
+from silo.utils.numerics import DEFAULT_TOLERANCE
 
 MIP_OBJECTIVE_TOLERANCE = 1e-9
 
@@ -86,6 +88,7 @@ class BranchAndBoundSolver:
         nodes_created = 1
         nodes_pruned = 0
         best_bound: float | None = None
+        unresolved_unbounded_bound = False
         variable_names = tuple(model.variable_names())
         cut_pool = (
             CutPool(variable_order=variable_names)
@@ -126,7 +129,7 @@ class BranchAndBoundSolver:
                 )
 
             lp_solution = self.lp_solver.solve(relaxation.model)
-            if lp_solution.objective_value is not None:
+            if lp_solution.objective_value is not None and not unresolved_unbounded_bound:
                 best_bound = _max_optional(best_bound, lp_solution.objective_value)
             self._dispatch_lp_relaxation_event(node, lp_solution, incumbent)
 
@@ -149,39 +152,18 @@ class BranchAndBoundSolver:
                 )
                 continue
 
-            if lp_solution.status == SolverStatus.UNBOUNDED:
-                nodes_pruned += 1
-                solution = Solution(
-                    status=SolverStatus.UNBOUNDED,
-                    message="LP relaxation is unbounded at a branch-and-bound node.",
-                )
-                logs.append(
-                    _log_node(
-                        node=node,
-                        lp_solution=lp_solution,
-                        prune_reason=PruneReason.UNBOUNDED,
-                        incumbent_value=incumbent.objective_value,
-                        message=solution.message,
-                    )
-                )
-                self._dispatch_node_prune_event(
-                    node=node,
-                    lp_solution=lp_solution,
-                    prune_reason=PruneReason.UNBOUNDED,
-                    incumbent=incumbent,
-                )
-                return self._complete_result(
-                    BranchAndBoundResult(
-                        solution=solution,
-                        nodes_processed=nodes_processed,
-                        nodes_created=nodes_created,
-                        nodes_pruned=nodes_pruned,
-                        incumbent_value=incumbent.objective_value,
-                        best_bound=best_bound,
-                        log=tuple(logs),
-                        status_message=solution.message,
-                    )
-                )
+            unbounded_relaxation = lp_solution.status == SolverStatus.UNBOUNDED
+            branching_values = lp_solution.primal_values
+            if unbounded_relaxation:
+                # An improving LP ray alone does not establish integer feasibility.
+                # Zero-objective values must never become original-objective bounds.
+                unresolved_unbounded_bound = True
+                best_bound = None
+                feasibility = self._probe_unbounded_feasibility(relaxation.model)
+                if feasibility.status == SolverStatus.OPTIMAL:
+                    branching_values = feasibility.primal_values
+                else:
+                    lp_solution = feasibility
 
             if lp_solution.status in (SolverStatus.ERROR, SolverStatus.NUMERICAL_ISSUE):
                 solution = Solution(status=lp_solution.status, message=lp_solution.message)
@@ -199,7 +181,7 @@ class BranchAndBoundSolver:
                     )
                 )
 
-            if lp_solution.status != SolverStatus.OPTIMAL:
+            if lp_solution.status not in (SolverStatus.OPTIMAL, SolverStatus.UNBOUNDED):
                 solution = Solution(
                     status=SolverStatus.ERROR,
                     message=f"Unexpected LP relaxation status: {lp_solution.status.value}",
@@ -218,56 +200,58 @@ class BranchAndBoundSolver:
                     )
                 )
 
-            try:
-                separator_error = self._run_noop_separator_boundary(
-                    variable_names=variable_names,
-                    node=node,
-                    lp_solution=lp_solution,
-                    incumbent=incumbent,
-                    cut_pool=cut_pool,
-                )
-            except (TypeError, ValueError) as exc:
-                separator_error = str(exc)
-            if separator_error is not None:
-                solution = Solution(status=SolverStatus.ERROR, message=separator_error)
-                logs.append(_log_error(node, solution))
-                return self._complete_result(
-                    BranchAndBoundResult(
-                        solution=solution,
-                        nodes_processed=nodes_processed,
-                        nodes_created=nodes_created,
-                        nodes_pruned=nodes_pruned,
-                        incumbent_value=incumbent.objective_value,
-                        best_bound=best_bound,
-                        log=tuple(logs),
-                        status_message=solution.message,
+            if not unbounded_relaxation:
+                try:
+                    separator_error = self._run_noop_separator_boundary(
+                        variable_names=variable_names,
+                        node=node,
+                        lp_solution=lp_solution,
+                        incumbent=incumbent,
+                        cut_pool=cut_pool,
                     )
-                )
+                except (TypeError, ValueError) as exc:
+                    separator_error = str(exc)
+                if separator_error is not None:
+                    solution = Solution(status=SolverStatus.ERROR, message=separator_error)
+                    logs.append(_log_error(node, solution))
+                    return self._complete_result(
+                        BranchAndBoundResult(
+                            solution=solution,
+                            nodes_processed=nodes_processed,
+                            nodes_created=nodes_created,
+                            nodes_pruned=nodes_pruned,
+                            incumbent_value=incumbent.objective_value,
+                            best_bound=best_bound,
+                            log=tuple(logs),
+                            status_message=solution.message,
+                        )
+                    )
 
-            if _is_bound_dominated(lp_solution, incumbent):
-                nodes_pruned += 1
-                logs.append(
-                    _log_node(
+                if _is_bound_dominated(lp_solution, incumbent):
+                    nodes_pruned += 1
+                    logs.append(
+                        _log_node(
+                            node=node,
+                            lp_solution=lp_solution,
+                            prune_reason=PruneReason.BOUND_DOMINATED,
+                            incumbent_value=incumbent.objective_value,
+                            message="LP bound cannot improve the incumbent.",
+                        )
+                    )
+                    self._dispatch_node_prune_event(
                         node=node,
                         lp_solution=lp_solution,
                         prune_reason=PruneReason.BOUND_DOMINATED,
-                        incumbent_value=incumbent.objective_value,
-                        message="LP bound cannot improve the incumbent.",
+                        incumbent=incumbent,
                     )
-                )
-                self._dispatch_node_prune_event(
-                    node=node,
-                    lp_solution=lp_solution,
-                    prune_reason=PruneReason.BOUND_DOMINATED,
-                    incumbent=incumbent,
-                )
-                continue
+                    continue
 
             try:
                 branching_variable = choose_branching_variable(
                     variable_names=variable_names,
                     integer_variable_names=integer_variable_names,
-                    values=lp_solution.primal_values,
+                    values=branching_values,
+                    tolerance=0.0 if unbounded_relaxation else DEFAULT_INTEGER_TOLERANCE,
                 )
             except ValueError as exc:
                 solution = Solution(status=SolverStatus.ERROR, message=str(exc))
@@ -286,6 +270,42 @@ class BranchAndBoundSolver:
                 )
 
             if branching_variable is None:
+                if unbounded_relaxation:
+                    # All integer coordinates have finite two-sided bounds. Every
+                    # LP recession direction therefore fixes those coordinates;
+                    # this integer-feasible point anchors a MIP improving ray.
+                    nodes_pruned += 1
+                    solution = Solution(
+                        status=SolverStatus.UNBOUNDED,
+                        message="Unbounded LP relaxation has a verified integer-feasible point.",
+                    )
+                    logs.append(
+                        _log_node(
+                            node=node,
+                            lp_solution=lp_solution,
+                            prune_reason=PruneReason.UNBOUNDED,
+                            incumbent_value=incumbent.objective_value,
+                            message=solution.message,
+                        )
+                    )
+                    self._dispatch_node_prune_event(
+                        node=node,
+                        lp_solution=lp_solution,
+                        prune_reason=PruneReason.UNBOUNDED,
+                        incumbent=incumbent,
+                    )
+                    return self._complete_result(
+                        BranchAndBoundResult(
+                            solution=solution,
+                            nodes_processed=nodes_processed,
+                            nodes_created=nodes_created,
+                            nodes_pruned=nodes_pruned,
+                            incumbent_value=incumbent.objective_value,
+                            best_bound=None,
+                            log=tuple(logs),
+                            status_message=solution.message,
+                        )
+                    )
                 nodes_pruned += 1
                 candidate = _mip_candidate_solution(lp_solution, integer_variable_names)
                 incumbent = incumbent.update(candidate)
@@ -307,7 +327,7 @@ class BranchAndBoundSolver:
                 )
                 continue
 
-            branching_value = lp_solution.primal_values[branching_variable]
+            branching_value = branching_values[branching_variable]
             left_constraint, right_constraint = branch_on_value(
                 branching_variable,
                 branching_value,
@@ -376,6 +396,38 @@ class BranchAndBoundSolver:
                 status_message=solution.message,
             )
         )
+
+    def _probe_unbounded_feasibility(self, relaxation: Model) -> Solution:
+        feasibility_model = Model(
+            name=f"{relaxation.name}_feasibility",
+            variables=list(relaxation.variables),
+            constraints=list(relaxation.constraints),
+            objective=Objective(coefficients={}, sense=OptimizationSense.MAXIMIZE),
+        )
+        solution = self.lp_solver.solve(feasibility_model)
+        if solution.status != SolverStatus.OPTIMAL:
+            status = (
+                SolverStatus.NUMERICAL_ISSUE
+                if solution.status in (
+                    SolverStatus.INFEASIBLE,
+                    SolverStatus.UNBOUNDED,
+                    SolverStatus.NUMERICAL_ISSUE,
+                )
+                else SolverStatus.ERROR
+            )
+            return Solution(
+                status=status,
+                message=(
+                    "Unbounded-relaxation feasibility probe returned "
+                    f"{solution.status.value}: {solution.message}"
+                ),
+            )
+        if not _feasibility_point_is_valid(feasibility_model, solution.primal_values):
+            return Solution(
+                status=SolverStatus.NUMERICAL_ISSUE,
+                message="Unbounded-relaxation feasibility probe returned an invalid primal point.",
+            )
+        return solution
 
     def _run_noop_separator_boundary(
         self,
@@ -557,6 +609,32 @@ class BranchAndBoundSolver:
     def _dispatch_callback_event(self, event: CallbackEvent) -> None:
         if self.callbacks:
             dispatch_callback_events(self.callbacks, (event,))
+
+
+def _feasibility_point_is_valid(model: Model, values: dict[str, float]) -> bool:
+    for variable in model.variables:
+        value = values.get(variable.name)
+        if value is None or not isfinite(value):
+            return False
+        if value < variable.bounds.lower - DEFAULT_TOLERANCE:
+            return False
+        if value > variable.bounds.upper + DEFAULT_TOLERANCE:
+            return False
+    for constraint in model.constraints:
+        lhs = sum(
+            coefficient * values[name] for name, coefficient in constraint.coefficients.items()
+        )
+        if not isfinite(lhs) or not isfinite(constraint.rhs):
+            return False
+        if constraint.sense == ConstraintSense.LE:
+            satisfied = lhs <= constraint.rhs + DEFAULT_TOLERANCE
+        elif constraint.sense == ConstraintSense.GE:
+            satisfied = lhs >= constraint.rhs - DEFAULT_TOLERANCE
+        else:
+            satisfied = abs(lhs - constraint.rhs) <= DEFAULT_TOLERANCE
+        if not satisfied:
+            return False
+    return True
 
 
 def _validate_supported_mip_scope(model: Model) -> tuple[str, ...]:

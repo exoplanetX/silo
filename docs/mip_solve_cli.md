@@ -150,3 +150,14 @@ Regression coverage exercises both `python -m silo.cli.main mip-solve` and the i
 - No branch-and-cut.
 - No MIP presolve.
 - No LP tableau, basis, or full relaxation dumps in node-log JSON.
+
+
+## Unbounded LP relaxations
+
+An unbounded node LP alone does not prove that an integer-feasible point exists. SILO now solves a second LP on exactly the same node constraints and variable bounds with a zero objective. It verifies the returned finite primal point against the node rows and bounds. A fractional integer coordinate triggers the existing floor/ceil branching rule; zero-objective values never update the incumbent or original-objective bounds.
+
+For this unboundedness proof path, integer coordinates must be exactly integer-valued in the returned point. The existing `1e-6` integer tolerance remains unchanged for bounded-objective solves; it is insufficient by itself for the new unboundedness proof. Row/bound feasibility uses the existing `1e-9` tolerance. Numerical ambiguity may require extra branching or return a numerical issue.
+
+All supported integer/binary variables have finite two-sided bounds. Thus every recession direction fixes their coordinates. Once an integer-feasible point is established, the original LP's improving direction proves MIP unboundedness. Unbounded integer variable domains remain unsupported.
+
+The extra feasibility LP does not count as another branch-and-bound node. Node logs and callbacks describe the original-objective relaxation, not the zero-objective probe. A node limit before integer feasibility is resolved reports no finite `best_bound` or gap for the unresolved unbounded tree. Contradictory or invalid probe results return `numerical_issue`; other probe failures return `error` rather than claiming unboundedness. No CLI or JSON fields were added.

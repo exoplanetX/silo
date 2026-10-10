@@ -343,3 +343,9 @@ The user explicitly approved baseline organization followed by the presolve and 
 Execute the three authorized tasks sequentially with separate contracts, reports and local commits. No push was requested. Local-ahead state produced by this approved sequence does not require repeated approval. Preserve unrelated work and do not expand into new capabilities or phase changes.
 
 See `docs/development_restart.md` and matching `tasks/reports/20261010-*` for current evidence. Older create-file suggestions for existing local mirror files are superseded. After completing the authorized repairs, report next-step recommendations and stop.
+
+### Recovery outcome
+
+The baseline and both authorized status repairs are complete in separate local commits. The project environment is `.venv`; historical `resfs/` originals are preserved and locally ignored. Presolve now requires feasible-point evidence for a terminal empty-column unbounded status. MIP now resolves integer feasibility before promoting LP unboundedness, with strict integer coordinates on this proof path. Consult the matching reports for tests and final commit references.
+
+Recommended next scope: establish independent small-instance correctness oracles and adversarial status regressions before expanding LP/MIP capabilities or reconsidering native acceleration. This recommendation does not issue another task or approve a phase transition. Native remains deferred, Phase 9 open/parked, Phase 10 not started.

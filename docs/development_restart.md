@@ -6,7 +6,7 @@ SILO remains a Python educational reference solver. Phase 0–8 closure applies 
 
 The user approved baseline organization followed by two separate status-correctness repairs on 2026-10-10. Execute one atomic task/commit at a time: baseline, presolve infeasible-vs-unbounded, then MIP unbounded-relaxation handling. No push, native implementation or phase transition is included. Local-ahead state within this explicit sequence is expected.
 
-The 2026-10-10 audit reproduced two defects despite 975 existing tests passing: an improving empty column can mask infeasible nonempty constraints in presolve, and LP-relaxation unboundedness can mask integer infeasibility in branch-and-bound. Matching task reports record the repair outcomes.
+The 2026-10-10 audit reproduced two defects despite 975 existing tests passing: an improving empty column can mask infeasible nonempty constraints in presolve, and LP-relaxation unboundedness can mask integer infeasibility in branch-and-bound. The separate presolve and MIP repairs now address both defects; matching task reports record red/green regression evidence and final checks.
 
 ## Reading order
 
