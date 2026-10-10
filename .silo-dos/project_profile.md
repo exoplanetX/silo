@@ -349,3 +349,16 @@ See `docs/development_restart.md` and matching `tasks/reports/20261010-*` for cu
 The baseline and both authorized status repairs are complete in separate local commits. The project environment is `.venv`; historical `resfs/` originals are preserved and locally ignored. Presolve now requires feasible-point evidence for a terminal empty-column unbounded status. MIP now resolves integer feasibility before promoting LP unboundedness, with strict integer coordinates on this proof path. Consult the matching reports for tests and final commit references.
 
 Recommended next scope: establish independent small-instance correctness oracles and adversarial status regressions before expanding LP/MIP capabilities or reconsidering native acceleration. This recommendation does not issue another task or approve a phase transition. Native remains deferred, Phase 9 open/parked, Phase 10 not started.
+
+### Subsequent authorized baseline — 2026-10-10
+
+The user subsequently requested a push followed by the recommended baseline task.
+Recovery commits 6bd9543, a2490ec and a4814f4 were pushed successfully to origin/main;
+the new task started clean with ahead/behind `0 0` at a4814f4. This later authorization
+supersedes the earlier sequence's no-push instruction for those completed commits.
+Task `20261010-04-01_correctness-oracles` adds independent analytical LP checks, exact
+finite integer enumeration and optional test-only HiGHS comparison. See
+`docs/correctness_baseline.md` and its execution report for coverage and limitations.
+The baseline task uses local-commit mode. Phase/native decisions remain unchanged.
+Next recommended scope is a separately approved LP dual-result convention and
+optimality-evidence task; no follow-on task is issued automatically.

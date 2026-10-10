@@ -41,3 +41,13 @@ For this recovery, `.venv` was created with `--system-site-packages` and the exi
 ## Boundaries
 
 Cuts/callbacks are conservative interfaces; complete Benders/column-generation solvers are not implemented. Uncertainty supports only tiny transformations. Avoid interpreting phase completion as production algorithm coverage. Historical task-ID collisions remain recorded debt; preserve immutable contracts.
+
+## Follow-up correctness baseline — 2026-10-10
+
+The user subsequently requested synchronization and the recommended independent
+baseline. The recovery commits through a4814f4 were successfully pushed to GitHub,
+then task `20261010-04-01_correctness-oracles` established the test-only baseline in
+`tests/verification/`. See [correctness baseline](correctness_baseline.md) for exact
+coverage, optional SciPy requirements, independent reference methods and limits.
+This follow-up has its own local commit and execution report; it does not change
+solver algorithms, phase status or the native defer decision.
