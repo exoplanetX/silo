@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from math import isfinite
 
 from silo.core.constraint import Constraint
 from silo.core.enums import ConstraintSense
@@ -117,7 +118,10 @@ class Presolver:
                 )
 
             column_diagnostics = inspect_empty_columns(current_model)
-            if column_diagnostics.unbounded_variable is not None:
+            if (
+                column_diagnostics.unbounded_variable is not None
+                and _lower_bound_point_is_feasible(current_model)
+            ):
                 return PresolveResult(
                     model=current_model,
                     reductions=tuple(reductions),
@@ -181,6 +185,30 @@ class Presolver:
 
     def apply(self, model: Model) -> Model:
         return self.run(model).model
+
+
+def _lower_bound_point_is_feasible(model: Model) -> bool:
+    """Certify a cheap feasible point before turning an improving ray into a status.
+
+    Failure to certify is inconclusive: structural passes and the LP solver must
+    still inspect the remaining constraints. Presolve never calls an LP backend.
+    """
+    values = {variable.name: variable.bounds.lower for variable in model.variables}
+    if not all(isfinite(value) for value in values.values()):
+        return False
+    for constraint in model.constraints:
+        lhs = sum(value * values[name] for name, value in constraint.coefficients.items())
+        if not isfinite(lhs) or not isfinite(constraint.rhs):
+            return False
+        if constraint.sense == ConstraintSense.LE:
+            satisfied = lhs <= constraint.rhs + DEFAULT_TOLERANCE
+        elif constraint.sense == ConstraintSense.GE:
+            satisfied = lhs >= constraint.rhs - DEFAULT_TOLERANCE
+        else:
+            satisfied = abs(lhs - constraint.rhs) <= DEFAULT_TOLERANCE
+        if not satisfied:
+            return False
+    return True
 
 
 def _run_structural_pass(model: Model) -> StructuralPassResult:

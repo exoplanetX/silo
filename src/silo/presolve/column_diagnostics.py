@@ -33,7 +33,8 @@ def inspect_empty_columns(
                     code="empty_column_unbounded",
                     message=(
                         "Empty column with positive objective coefficient and no finite "
-                        "upper bound makes the model unbounded."
+                        "upper bound gives an improving direction; unboundedness also "
+                        "requires a feasible remaining system."
                     ),
                     source=variable.name,
                 )

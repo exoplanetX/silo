@@ -86,7 +86,7 @@ The presolve layer uses immutable result, diagnostics, scaling, and reduction re
 
 ## Empty-Row and Empty-Column Presolve Diagnostics
 
-The presolver now detects feasible empty rows, infeasible empty rows, and simple empty-column unboundedness. Feasible empty rows are removed from the returned presolved model with traceable reduction records. Empty columns are diagnostic-only except when a nonconstrained variable with positive maximization objective and no finite upper bound proves unboundedness.
+The presolver detects feasible empty rows, infeasible empty rows, and improving empty columns. Feasible empty rows are removed with traceable reduction records. An improving empty column proves unboundedness only when a finite lower-bound point also satisfies every remaining row under the existing feasibility tolerance. Without that sufficient feasible-point check, presolve retains a conditional warning, continues structural reductions, and leaves the final status to the LP solver. This prevents contradictory nonempty rows from being hidden by an improving direction; presolve itself never calls an LP solver.
 
 ## Fixed-Variable Presolve
 
