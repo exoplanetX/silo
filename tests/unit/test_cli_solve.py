@@ -29,7 +29,7 @@ def test_cli_solve_prints_solution_json_to_stdout(capsys) -> None:
     assert payload["slack_values"] == {"labor": 0.0, "material": 0.0}
     assert payload["reduced_costs"] == {"x1": 0.0, "x2": 0.0}
     assert payload["basis_status"] == {"x1": "basic", "x2": "basic"}
-    assert payload["dual_values"] == {}
+    assert payload["dual_values"] == {"labor": pytest.approx(2.25), "material": pytest.approx(0.25)}
 
 
 def test_cli_solve_accepts_explicit_tableau_solver(capsys) -> None:

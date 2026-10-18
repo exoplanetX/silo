@@ -70,3 +70,12 @@ Next recommended atomic task: add an independently checked LP optimality-evidenc
 baseline (dual feasibility and objective equality where evidence is available), or
 first formalize the missing dual-result contract if that evidence is unavailable.
 Capability expansion should be separately scoped and authorized.
+
+## LP dual follow-up — 2026-10-18
+
+Task `20261018-01-02_lp-dual-optimality` adds original-row dual output, a native
+original-input checker, analytical dual signs, negative evidence controls and dual
+verification on this baseline's optimal LP fixtures. The original 232-check baseline
+above is preserved as its historical evidence count. See [LP duality](lp_duality.md)
+and the matching report for the follow-up's actual counts and limitations. Finite
+validation remains distinct from a general solver or numerical-robustness proof.

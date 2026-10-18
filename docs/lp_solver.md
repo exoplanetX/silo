@@ -26,7 +26,9 @@ The solver rejects minimization models, finite upper bounds, nonzero lower bound
 - Negative RHS normalization.
 - Infeasible LP detection through the Phase I artificial objective.
 - Unbounded LP detection in Phase II.
-- Solution diagnostics for primal values, slacks, reduced costs, and basis status.
+- Solution diagnostics for primal values, slacks, original-row dual values, reduced costs,
+  and basis status. See [LP duality and optimality checks](lp_duality.md) for signs,
+  presolve recovery, fixed-bound contributions and the independent Python checker.
 
 ## Current Non-Goals
 
@@ -74,7 +76,12 @@ The revised simplex solver now supports Phase I construction for artificial-vari
 
 For maximization LPs, public reduced costs are reported for original variables as `c_j - pi^T A_j`. At optimality, basic original variables should have reduced costs near zero, and nonbasic variables at their lower bound should have nonpositive reduced costs within tolerance. The tableau implementation may store the opposite sign in its internal objective row, but public `Solution.reduced_costs` is normalized to the same convention used by revised simplex.
 
-Both current native LP solvers intentionally leave `dual_values` empty. Dual-value exposure requires a separate mapping design because original rows may be `<=`, `>=`, or `=`, and negative RHS normalization can flip row signs before solving.
+Both native LP solvers now populate `dual_values` for optimal results using original
+row names and signs, including negative RHS normalization and redundant equality
+cleanup. The checker validates original-space primal/dual conditions independently.
+See [LP duality](lp_duality.md) for the formulas, fixed-bound correction, tolerance
+and the existing revised Phase-I cleanup robustness boundary. Nonoptimal LP and
+MIP results retain empty optimal-dual mappings.
 
 ## Presolve and Scaling Layer
 
@@ -94,7 +101,7 @@ The presolver can eliminate variables with equal lower and upper bounds by subst
 
 ## Scaling Diagnostics
 
-The presolver now computes coefficient-range diagnostics without automatically scaling the model. Diagnostics report matrix coefficient range, RHS magnitude, objective magnitude, near-zero coefficients, and large-range warnings. Automatic scaling remains future work because primal, reduced-cost, and future dual-value mappings must be handled carefully.
+The presolver now computes coefficient-range diagnostics without automatically scaling the model. Diagnostics report matrix coefficient range, RHS magnitude, objective magnitude, near-zero coefficients, and large-range warnings. Automatic scaling remains future work because primal, reduced-cost, and dual-value mappings must be handled carefully.
 
 ## Presolve Diagnostics CLI
 

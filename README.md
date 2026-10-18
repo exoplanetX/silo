@@ -30,7 +30,8 @@ The current repository contains a working educational LP path:
 - Optional solve-time presolve through `silo solve --presolve`.
 - Conservative presolve with empty-row diagnostics/removal, empty-column diagnostics, fixed-variable elimination, repeated-pass reductions, original-space slack recovery, and coefficient-range scaling diagnostics.
 - Python API and `silo mip-solve` branch-and-bound for small binary and bounded nonnegative integer MIPs.
-- Solution JSON output with primal values, slacks, reduced costs, and basis status.
+- Solution JSON output with primal values, slacks, original-row LP duals, reduced costs,
+  and basis status; original-space primal/dual optimality checks through the Python API.
 
 The native solver path does not call external solvers.
 
@@ -44,7 +45,7 @@ The native solver path does not call external solvers.
 - No cuts, heuristics, callbacks, or branch-and-cut yet.
 - Presolve is not enabled by default; solve-time presolve is opt-in.
 - No automatic scaling yet.
-- No dual values exposed yet.
+- LP duals cover the current continuous scope; MIP dual values remain empty.
 - No external solver backend is used by native algorithms.
 - No industrial performance claims.
 
@@ -107,6 +108,9 @@ pytest
 ```
 
 ## Documentation
+
+See [LP dual conventions and optimality checks](docs/lp_duality.md) for a worked
+example, original-row signs, fixed-variable recovery, API usage and numeric limits.
 
 - [JSON model format](docs/json_model_format.md)
 - [CLI solve usage](docs/cli_solve.md)

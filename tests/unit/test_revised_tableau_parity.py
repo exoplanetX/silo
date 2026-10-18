@@ -7,6 +7,7 @@ from silo.core.objective import Objective
 from silo.core.solution import Solution
 from silo.core.status import SolverStatus
 from silo.core.variable import Variable
+from silo.lp.optimality import check_lp_optimality
 from silo.lp.simplex.basis import BASIC, NONBASIC_LOWER
 from silo.lp.simplex.revised import RevisedSimplexSolver
 from silo.lp.simplex.tableau import TableauSimplexSolver
@@ -21,7 +22,7 @@ def test_tableau_and_revised_match_on_production_lp() -> None:
     assert tableau.objective_value == pytest.approx(21.0)
     assert tableau.primal_values == {"x1": pytest.approx(2.0), "x2": pytest.approx(3.0)}
     assert tableau.basis_status == revised.basis_status == {"x1": BASIC, "x2": BASIC}
-    assert tableau.dual_values == revised.dual_values == {}
+    assert tableau.dual_values == pytest.approx({"labor": 2.25, "material": 0.25})
 
 
 def test_tableau_and_revised_match_on_objective_constant_lp() -> None:
@@ -31,7 +32,7 @@ def test_tableau_and_revised_match_on_objective_constant_lp() -> None:
     assert tableau.objective_value == pytest.approx(9.0)
     assert tableau.primal_values == {"x": pytest.approx(4.0)}
     assert tableau.basis_status == revised.basis_status == {"x": BASIC}
-    assert tableau.dual_values == revised.dual_values == {}
+    assert tableau.dual_values == pytest.approx({"capacity": 2})
 
 
 def test_tableau_and_revised_match_on_ge_phase_one_lp() -> None:
@@ -45,7 +46,7 @@ def test_tableau_and_revised_match_on_ge_phase_one_lp() -> None:
         "capacity": pytest.approx(0.0),
     }
     assert tableau.basis_status == revised.basis_status == {"x": BASIC}
-    assert tableau.dual_values == revised.dual_values == {}
+    assert tableau.dual_values == pytest.approx({"demand": 0, "capacity": 1})
 
 
 def test_tableau_and_revised_match_on_degenerate_equality_lp() -> None:
@@ -60,7 +61,8 @@ def test_tableau_and_revised_match_on_degenerate_equality_lp() -> None:
     _assert_primal_feasible(model, revised)
     _assert_basis_statuses_are_valid(tableau)
     _assert_basis_statuses_are_valid(revised)
-    assert tableau.dual_values == revised.dual_values == {}
+    # Multipliers may differ; _solve_both checks each original-space witness.
+    assert set(tableau.dual_values) == {row.name for row in model.constraints}
 
 
 def test_tableau_and_revised_match_on_infeasible_lp() -> None:
@@ -89,11 +91,15 @@ def test_public_reduced_cost_signs_match_for_nonbasic_lower_variable() -> None:
         "x": BASIC,
         "y": NONBASIC_LOWER,
     }
-    assert tableau.dual_values == revised.dual_values == {}
+    assert tableau.dual_values == pytest.approx({"x_capacity": 1, "y_capacity": 0})
 
 
 def _solve_both(model: Model) -> tuple[Solution, Solution]:
-    return TableauSimplexSolver().solve(model), RevisedSimplexSolver().solve(model)
+    solutions = TableauSimplexSolver().solve(model), RevisedSimplexSolver().solve(model)
+    for solution in solutions:
+        if solution.status == SolverStatus.OPTIMAL:
+            assert check_lp_optimality(model, solution).passed
+    return solutions
 
 
 def _assert_same_optimal_diagnostics(tableau: Solution, revised: Solution) -> None:

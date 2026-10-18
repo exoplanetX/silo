@@ -362,3 +362,17 @@ finite integer enumeration and optional test-only HiGHS comparison. See
 The baseline task uses local-commit mode. Phase/native decisions remain unchanged.
 Next recommended scope is a separately approved LP dual-result convention and
 optimality-evidence task; no follow-on task is issued automatically.
+
+### Authorized LP dual evidence — 2026-10-18
+
+The user explicitly approved LP dual conventions, output and optimality verification
+in the existing solver. Task `20261018-01-02_lp-dual-optimality` (revision 01 preserved)
+adds original-row multipliers to both backends, fixed-aware presolve recovery, an
+independent Python checker and compare-time validation, without adding JSON keys.
+See `docs/lp_duality.md` for formulas, worked examples and limits, and the matching
+report for tests and local commit/integration evidence. This continues the approved
+baseline at 5cc88cb in a clean managed worktree, preserving primary-checkout research
+notes. Git mode is local-commit; no push is included. Phase 9 remains open/parked,
+native deferred and Phase 10 not started. A known revised Phase-I source-row cleanup
+robustness obligation is documented for a separate atomic task, without altering the
+current pivot/search algorithm or implying another task's execution approval.

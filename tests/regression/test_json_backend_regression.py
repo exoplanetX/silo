@@ -13,6 +13,7 @@ from silo.core.solution import Solution
 from silo.core.status import SolverStatus
 from silo.core.variable import Variable
 from silo.io.json_reader import read_json_model
+from silo.lp.optimality import check_lp_optimality
 from silo.lp.simplex.revised import RevisedSimplexSolver
 from silo.lp.simplex.tableau import TableauSimplexSolver
 
@@ -74,10 +75,12 @@ def test_tableau_and_revised_backends_match_json_examples(example_name: str) -> 
 
     expected_status = expectation["status"]
     assert tableau.status == revised.status == expected_status
-    assert tableau.dual_values == revised.dual_values == {}
-
     if expected_status != SolverStatus.OPTIMAL:
+        assert tableau.dual_values == revised.dual_values == {}
         return
+
+    assert check_lp_optimality(model, tableau).passed
+    assert check_lp_optimality(model, revised).passed
 
     expected_objective = expectation["objective_value"]
     assert tableau.objective_value == pytest.approx(expected_objective)
@@ -108,7 +111,8 @@ def test_reduced_cost_sign_parity_for_deterministic_model() -> None:
     assert revised.primal_values == {"x": pytest.approx(1.0), "y": pytest.approx(0.0)}
     assert tableau.reduced_costs == revised.reduced_costs
     assert tableau.reduced_costs == {"x": pytest.approx(0.0), "y": pytest.approx(-1.0)}
-    assert tableau.dual_values == revised.dual_values == {}
+    assert check_lp_optimality(_reduced_cost_sign_model(), tableau).passed
+    assert check_lp_optimality(_reduced_cost_sign_model(), revised).passed
 
 
 @pytest.mark.parametrize("solver_name", ("tableau", "revised"))

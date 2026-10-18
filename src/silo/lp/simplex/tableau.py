@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from math import isinf
 
 from silo.core.enums import ConstraintSense, OptimizationSense, VariableType
@@ -33,6 +33,9 @@ class SimplexTableau:
     rows: list[list[float]]
     objective_row: list[float]
     basis: list[int]
+    # Each current row as a linear combination of ORIGINAL input rows. Keeping
+    # this map through Phase I also handles deleted, transformed redundant rows.
+    row_origins: list[list[float]] = field(default_factory=list)
 
     @classmethod
     def from_model(cls, model: Model) -> "SimplexTableau":
@@ -46,6 +49,10 @@ class SimplexTableau:
         pivot_element = self.rows[row_index][column_index]
         normalized_pivot_row = [value / pivot_element for value in self.rows[row_index]]
         self.rows[row_index] = normalized_pivot_row
+        if self.row_origins:
+            self.row_origins[row_index] = [
+                value / pivot_element for value in self.row_origins[row_index]
+            ]
 
         for candidate_index, row in enumerate(self.rows):
             if candidate_index == row_index:
@@ -57,6 +64,13 @@ class SimplexTableau:
                 value - row_multiplier * pivot_row_value
                 for value, pivot_row_value in zip(row, normalized_pivot_row, strict=True)
             ]
+            if self.row_origins:
+                self.row_origins[candidate_index] = [
+                    value - row_multiplier * pivot_value
+                    for value, pivot_value in zip(
+                        self.row_origins[candidate_index], self.row_origins[row_index], strict=True,
+                    )
+                ]
 
         objective_multiplier = self.objective_row[column_index]
         self.objective_row = [
@@ -143,6 +157,7 @@ class TableauSimplexSolver(LPSolver):
                 objective_value=tableau.objective_value(),
                 primal_values=primal_values,
                 slack_values=_constraint_slacks(model, primal_values),
+                dual_values=_original_dual_values(tableau, model),
                 reduced_costs=tableau.reduced_costs(),
                 basis_status=tableau.basis_status(),
                 message="Tableau simplex solved the LP.",
@@ -221,6 +236,11 @@ def _build_initial_tableau(model: Model) -> TableauBuildResult:
         rows=rows,
         objective_row=objective_row,
         basis=basis,
+        row_origins=[
+            [(-1.0 if row.rhs < -DEFAULT_TOLERANCE else 1.0) if i == j else 0.0
+             for j in range(len(model.constraints))]
+            for i, row in enumerate(model.constraints)
+        ],
     )
     _canonicalize_objective_row(tableau)
     return TableauBuildResult(
@@ -333,6 +353,8 @@ def _remove_artificial_columns(
         if pivot_column is None:
             del tableau.rows[row_index]
             del tableau.basis[row_index]
+            if tableau.row_origins:
+                del tableau.row_origins[row_index]
             continue
 
         tableau.pivot(row_index, pivot_column)
@@ -398,6 +420,24 @@ def _run_simplex_iterations(
         status=SolverStatus.ITERATION_LIMIT,
         message=f"{phase_name} reached the iteration limit: {iteration_limit}",
     )
+
+
+def _original_dual_values(tableau: SimplexTableau, model: Model) -> dict[str, float]:
+    # Phase II structural costs are zero; y = c_B^T * row_origins.
+    basic_costs = [
+        model.objective.coefficients.get(tableau.variable_names[column], 0.0)
+        if column < tableau.original_variable_count else 0.0
+        for column in tableau.basis
+    ]
+    return {
+        # Small multipliers may have a material y_i*b_i contribution. Preserve
+        # their magnitude rather than applying a display-oriented zero cutoff.
+        row.name: sum((
+            cost * origin[i]
+            for cost, origin in zip(basic_costs, tableau.row_origins, strict=True)
+        ), 0.0)
+        for i, row in enumerate(model.constraints)
+    }
 
 
 def _constraint_slacks(model: Model, primal_values: dict[str, float]) -> dict[str, float]:

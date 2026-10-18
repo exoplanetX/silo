@@ -1,10 +1,15 @@
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
 from silo.cli.compare import compare_backends, max_abs_diff
 from silo.cli.main import main
+from silo.core.solution import Solution
+from silo.core.status import SolverStatus
+from silo.lp.simplex.revised import RevisedSimplexSolver
+from silo.lp.simplex.tableau import TableauSimplexSolver
 
 EXAMPLE_ROOT = Path("examples/json")
 REQUIRED_TOP_LEVEL_FIELDS = {
@@ -126,6 +131,28 @@ def test_cli_compare_solution_payloads_use_solve_schema(capsys) -> None:
 
 def test_max_abs_diff_reports_infinity_for_mismatched_keys() -> None:
     assert max_abs_diff({"x": 1.0}, {"y": 1.0}) == float("inf")
+
+
+@pytest.mark.parametrize("corrupt", [False, True])
+def test_compare_validates_nonunique_duals_instead_of_requiring_equality(tmp_path, monkeypatch,
+                                                                       corrupt):
+    path = tmp_path / "duplicate.json"
+    path.write_text(json.dumps({
+        "sense": "maximize", "variables": [{"name": "x"}],
+        "objective": {"coefficients": {"x": 2}},
+        "constraints": [
+            {"name": name, "coefficients": {"x": 1}, "sense": "<=", "rhs": 3}
+            for name in ("a", "b")
+        ],
+    }), encoding="utf-8")
+    left = Solution(SolverStatus.OPTIMAL, objective_value=6, primal_values={"x": 3},
+                    dual_values={"a": 2, "b": 0}, reduced_costs={"x": 0})
+    right = replace(left, dual_values={"a": 0, "b": 1 if corrupt else 2})
+    monkeypatch.setattr(TableauSimplexSolver, "solve", lambda self, model: left)
+    monkeypatch.setattr(RevisedSimplexSolver, "solve", lambda self, model: right)
+    result = compare_backends(path)
+    assert result["checks"]["dual_values_empty"] is False
+    assert result["consistent"] is (not corrupt)
 
 
 def _assert_compare_payload_schema(payload: dict[str, object]) -> None:

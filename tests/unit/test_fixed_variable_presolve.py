@@ -132,7 +132,7 @@ def test_recover_solution_restores_fixed_variable_values() -> None:
     assert recovered.primal_values["y"] == pytest.approx(3.0)
     assert recovered.objective_value == pytest.approx(12.0)
     assert recovered.basis_status["x"] == "fixed"
-    assert recovered.reduced_costs["x"] == 0.0
+    assert recovered.reduced_costs["x"] == pytest.approx(1.0)
 
 
 def test_recover_solution_does_not_double_count_objective() -> None:

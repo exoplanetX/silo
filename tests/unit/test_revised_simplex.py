@@ -21,7 +21,7 @@ def test_revised_simplex_solves_single_variable_lp() -> None:
     assert solution.slack_values == {"capacity": pytest.approx(0.0)}
     assert solution.reduced_costs == {"x": pytest.approx(0.0)}
     assert solution.basis_status == {"x": BASIC}
-    assert solution.dual_values == {}
+    assert solution.dual_values == {"capacity": pytest.approx(2)}
 
 
 def test_revised_simplex_solves_production_lp() -> None:

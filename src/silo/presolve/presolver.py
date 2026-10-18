@@ -5,6 +5,7 @@ from silo.core.constraint import Constraint
 from silo.core.enums import ConstraintSense
 from silo.core.model import Model
 from silo.core.solution import Solution
+from silo.core.status import SolverStatus
 from silo.presolve.column_diagnostics import inspect_empty_columns
 from silo.presolve.diagnostics import PresolveDiagnostics, PresolveStatus, PresolveWarning
 from silo.presolve.fixed_variable import FixedValue, eliminate_fixed_variables
@@ -55,12 +56,36 @@ class PresolveResult:
         ):
             slack_values = _constraint_slacks(self.original_model, primal_values)
 
+        dual_values = dict(solution.dual_values)
+        # Lift only complete optimal LP evidence. Legacy/manual results without
+        # duals keep their existing recovery behavior; the checker rejects those
+        # as incomplete rather than inventing multipliers for surviving rows.
+        if (
+            solution.status == SolverStatus.OPTIMAL
+            and self.original_model is not None
+            and set(dual_values) == {row.name for row in self.model.constraints}
+        ):
+            dual_values = {
+                row.name: dual_values.get(row.name, 0.0)
+                for row in self.original_model.constraints
+            }
+            reduced_costs = {
+                # Do not round a small fixed-coordinate residual to zero: its
+                # product with the fixed value can be a material dual bound term.
+                variable.name: (
+                    self.original_model.objective.coefficients.get(variable.name, 0.0)
+                    - sum(row.coefficients.get(variable.name, 0.0) * dual_values[row.name]
+                          for row in self.original_model.constraints)
+                )
+                for variable in self.original_model.variables
+            }
+
         return Solution(
             status=solution.status,
             objective_value=solution.objective_value,
             primal_values=primal_values,
             slack_values=slack_values,
-            dual_values=dict(solution.dual_values),
+            dual_values=dual_values,
             reduced_costs=reduced_costs,
             basis_status=basis_status,
             message=solution.message,

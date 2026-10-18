@@ -25,8 +25,9 @@ The command is intended for development, regression checks, and debugging. It co
 The top-level `consistent` field is `true` when:
 
 - solver statuses match;
-- if both solvers are optimal, objective values match within the default numerical tolerance;
-- both solvers leave `dual_values` empty.
+- if both solvers are optimal, objective values match within the default numerical
+  tolerance and each solution passes original-space LP optimality checks;
+- for matching nonoptimal statuses, both solvers leave `dual_values` empty.
 
 Primal values, slack values, reduced costs, and basis statuses are reported in `checks`, but primal equality is not required for consistency. Degenerate LPs may have multiple optimal primal solutions, so two correct backends can return different optimal variable values while agreeing on status and objective value.
 
@@ -40,7 +41,14 @@ The `checks` object includes:
 - `slack_max_abs_diff`: maximum absolute difference across reported slack values.
 - `reduced_cost_max_abs_diff`: maximum absolute difference across reported reduced costs.
 - `basis_status_match`: whether original-variable basis statuses match exactly.
-- `dual_values_empty`: whether both backends still report empty dual values.
+- `dual_values_empty`: whether both backends report empty dual values. This historical
+  diagnostic key remains for compatibility; it is normally false for optimal LPs with rows.
+
+Optimal dual vectors can differ under degeneracy. Each is validated independently
+against the original model; coordinate equality is not required. The checks include
+original primal feasibility, dual signs, reduced costs, objective equality and
+complementarity, using the reported default absolute tolerance. See
+[LP dual conventions](lp_duality.md). The comparison JSON keys are unchanged.
 
 The `tableau` and `revised` payloads use the same solution schema as `silo solve`.
 

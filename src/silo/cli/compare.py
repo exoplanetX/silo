@@ -6,6 +6,7 @@ from silo.core.solution import Solution
 from silo.core.status import SolverStatus
 from silo.io.json_reader import read_json_model
 from silo.io.solution_writer import solution_to_dict
+from silo.lp.optimality import check_lp_optimality
 from silo.lp.simplex.revised import RevisedSimplexSolver
 from silo.lp.simplex.tableau import TableauSimplexSolver
 from silo.utils.numerics import DEFAULT_TOLERANCE
@@ -19,6 +20,13 @@ def compare_backends(model_path: str | Path) -> dict[str, Any]:
 
     checks = _comparison_checks(tableau_solution, revised_solution)
     consistent = _is_consistent(tableau_solution, revised_solution, checks)
+    if consistent and tableau_solution.status == SolverStatus.OPTIMAL:
+        # Duals can be nonunique. Check each original-space witness instead of
+        # demanding coordinate equality or the historical empty-dual placeholder.
+        consistent = all(
+            check_lp_optimality(model, solution, DEFAULT_TOLERANCE).passed
+            for solution in (tableau_solution, revised_solution)
+        )
 
     return {
         "model_path": path.as_posix(),
@@ -72,8 +80,8 @@ def _is_consistent(
     right: Solution,
     checks: dict[str, Any],
 ) -> bool:
-    if not checks["status_match"] or not checks["dual_values_empty"]:
+    if not checks["status_match"]:
         return False
     if left.status == right.status == SolverStatus.OPTIMAL:
         return bool(checks["objective_match"])
-    return True
+    return bool(checks["dual_values_empty"])

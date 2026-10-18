@@ -17,6 +17,7 @@ class BasisState:
     primal_values: np.ndarray
     basic_values: np.ndarray
     reduced_costs: np.ndarray
+    simplex_multipliers: np.ndarray
 
 
 @dataclass(frozen=True)
@@ -452,6 +453,7 @@ def _compute_basis_state(
         primal_values=np.asarray([_clean_zero(value) for value in primal_values]),
         basic_values=np.asarray([_clean_zero(value) for value in basic_values]),
         reduced_costs=np.asarray([_clean_zero(value) for value in reduced_costs]),
+        simplex_multipliers=simplex_multipliers,
     )
 
 
@@ -517,10 +519,26 @@ def _optimal_solution(
         ),
         primal_values=primal_values,
         slack_values=_constraint_slacks(model, primal_values),
+        dual_values=_original_dual_values(model, problem, state),
         reduced_costs=_original_reduced_costs(problem, state.reduced_costs),
         basis_status=_original_basis_status(problem, basis),
         message="Revised simplex solved the LP.",
     )
+
+
+def _original_dual_values(
+    model: Model, problem: StandardFormProblem, state: BasisState,
+) -> dict[str, float]:
+    # Cleanup retains a subset of ORIGINAL normalized rows. Removed redundant
+    # equalities get zero multipliers; undo each surviving row's RHS sign flip.
+    normalized = dict(zip(problem.row_names, state.simplex_multipliers, strict=True))
+    return {
+        # Preserve small multipliers: y_i*b_i can still be significant.
+        row.name: float(normalized.get(row.name, 0.0)) * (
+            -1.0 if row.rhs < -DEFAULT_TOLERANCE else 1.0
+        )
+        for row in model.constraints
+    }
 
 
 def _original_primal_values(
