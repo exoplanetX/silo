@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "ingestion_task": "20261018-04-02_research-assets",
+  "project_baseline": "cd83009168311286a19b6095bce46ff5bbd8c982",
+  "original_session_id": "01a12613-6c43-7fd0-bb57-0a7b4a14e364",
+  "probes": {
+    "theory": {
+      "original_relative_path": "pricing_theory_checks_20261011.py",
+      "bytes": 5157,
+      "sha256": "2b021c6537bc80feb07ee2739cb0003fa255d78bf14b068597e8a150e4fbb7d5",
+      "historical_result": {
+        "original_relative_path": "pricing_theory_checks_20261011.json",
+        "bytes": 1436,
+        "sha256": "74d73de878f38fed3107fbccb04ad22ad52dedf43057c63ff60fbf687b3c4ecb"
+      },
+      "repo_path": "scripts/research/pricing/probes/pricing_theory_checks_20261011.py"
+    },
+    "signature": {
+      "original_relative_path": "pricing_signature_checks_20261011.py",
+      "bytes": 9444,
+      "sha256": "c58ffdc106112befc234900b4c075f78112d72f3560a1adff859e9dfabaa8ab5",
+      "historical_result": {
+        "original_relative_path": "pricing_signature_checks_20261011.json",
+        "bytes": 4014,
+        "sha256": "88cbb1cd7cda3655dcbfe9c3ab52677e70bc735ee67d73a1c0cf09bddcc64a0d"
+      },
+      "repo_path": "scripts/research/pricing/probes/pricing_signature_checks_20261011.py"
+    },
+    "frontier": {
+      "original_relative_path": "pricing_frontier_state_checks_20261011.py",
+      "bytes": 17355,
+      "sha256": "be57a28c16d5118ebf9775d0aeccead5f539ea607c7e4d49ed0b09ecace1b986",
+      "historical_result": {
+        "original_relative_path": "pricing_frontier_state_checks_20261011.json",
+        "bytes": 4286,
+        "sha256": "60ccf25216efac47570ffd5ee89366b8904dfb4e3fe33177a0c97200929defdc"
+      },
+      "repo_path": "scripts/research/pricing/probes/pricing_frontier_state_checks_20261011.py"
+    },
+    "application": {
+      "original_relative_path": "rcsp_20261011/pricing_application_probe.py",
+      "bytes": 29339,
+      "sha256": "2fe7e37316d5f282549023e85f058a9895d19398c4de0d1e8dc9d5a675f05b20",
+      "historical_result": {
+        "original_relative_path": "rcsp_20261011/pricing_application_results.json",
+        "bytes": 701154,
+        "sha256": "23b0b65cf279db5f9a969f43915d4744e2aef7e65bf5b4a361155180ad89b698"
+      },
+      "repo_path": "examples/research/pricing_application_probe.py"
+    },
+    "locality": {
+      "original_relative_path": "pricing_locality_20261017/verify_boundary_conditions.py",
+      "bytes": 9697,
+      "sha256": "8c04887151c8aa766538ec83fadbc77ab05aef88336b7b7f07392bbdc4c68299",
+      "historical_result": {
+        "original_relative_path": "pricing_locality_20261017/boundary_conditions_results.json",
+        "bytes": 4523,
+        "sha256": "f6b3a13ebebe9a5110c1f9bbcbde3f17c01b4dd3b072adadbf26073ed1bedb51"
+      },
+      "repo_path": "scripts/research/pricing/probes/verify_boundary_conditions.py"
+    }
+  },
+  "notes": [
+    {
+      "path": "notes/26_incremental_pricing_research_start.md",
+      "original_sha256": "392d3405b451f31b3f792975b429be24f3ea4560c0da38c1c71eb5a9342631a3",
+      "bytes": 35496,
+      "link_replacements": [
+        {
+          "original_relative_path": "pricing_theory_checks_20261011.py",
+          "target": "../scripts/research/pricing/probes/pricing_theory_checks_20261011.py",
+          "occurrences": 1
+        }
+      ],
+      "ingested_sha256": "67cc5e68c3e05ca39630112d4b8a9db48b4ba9df47e3e9cd05718c99c750c30f"
+    },
+    {
+      "path": "notes/27_pricing_operation_alignment_and_structure_class.md",
+      "original_sha256": "9d5d8d50e1c062de72e1e8ab5aaed9c86dea79c4ab305ac7905302b186d6693a",
+      "bytes": 28195,
+      "link_replacements": [
+        {
+          "original_relative_path": "pricing_signature_checks_20261011.py",
+          "target": "../scripts/research/pricing/probes/pricing_signature_checks_20261011.py",
+          "occurrences": 1
+        },
+        {
+          "original_relative_path": "pricing_signature_checks_20261011.json",
+          "target": "../scripts/research/pricing/README.md#historical-results",
+          "occurrences": 1
+        }
+      ],
+      "ingested_sha256": "3b5b1d3dd084eec26c48707225ac6ed5ee9224e2d7dcabf2b37ad85f4ab63903"
+    },
+    {
+      "path": "notes/28_pricing_frontier_state_and_repair_baseline.md",
+      "original_sha256": "3bc4cb53259e33fd3d2fe0c94086b1408b20d7348265ca627c8cb6b41beb1dfb",
+      "bytes": 23936,
+      "link_replacements": [
+        {
+          "original_relative_path": "pricing_frontier_state_checks_20261011.py",
+          "target": "../scripts/research/pricing/probes/pricing_frontier_state_checks_20261011.py",
+          "occurrences": 1
+        },
+        {
+          "original_relative_path": "pricing_frontier_state_checks_20261011.json",
+          "target": "../scripts/research/pricing/README.md#historical-results",
+          "occurrences": 1
+        }
+      ],
+      "ingested_sha256": "09e4cfb0146d0e0b7e19761258087ebb451c7bbb4961689d9f7d207ed12e797d"
+    },
+    {
+      "path": "notes/29_pricing_application_structure_and_cost_gate.md",
+      "original_sha256": "7c8359dd6ff9c2b2ac59ab52f0a204e0367e23d9acf95e0face1fc4d053f4738",
+      "bytes": 22848,
+      "link_replacements": [
+        {
+          "original_relative_path": "rcsp_20261011/pricing_application_probe.py",
+          "target": "../examples/research/pricing_application_probe.py",
+          "occurrences": 1
+        },
+        {
+          "original_relative_path": "rcsp_20261011/pricing_application_results.json",
+          "target": "../scripts/research/pricing/README.md#historical-results",
+          "occurrences": 1
+        },
+        {
+          "original_relative_path": "rcsp_20261011/source_manifest.json",
+          "target": "../scripts/research/pricing/source_manifest.json",
+          "occurrences": 2
+        }
+      ],
+      "ingested_sha256": "320829fb28db37969482c6e46f56382d7c3687574aa47e86a9a3c8c70e8c50ce"
+    },
+    {
+      "path": "notes/30_pricing_locality_conditions_and_nearest_neighbors.md",
+      "original_sha256": "8fe91051fffde1ebb654ecda8c0eba19b11409358cb81c08f7e708829ab9712c",
+      "bytes": 29350,
+      "link_replacements": [
+        {
+          "original_relative_path": "pricing_locality_20261017/verify_boundary_conditions.py",
+          "target": "../scripts/research/pricing/probes/verify_boundary_conditions.py",
+          "occurrences": 1
+        },
+        {
+          "original_relative_path": "pricing_locality_20261017/boundary_conditions_results.json",
+          "target": "../scripts/research/pricing/README.md#historical-results",
+          "occurrences": 1
+        }
+      ],
+      "ingested_sha256": "a5437854d459b180ef9f9f8c3eefcc0206c1d3f263d68145862e68ad1befa43d"
+    }
+  ],
+  "inputs": {
+    "manifest": "source_manifest.json",
+    "manifest_sha256": "d37b6835fa173a4b5a1fa791c7a631bacb249295f618cbf6f1f5e4ba72c06a47",
+    "repository": "BartvanRossum/rcsp-benchmark",
+    "revision": "698703dd98607b3f010bdd859a608be1d3b08133",
+    "file_count": 16,
+    "original_manifest_sha256": "3dac3e04afcfad611f646ecc198faba31344ebb3d841c772415765df4d790612",
+    "manifest_normalization": "CRLF to LF only; original bytes/hash retained in backup and original_manifest_sha256"
+  },
+  "historical_archive": [
+    {
+      "original_relative_path": "resfs/SILO-DOS v0.4-需求讨论.md",
+      "bytes": 13815,
+      "sha256": "0be3002c121867c4ad9ace758c1003501182789f79ef5f470363e92415344155"
+    },
+    {
+      "original_relative_path": "resfs/silo_dos_操作指南_v_1.md",
+      "bytes": 20908,
+      "sha256": "49dab79e3e8e84412bea24f172b005b00a40e482087ea0146ce4e7881902b822"
+    },
+    {
+      "original_relative_path": "resfs/SILO开发流程优化.md",
+      "bytes": 236436,
+      "sha256": "f59286bd4ec47283512340c6f0eb0be5134ab01cd220974dceebcc8cb6c4f91b"
+    }
+  ],
+  "backup_id": "20261018-04-01_research-assets",
+  "historical_results_policy": "Original JSON is backed up outside Git; hashes preserve identity. Fresh runs have separate manifests; semantic reproduction is reported explicitly."
+}

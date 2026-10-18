@@ -1,0 +1,98 @@
+[
+  {
+    "path": "README.md",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/README.md",
+    "sha256": "1F941250CD2140821F34D53667EF06FBABBA4B555579CED9762D81D6640108B8",
+    "bytes": 4067
+  },
+  {
+    "path": "instances/README.md",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/instances/README.md",
+    "sha256": "E9E675C2301A941CFE09744ACDBA3EFB2D638FFB55B6C824FEE5D9B34C8F5B40",
+    "bytes": 2555
+  },
+  {
+    "path": "solutions/README.md",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/solutions/README.md",
+    "sha256": "1C624C69DA4C684EE6C51BC3316437FAC599532B3FC6CF4D3288E1FBCCD21D0B",
+    "bytes": 6891
+  },
+  {
+    "path": "LICENSE",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/LICENSE",
+    "sha256": "CA6B3E2797ED289537009F46415D79CD61DAF5BFFD3A5A37E5C675E82464FF81",
+    "bytes": 1070
+  },
+  {
+    "path": "instances/s2_t90/tasks.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/instances/s2_t90/tasks.txt",
+    "sha256": "87EFA40F78F4927D7DFB046BE0B175477D1DCA1CBEABA8EAB7977CD23608CB06",
+    "bytes": 2150
+  },
+  {
+    "path": "instances/s2_t90/connections.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/instances/s2_t90/connections.txt",
+    "sha256": "4FC3359A36116D6A7E92E7F197E234FAD2E9659A1BB688316AA87109B7C6167E",
+    "bytes": 20800
+  },
+  {
+    "path": "instances/s2_t90/crewBases.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/instances/s2_t90/crewBases.txt",
+    "sha256": "A7E8CBEF2255BEBC1638879B6834EC9BECE44D6A6F9CF4F13E65C0E95A9B68B8",
+    "bytes": 4
+  },
+  {
+    "path": "solutions/solution_s2_t90.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/solutions/solution_s2_t90.txt",
+    "sha256": "E22C306EF1F93ECD28C6C31DDAD04E22BDF00C9EF37DAF33A68310275837043F",
+    "bytes": 400
+  },
+  {
+    "path": "instances/s3_t168/tasks.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/instances/s3_t168/tasks.txt",
+    "sha256": "7D07BEEDF1635D8A991571BC72A936502DCA115F7B94A74EE436A1F7BE1DD780",
+    "bytes": 4090
+  },
+  {
+    "path": "instances/s3_t168/connections.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/instances/s3_t168/connections.txt",
+    "sha256": "97A55614762F350C94CC72FB64167434F0F0DFF012073D0CC711FB0B1E1D696A",
+    "bytes": 50830
+  },
+  {
+    "path": "instances/s3_t168/crewBases.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/instances/s3_t168/crewBases.txt",
+    "sha256": "A7E8CBEF2255BEBC1638879B6834EC9BECE44D6A6F9CF4F13E65C0E95A9B68B8",
+    "bytes": 4
+  },
+  {
+    "path": "solutions/solution_s3_t168.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/solutions/solution_s3_t168.txt",
+    "sha256": "86761F34D56E678786F1BBE0E690A457D3D599FC4858316CE88E634CEEB5A111",
+    "bytes": 830
+  },
+  {
+    "path": "instances/s6_t450/tasks.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/instances/s6_t450/tasks.txt",
+    "sha256": "8E4F10ED6E80F6BDAB66C3365CDCED816364201704459DF0E482EA953B646280",
+    "bytes": 11006
+  },
+  {
+    "path": "instances/s6_t450/connections.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/instances/s6_t450/connections.txt",
+    "sha256": "742859AC7A2B226890B4082348638804BAFF20EDE84D109354FB65D009A3E0F2",
+    "bytes": 194919
+  },
+  {
+    "path": "instances/s6_t450/crewBases.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/instances/s6_t450/crewBases.txt",
+    "sha256": "A7E8CBEF2255BEBC1638879B6834EC9BECE44D6A6F9CF4F13E65C0E95A9B68B8",
+    "bytes": 4
+  },
+  {
+    "path": "solutions/solution_s6_t450.txt",
+    "url": "https://raw.githubusercontent.com/BartvanRossum/rcsp-benchmark/698703dd98607b3f010bdd859a608be1d3b08133/solutions/solution_s6_t450.txt",
+    "sha256": "0E41AC36C52A6C500A3961566C4055C6D7ADC0E2198CAD2562A7ADCC3CCB7C04",
+    "bytes": 2510
+  }
+]

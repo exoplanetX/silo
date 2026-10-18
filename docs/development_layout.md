@@ -17,6 +17,8 @@
 | tasks/phases | 阶段目标与范围；阶段完成限于已批准边界 |
 | tasks/codex | 不可变的原子任务合同；修订新建 RR |
 | tasks/reports | 对应执行证据；记录实际基线、检查与遗留问题 |
+| scripts/research/pricing | 已归档的合成研究探针、固定来源清单与运行入口 |
+| examples/research | 使用外部求解器的隔离研究参考例 |
 | .silo-dos/project_profile.md | 当前状态单一摘要，链接完成项和待议事项 |
 | .silo-dos/technical_route.md、decision_log.md | 技术门控、长期决定与历史替代关系 |
 | outputs、resfs、.venv、各类缓存 | 本地运行、历史原件、环境和缓存；Git 忽略 |
@@ -73,9 +75,12 @@ pyproject.toml、silo.__version__ 和 CITATION.cff 保持相同代码版本。
 'git log -1 --format=%H -- tasks/reports/<report-file>' 定位，避免在同一提交内填写
 其尚未产生的自身哈希。工作副本状态与远端状态用 Git 实时查询。
 
-研究探针待单独纳管：自写源码应形成可追溯的稳定来源；大数据和生成结果保持仓库外
-或受忽略，同时保存来源 commit/hash 与重建命令。聊天产物目录中的脚本尚未因此
-成为正式求解器模块；本轮不移动这些原件。
+五篇 pricing 笔记与五份原始探针已纳管，见
+[研究资产入口](../scripts/research/pricing/README.md)。原始探针按字节保留并校验哈希；
+实际算法不因归档而升级为正式求解器能力。应用参考例按外部求解器边界放在 examples。
+16 个公开输入固定到来源 commit/hash，数据和新结果保持 Git 忽略。35 个原始文件的
+独立本地备份及旧工作副本的归属处理见
+[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md)。
 
 ## 日常检查
 

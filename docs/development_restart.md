@@ -51,3 +51,20 @@ then task `20261010-04-01_correctness-oracles` established the test-only baselin
 coverage, optional SciPy requirements, independent reference methods and limits.
 This follow-up has its own local commit and execution report; it does not change
 solver algorithms, phase status or the native defer decision.
+
+## Research asset preservation — 2026-10-18
+
+The five pricing notes and original probe sources now have stable repository paths;
+see the [asset guide](../scripts/research/pricing/README.md) and
+[ingestion report](../tasks/reports/20261018-04-02_research-assets_report.md).
+The originals, historical results, pinned inputs and three resfs documents were copied
+before note-link edits to the sibling directory
+`silo-solver-backups/20261018-04-01_research-assets` (35 files, 1504344 bytes), with a
+verified `backup_manifest.json`. This is a local backup in the OneDrive directory tree;
+cloud-upload state was not verified. The original resfs files remain ignored and are
+not included in a GitHub push. Stable research sources and provenance metadata are
+versioned; generated results and input caches remain under ignored outputs.
+
+The old lp-dual-evidence worktree is clean at the already-integrated bb6baff commit.
+The app rejected attachment because it belongs to another chat; it is intentionally
+retained with that owner. Archive it from the owning chat when no longer needed.

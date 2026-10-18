@@ -10,3 +10,5 @@
 - Established the development companion learning series with stable lesson identities.
 - Consolidated current project navigation, generated task/report index, and structural checks;
   preserved historical contracts and file paths. Version 0.1.0 remains unreleased.
+- Preserved pricing research notes/probes with pinned input provenance, portable
+  bounded reproduction and a verified local backup of original evidence.

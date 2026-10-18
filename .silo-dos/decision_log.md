@@ -238,3 +238,20 @@ that references the earlier decision and states the superseding condition.
   profile; original reports retain their execution evidence and historical advice.
 - Boundary: native remains deferred, Phase 9 open/parked, Phase 10 not started.
   Research-asset ingestion and the revised Phase-I repair require separate tasks.
+
+### DEC-20261018-RESEARCH-ASSETS
+
+- Date: 2026-10-18.
+- Authority: user explicitly requested completing remaining organization and GitHub push.
+- Sources: [contract RR=02](../tasks/codex/20261018-04-02_research-assets.md) and
+  [report](../tasks/reports/20261018-04-02_research-assets_report.md).
+- Approved scope: preserve original research sources, version five notes and five probes,
+  provide pinned inputs and portable reproduction, verify a separate local backup, and
+  push this asset-management commit with the preceding cd83009 organization commit.
+- Probe originals stay byte-identical; the SciPy/HiGHS application reference belongs
+  in examples. Generated results, external input caches and ignored historical originals
+  are excluded from Git. Scope does not promote research probes into solver algorithms.
+- Old LP worktree: clean and already integrated, retained with its owning chat after
+  the app denied attachment by this chat. No ownership bypass or forced removal.
+- Supersedes: the project's pending research-ingestion recommendation. The next solver
+  recommendation and phase/native decisions remain unchanged.

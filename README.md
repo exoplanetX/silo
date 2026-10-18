@@ -112,6 +112,8 @@ pytest
 
 For development management, start with the [current project snapshot](.silo-dos/project_profile.md),
 the [task/report index](tasks/INDEX.md), and the [directory and code entrypoints](docs/development_layout.md).
+Preserved pricing research notes and bounded reference probes are indexed in the
+[research asset guide](scripts/research/pricing/README.md); they remain outside the solver API.
 
 Start with [development companion learning](learning/README.md) for mathematical
 explanations, worked examples, research connections, limitations and exercises.

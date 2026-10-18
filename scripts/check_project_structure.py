@@ -8,6 +8,8 @@ import argparse
 import ast
 import json
 import re
+import subprocess
+import sys
 from collections import defaultdict
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -21,6 +23,13 @@ DOCS = (
     "tasks/INDEX.md",
     "docs/README.md",
     "docs/development_layout.md",
+    "notes/README.md",
+    "notes/26_incremental_pricing_research_start.md",
+    "notes/27_pricing_operation_alignment_and_structure_class.md",
+    "notes/28_pricing_frontier_state_and_repair_baseline.md",
+    "notes/29_pricing_application_structure_and_cost_gate.md",
+    "notes/30_pricing_locality_conditions_and_nearest_neighbors.md",
+    "scripts/research/pricing/README.md",
     ".silo-dos/project_profile.md",
     ".silo-dos/technical_route.md",
     ".silo-dos/decision_log.md",
@@ -214,6 +223,14 @@ def main() -> int:
                 "Task index is stale; run scripts/check_project_structure.py --write-index"
             )
         links = check_links(root, errors)
+        assets = subprocess.run(
+            [sys.executable, "-B", str(root / "scripts/research/pricing/run_probe.py"), "--verify"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+        )
+        if assets.returncode:
+            errors.append("Research asset verification failed: " + assets.stderr.strip())
     except (OSError, ValueError, KeyError, IndexError, SyntaxError) as exc:
         errors.append(str(exc))
     if errors:

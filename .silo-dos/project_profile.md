@@ -17,9 +17,9 @@
 | Phase 10 | not started |
 | 最近求解器核验基线 | bb6bafff1cea78943eb8ae9d4b1a1b7d2a4dc52b；[LP 报告](../tasks/reports/20261018-01-02_lp-dual-optimality_report.md) |
 | 学习系列基线 | bdddf5851b72397c641c3dd872a306f66a12b296；[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
-| 最近管理记录 | [项目导航与追溯整理](../tasks/reports/20261018-03-01_project-navigation_report.md) |
-| 本轮授权范围 | 项目入口、任务索引与结构检查；[合同](../tasks/codex/20261018-03-01_project-navigation.md) |
-| Git 同步 | 整理前已核对本地与 live origin/main 均为 bdddf58；当前状态用下面命令实时查询 |
+| 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
+| 本轮授权范围 | 剩余研究资产纳管、备份核验和 GitHub push；[合同 RR=02](../tasks/codex/20261018-04-02_research-assets.md) |
+| Git 同步 | 本轮 push-on-success，包含 cd83009；实际同步状态实时核对，执行证据见报告和结束回执 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
 本轮整理完成后停止；后续建议需要单独的原子任务。
@@ -32,22 +32,26 @@
 | 独立小实例正确性基准 | 5cc88cb | [基准报告](../tasks/reports/20261010-04-01_correctness-oracles_report.md) |
 | LP 原始行对偶与最优性核验 | bb6baff，合同 RR=02；RR=01 保留 | [LP 对偶参考](../docs/lp_duality.md)、[报告](../tasks/reports/20261018-01-02_lp-dual-optimality_report.md) |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
+| 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
+| Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
 
 Phase 6–8 的完成指接口、toy 驱动与有限变换边界；完整割算法、生产级
 Benders / column generation / branch-and-price 和一般不确定性求解仍待后续立项。
 现有 LP 支持域、MIP 支持域和数值限制分别查阅当前 API 文档。
 
-## Recommendations / Open Management Items
+## Recommendations / Asset Disposition
 
-1. 优先为五篇 notes/26..30 研究笔记及其仓库外 pricing 探针建立独立的纳管任务：
-   保留原件，确认代码归属、输入来源和重建命令，再提交需要长期保留的自写源码。
-2. 求解器下一项建议仍是 revised Phase-I 冗余行清理的 source-row provenance：
-   先复核已记录构造例与可达性，再单独定义正确性任务，并更新 L0001。
-3. 已合入的旧 lp-dual-evidence worktree 可在另行核对归属、状态后归档。
-   历史 resfs 原件受 Git 忽略；它们的备份需要独立安排。
+日常管理入口、任务索引及研究资产已建立稳定维护源。五篇笔记仅调整来源路径，
+五份探针保持原始字节；35 个原始文件已完成独立本地备份与哈希核对。
+历史原件和新运行结果保持各自身份，备份位置与复现范围见纳管报告。
 
-以上均为建议。本轮不导入研究脚本、不修改研究笔记、不归档旧 worktree，
-不授权 native、Phase 9 closure、Phase 10 或下一项求解器开发。
+旧 lp-dual-evidence worktree 已核对干净且 bb6baff 已合入；它属于另一个对话，
+应用的归属检查拒绝本对话接管，因此保留在原所有者下。原对话可在不再使用时归档。
+resfs 原件继续保留且受 Git 忽略；独立备份已核对，OneDrive 云端上传未单独验证。
+
+下一项求解器建议仍是 revised Phase-I 冗余行清理的 source-row provenance：
+先复核已记录构造例与可达性，再单独定义正确性任务，并更新 L0001。
+该建议未执行；native、Phase 9 closure 和 Phase 10 保持原有门控。
 
 ## Source / Directory Map
 
