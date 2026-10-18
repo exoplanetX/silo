@@ -41,3 +41,14 @@
 - Treat historical task ID collisions as reportable task-system debt, not as permission to rename immutable task files.
 - If the task naming, folder rules, or SILO-DOS rules need to change, update `tasks/README.md` first or in the same commit.
 - Responsibility boundary: the user sets priorities and approves scope; ChatGPT or the user may design phase strategy and approve phase transitions; Codex executes one issued task at a time from local repository rules; GitHub stores synchronized commits and remote collaboration state, but is not the source of task interpretation.
+
+## Development Companion Learning
+
+- For new tasks involving models, algorithms, mathematical conventions, numerics or
+  correctness fixes, read `learning/README.md` and `learning/WRITING_GUIDE.md`.
+- Put the new/updated lesson path inside the task's allowed scope and report its actual
+  verification. Include principles, a small example, code mapping, research value and limits.
+- Preserve stable lesson IDs. Maintain the catalog; avoid duplicating full teaching bodies
+  in API docs. Routine housekeeping may record a learning-impact explanation instead.
+- Follow `tasks/README.md` section 6.8. This applies to newly issued tasks; leave existing
+  immutable contracts and historical research notes intact.

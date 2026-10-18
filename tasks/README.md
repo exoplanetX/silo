@@ -232,3 +232,31 @@ The intended responsibility split is:
 - GitHub stores synchronized commits and remote collaboration state; it is not the source of task interpretation.
 
 Codex should not depend on a live ChatGPT conversation to interpret task boundaries. It should rely on `tasks/README.md`, phase files, issued task files, prior reports, and explicit user instructions in the current Codex session.
+
+### 6.8 Development Companion Learning
+
+The dedicated `learning/` directory contains reader-oriented explanations, derivations,
+research connections, limitations, exercises and solutions. Its stable lesson catalog
+supports chronological review and later thematic course/book organization. It remains
+outside `tasks/`; task contracts and reports retain their existing roles.
+
+For newly issued tasks concerning models, algorithms, mathematical conventions,
+numerical handling or correctness fixes:
+
+- Declare a **Learning delivery** field with the lesson to create or update and include
+  its paths in allowed changes. A task may deepen an existing lesson rather than create one.
+- Follow `learning/README.md` and `learning/WRITING_GUIDE.md`; provide principle,
+  hand-worked example, code/test mapping, research significance and limits, with practice
+  and solutions proportionate to the change.
+- Record the real verified code baseline and checks. Update `learning/CATALOG.md` for
+  new lessons, and link learning outputs/checks in the execution report.
+
+Pure sync, formatting or administrative work may state **Learning delivery: not
+applicable**, with a short reason, or update only the affected navigation/metadata.
+One learning lesson can accumulate several atomic tasks. Learning work must stay
+within the task's scope lock and cannot authorize another algorithm or phase.
+
+This requirement applies prospectively; do not revise old immutable contracts or
+historical reports to retrofit it. Teaching material has one canonical body under
+`learning/`; current usage and API reference belong under `docs/`, while original
+design/research records remain under `notes/`.

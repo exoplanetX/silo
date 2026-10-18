@@ -12,7 +12,7 @@ pip install -e ".[dev]"
 
 ## Before Committing
 
-Run the test suite:
+For executable changes, run the relevant tests and required full quality checks:
 
 ```bash
 pytest
@@ -23,6 +23,25 @@ For local quality checks, use:
 ```bash
 python scripts/check_quality.py
 ```
+
+For documentation-only changes, validate affected local links, mathematical examples,
+metadata and scope. Execute any new/changed runnable examples. A full solver rerun is
+needed when executable behavior changes or an issued task explicitly requires it.
+
+## Development Companion Learning
+
+For work on models, algorithms, mathematical conventions, numerical handling or
+correctness fixes, create or update a lesson under [learning/](learning/README.md).
+Use the [writing guide](learning/WRITING_GUIDE.md) and [template](learning/templates/lesson.md).
+Include a hand-worked example, derivation, code/test mapping, research significance,
+limitations and appropriate exercises with solutions. Keep stable lesson IDs and
+record the code baseline actually verified; update the catalog when adding a lesson.
+
+Declare the learning delivery path in the task contract and link the delivered lesson
+and actual checks from its report. Existing lessons may accumulate multiple tasks.
+Pure synchronization, formatting or organization work can record why no new teaching
+body is needed. Do not duplicate complete lessons in API docs or rewrite historical
+contracts to add the new requirement. Detailed task rules remain in `tasks/README.md`.
 
 ## AI/Codex-Assisted Development
 

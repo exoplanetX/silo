@@ -109,8 +109,23 @@ pytest
 
 ## Documentation
 
-See [LP dual conventions and optimality checks](docs/lp_duality.md) for a worked
-example, original-row signs, fixed-variable recovery, API usage and numeric limits.
+Start with [development companion learning](learning/README.md) for mathematical
+explanations, worked examples, research connections, limitations and exercises.
+The first lesson is [L0001: LP duality and optimality verification](learning/lessons/L0001-lp-duality/README.md).
+Current API semantics remain in [LP dual reference](docs/lp_duality.md).
+
+| Directory | Purpose |
+|---|---|
+| `src/`, `tests/`, `examples/` | Solver implementation, deterministic tests and runnable examples |
+| [learning/](learning/README.md) | Stable lessons, thematic/chronological catalog, exercises and answers |
+| [docs/](docs/README.md) | Current usage, API contracts and solver scope |
+| [notes/](notes/README.md) | Design/research exploration and historical decisions |
+| [tasks/](tasks/README.md) | Phase plans, immutable task contracts and execution reports |
+| `.silo-dos/` | Local project status and development operating rules |
+
+Lesson IDs remain stable while thematic reading order can evolve into a future
+course or book. Mathematical development tasks create or update a companion lesson;
+see [contribution requirements](CONTRIBUTING.md).
 
 - [JSON model format](docs/json_model_format.md)
 - [CLI solve usage](docs/cli_solve.md)

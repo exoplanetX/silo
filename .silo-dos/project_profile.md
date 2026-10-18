@@ -376,3 +376,16 @@ notes. Git mode is local-commit; no push is included. Phase 9 remains open/parke
 native deferred and Phase 10 not started. A known revised Phase-I source-row cleanup
 robustness obligation is documented for a separate atomic task, without altering the
 current pivot/search algorithm or implying another task's execution approval.
+
+### Development companion series — 2026-10-18
+
+The user approved a dedicated, systematically arranged learning series that grows
+with solver development and can later support thematic material or a textbook.
+`learning/README.md` and `learning/CATALOG.md` are its entry points; stable lesson
+IDs are independent of future chapter order. L0001 curates the completed LP dual
+work with principles, code provenance, research connections, limits and exercises.
+`docs/` keeps current reference material, `notes/` keeps original research history,
+and tasks keep their existing roles. See tasks/README.md section 6.8 for prospective
+learning deliveries; no historical contracts are rewritten. No solver/native/phase
+change or push is included. Next solver recommendation remains the separately scoped
+revised Phase-I cleanup-provenance task, with an L0001 update when that work occurs.
