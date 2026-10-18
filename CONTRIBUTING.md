@@ -12,6 +12,17 @@ pip install -e ".[dev]"
 
 ## Before Committing
 
+After adding task contracts/reports, refresh the derived navigation and run its check:
+
+```bash
+python scripts/check_project_structure.py --write-index
+python scripts/check_project_structure.py
+```
+
+Start development from the [current project snapshot](.silo-dos/project_profile.md).
+Use the [task index](tasks/INDEX.md) for history and the
+[directory/entrypoint map](docs/development_layout.md) for implementation ownership.
+
 For executable changes, run the relevant tests and required full quality checks:
 
 ```bash
@@ -65,6 +76,10 @@ core <- modeling <- presolve <- lp <- mip <- cuts/decomposition/uncertainty
 ```
 
 The `core` package must remain independent of solver implementations. External solver integrations belong only in `interfaces/`, examples, or comparison tests.
+
+The chain above describes development progression. The existing MIP driver imports
+passive cut/callback interfaces; cuts stays independent of MIP. See the directory map
+for actual import directions and the current placeholder modules.
 
 ## Tests
 

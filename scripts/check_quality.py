@@ -8,6 +8,7 @@ def run(command: list[str]) -> int:
 
 def main() -> int:
     checks = [
+        [sys.executable, "scripts/check_project_structure.py"],
         [sys.executable, "-m", "pytest"],
         [sys.executable, "-m", "ruff", "check", "src", "tests", "examples", "scripts"],
     ]

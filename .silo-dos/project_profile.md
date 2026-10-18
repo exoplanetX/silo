@@ -1,391 +1,94 @@
 # SILO Project Profile
 
-## Role Of This Profile
+## Current Snapshot — 2026-10-18
 
-This file is the repository-local SILO-DOS v0.4 project profile. It summarizes stable
-project identity, current milestone status, standing boundaries, and operating rules
-that Codex can read before issuing or executing SILO tasks.
+本文件是当前项目状态的单一摘要入口。任务规则以
+[tasks/README.md](../tasks/README.md)、本轮合同和用户指令为准；阶段范围以
+[ROADMAP.md](../ROADMAP.md) 和 [阶段记录](../tasks/phases/) 为依据。
+历史报告中的“下一步”属于当时建议；当前建议只在本页汇总。
 
-This profile is a local mirror. It does not replace:
+| 项目 | 当前状态 / 依据 |
+|---|---|
+| 项目身份 | SILO，Python 教学与保守参考求解器 |
+| 代码版本 | 0.1.0，开发中，尚未正式发布；开发基线用 Git commit 定位 |
+| 流程版本 | SILO-DOS v0.4，与代码版本分别管理 |
+| Phase 0–8 | 各自已批准的保守范围完成，具体边界见阶段记录 |
+| Phase 9 | open / parked；native implementation deferred and unapproved |
+| Phase 10 | not started |
+| 最近求解器核验基线 | bb6bafff1cea78943eb8ae9d4b1a1b7d2a4dc52b；[LP 报告](../tasks/reports/20261018-01-02_lp-dual-optimality_report.md) |
+| 学习系列基线 | bdddf5851b72397c641c3dd872a306f66a12b296；[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
+| 最近管理记录 | [项目导航与追溯整理](../tasks/reports/20261018-03-01_project-navigation_report.md) |
+| 本轮授权范围 | 项目入口、任务索引与结构检查；[合同](../tasks/codex/20261018-03-01_project-navigation.md) |
+| Git 同步 | 整理前已核对本地与 live origin/main 均为 bdddf58；当前状态用下面命令实时查询 |
 
-- `tasks/README.md` as the task-directory and SILO-DOS rule source;
-- `AGENTS.md` as the agent-facing solver rule file;
-- `ROADMAP.md` as the phase-level status source;
-- `tasks/phases/` as long-term phase records;
-- `tasks/codex/` as immutable task contracts;
-- `tasks/reports/` as execution memory.
+这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
+本轮整理完成后停止；后续建议需要单独的原子任务。
 
-If this profile conflicts with a current user instruction, an issued task contract, or a
-repository rule file, Codex must stop and resolve the conflict through the usual
-SILO-DOS review gate.
+## Completed Maintenance / Evidence
 
-## Sources
+| 工作 | 实现或记录 | 核验依据 |
+|---|---|---|
+| 开发恢复、预处理与 MIP 状态纠错 | 6bd9543、a2490ec、a4814f4 | [重启记录](../docs/development_restart.md) |
+| 独立小实例正确性基准 | 5cc88cb | [基准报告](../tasks/reports/20261010-04-01_correctness-oracles_report.md) |
+| LP 原始行对偶与最优性核验 | bb6baff，合同 RR=02；RR=01 保留 | [LP 对偶参考](../docs/lp_duality.md)、[报告](../tasks/reports/20261018-01-02_lp-dual-optimality_report.md) |
+| 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 
-Primary sources:
+Phase 6–8 的完成指接口、toy 驱动与有限变换边界；完整割算法、生产级
+Benders / column generation / branch-and-price 和一般不确定性求解仍待后续立项。
+现有 LP 支持域、MIP 支持域和数值限制分别查阅当前 API 文档。
 
-- `.silo-dos/v04_architecture.md`
-- `tasks/reports/20260604-12-01_project-milestone-audit_report.md`
+## Recommendations / Open Management Items
 
-Supporting sources:
+1. 优先为五篇 notes/26..30 研究笔记及其仓库外 pricing 探针建立独立的纳管任务：
+   保留原件，确认代码归属、输入来源和重建命令，再提交需要长期保留的自写源码。
+2. 求解器下一项建议仍是 revised Phase-I 冗余行清理的 source-row provenance：
+   先复核已记录构造例与可达性，再单独定义正确性任务，并更新 L0001。
+3. 已合入的旧 lp-dual-evidence worktree 可在另行核对归属、状态后归档。
+   历史 resfs 原件受 Git 忽略；它们的备份需要独立安排。
 
-- `tasks/README.md`
-- `AGENTS.md`
-- `ROADMAP.md`
-- recent Phase 9 reports under `tasks/reports/`
+以上均为建议。本轮不导入研究脚本、不修改研究笔记、不归档旧 worktree，
+不授权 native、Phase 9 closure、Phase 10 或下一项求解器开发。
 
-## Project Identity
+## Source / Directory Map
 
-SILO is an educational and conservative optimization solver project. Its current
-reference implementation is Python-first. The project emphasizes:
+| 查什么 | 入口 |
+|---|---|
+| 当前状态、已完成与建议 | 本文件 |
+| 技术边界和审阅门控 | [technical_route.md](technical_route.md)、[standing approval](standing_approval_profile.md) |
+| 长期决策与被替代的历史状态 | [decision_log.md](decision_log.md) |
+| 任务规则、全部合同与报告 | [规则](../tasks/README.md)、[自动生成索引](../tasks/INDEX.md) |
+| 源码实际入口、目录职责、版本约定 | [development_layout.md](../docs/development_layout.md) |
+| 当前用法与接口 | [docs/README.md](../docs/README.md) |
+| 数学讲解、练习与核验来源 | [learning/README.md](../learning/README.md) |
+| 原始设计、反例、研究演变 | [notes/README.md](../notes/README.md) |
+| 同步状态解释 | [remote_sync_proof.md](remote_sync_proof.md) |
+| 经验与流程改进 | [experience_map.md](experience_map.md)、[self_evolution.md](self_evolution.md) |
 
-- readable reference algorithms;
-- deterministic small tests;
-- explicit mathematical conventions;
-- conservative phase boundaries;
-- one atomic task at a time;
-- documented deferred work instead of silent scope expansion.
+本对话负责开发推进与执行协调，silo-solver-1010 集中讨论研究问题。
+进入执行的决定应形成仓库合同或决策记录；任务解释不依赖聊天历史。
+.silo-dos 中的旧架构、集成设计及 Research Brain 桥接文件按需阅读，
+其中未执行的候选动作应先与本页和当前文件存在性核对。
 
-The current dependency direction is:
+## Operating Boundaries / Live Checks
 
-```text
-core <- modeling <- presolve <- lp <- mip <- cuts/decomposition/uncertainty
-```
+- 正式源码只有 src/silo；core 保持独立。实际导入关系见目录说明。
+- 外部求解器仅用于 interfaces、examples 或比较测试。
+- 每轮一个原子任务；保留历史合同、报告、笔记和学习篇目身份。
+- L0/L1 适用条件查 standing approval；L2/L3 需要明确授权。
+- 默认 local-commit；任务允许或用户要求时才 push。同步失败保留本地提交。
+- native 实现、依赖/build/packaging、dispatch、公共 CLI/schema、阶段转换保持原有门控。
+- 战略信息缺失时依 local mirror → Research Brain → user decision 查询，
+  Research Brain 不能替代本地执行授权。
 
-The `core` package must not depend on LP, MIP, cuts, decomposition, uncertainty, or
-native-backend modules.
+从项目根目录执行：
 
-Native algorithms must not call external solvers. External solvers may appear only in
-`interfaces/`, examples, or tests for comparison.
-
-## Current Milestone Status
-
-The current project milestone is:
-
-```text
-python_reference_solver_milestone_complete_for_current_educational_scope
-```
-
-Interpretation:
-
-- Phase 0 through Phase 8 are complete for their scoped educational/conservative
-  milestones.
-- Phase 9 remains open and parked on design/bookkeeping after the native implementation
-  defer decision.
-- Native implementation is not approved.
-- Phase 10 has not started.
-- No immediate follow-on implementation task is required.
-
-## Phase Status Snapshot
-
-- Phase 0: complete project scaffold.
-- Phase 1: complete model core and canonicalization.
-- Phase 2: complete educational tableau simplex scope.
-- Phase 3: complete enough revised simplex and basis layer for the current LP backend.
-- Phase 4: complete conservative presolve, scaling, and numerical diagnostics scope.
-- Phase 5: complete minimal branch-and-bound scope.
-- Phase 6: complete conservative cut/callback boundary scope.
-- Phase 7: complete conservative decomposition boundary scope.
-- Phase 8: complete conservative stochastic/robust transformation boundary scope.
-- Phase 9: open and parked on design/bookkeeping after native implementation defer.
-- Phase 10: not started.
-
-## Parked Phase 9 State
-
-Phase 9 has native-backend planning and passive boundary artifacts:
-
-- conservative native backend boundary design;
-- first candidate selection for `tableau_leaving_row_ratio_test`;
-- passive backend/interface records;
-- candidate-specific parity fixtures;
-- candidate-specific unavailable-native diagnostics;
-- native build/dependency/generated-artifact policy;
-- native implementation decision packet;
-- explicit user defer decision;
-- post-defer status audit.
-
-The current Phase 9 classification is:
-
-```text
-phase9_parked_on_design_bookkeeping_after_native_defer
-```
-
-Allowed next strategic directions require explicit user instruction:
-
-- remain parked;
-- revise or reject the selected native candidate;
-- approve a specific native implementation path through an L3 task;
-- prepare Phase 9 closure bookkeeping;
-- start Phase 10 planning.
-
-None of these directions should be inferred automatically.
-
-## Native Defer Decision
-
-Native implementation is deferred and unapproved.
-
-The selected candidate, `tableau_leaving_row_ratio_test`, remains Python-reference only
-for now. The future approval template in the native decision packet is only a template.
-It is not approval.
-
-No task may implement native backend code, add native dependencies, modify build or
-packaging files, change solver dispatch, add public CLI controls, or add JSON schema
-controls unless a separate explicitly approved task scopes that work.
-
-## Completed Capability Map
-
-SILO currently includes:
-
-- model core and canonicalization;
-- tableau simplex;
-- revised simplex and basis layer;
-- presolve and numerical diagnostics;
-- minimal branch-and-bound;
-- conservative cut/callback boundary;
-- conservative decomposition boundary;
-- conservative stochastic/robust transformation boundary;
-- native backend planning and passive boundary records.
-
-These capabilities define the current Python reference-solver milestone. They do not
-imply production-grade performance or advanced solver features.
-
-## Deliberately Deferred Work
-
-The following work remains deferred:
-
-- advanced MIP features and heuristics;
-- real cut families;
-- cut materialization into LP relaxations;
-- lazy constraints and mutation callbacks;
-- production Benders decomposition;
-- production column generation;
-- branch-and-price;
-- broader decomposition integration with LP/MIP solve loops;
-- scenario-dependent variables and nonanticipativity constraints;
-- broader stochastic and robust transformations;
-- public uncertainty CLI or JSON schemas;
-- native backend implementation;
-- native dependencies, build, packaging, platform support, and native CI behavior;
-- solver dispatch to native backend;
-- Phase 10 planning or implementation.
-
-## Forbidden Default Changes
-
-Unless an issued task explicitly allows them, Codex must not:
-
-- modify solver source code under `src/`;
-- modify tests;
-- modify examples;
-- modify `ROADMAP.md`;
-- modify `tasks/phases/`;
-- modify existing notes;
-- modify existing task files;
-- modify the local `silo-development-operator` skill;
-- modify public CLI behavior;
-- modify JSON model or solution schemas;
-- add dependencies;
-- modify build or packaging files;
-- implement native backend code;
-- change solver dispatch or backend selection behavior;
-- close a phase;
-- start a new phase;
-- continue to a second task.
-
-If completing a task appears to require any forbidden change, Codex must stop and report
-through the appropriate SILO-DOS packet.
-
-## Task And Report Directories
-
-Directory roles:
-
-- `tasks/phases/`: long-term phase records and phase-level knowledge.
-- `tasks/codex/`: immutable issued Codex task contracts.
-- `tasks/reports/`: execution memory for completed or attempted tasks.
-- `.silo-dos/`: repository-local mirror for stable operating knowledge.
-
-Task file naming:
-
-```text
-tasks/codex/YYYYMMDD-TT-RR_slug.md
-```
-
-Report file naming:
-
-```text
-tasks/reports/YYYYMMDD-TT-RR_slug_report.md
-```
-
-Before creating a new task, scan both `tasks/codex/` and `tasks/reports/` for the
-intended date. Use the next available `TT` with `RR = 01` for a new unrelated task.
-
-Existing files under `tasks/codex/` are immutable after creation unless the user
-explicitly asks for task-file maintenance.
-
-## Standard Checks
-
-Minimum checks for L0 documentation, report, audit, and bookkeeping tasks:
-
-```text
+~~~text
 git status --short
 git branch --show-current
 git log --oneline -5
-git diff --check
-```
+git rev-list --left-right --count origin/main...HEAD
+python scripts/check_project_structure.py
+~~~
 
-When staging new files, also prefer:
-
-```text
-git diff --cached --check
-```
-
-For executable solver changes, use targeted tests relevant to the changed behavior. For
-broader or phase-closure work, use the repository quality script when scoped by the task.
-
-Do not run native build commands or native tooling unless an issued task explicitly
-approves native build or implementation work.
-
-## Git And Remote Sync
-
-Default task Git mode is `local-commit` unless the task states otherwise. Push only when
-the task Git mode is `push-on-success`, the task is `sync-only`, or the user explicitly
-requests a push.
-
-When push is attempted, record:
-
-- push output;
-- whether push succeeded;
-- final working tree status;
-- `git rev-list --left-right --count origin/main...HEAD` when useful.
-
-Interpretation:
-
-- `0 0`: local branch and tracked remote are synchronized.
-- `0 N`: local branch is ahead by `N` commits.
-- `N 0`: local branch is behind and should be synchronized before new work.
-- `N M`: local and remote diverged and require explicit recovery.
-
-Push failure is non-fatal. Preserve the local commit, record the failure, and do not
-retry repeatedly inside the same task.
-
-## Phase Transition Rules
-
-No phase may start without explicit user approval.
-
-No phase may close without explicit user approval.
-
-Phase planning is separate from phase implementation. A user may approve planning
-without approving implementation.
-
-Phase closure is separate from starting the next phase. A closure bookkeeping task must
-not issue planning or implementation work for the next phase unless the user explicitly
-requests that separate task.
-
-Phase 10 is not started. Any Phase 10 planning task requires explicit user approval.
-
-## Standing Approval Profile
-
-This standing profile guides recommendations but does not override current user
-instructions, issued task contracts, `tasks/README.md`, or `AGENTS.md`.
-
-Usually auto-executable in Mode A when scope is clean:
-
-- L0 documentation;
-- L0 reports;
-- L0 audits;
-- L0 bookkeeping;
-- task-system cleanup.
-
-Potentially auto-executable only when backed by design notes and explicit acceptance
-criteria:
-
-- L1 passive dataclasses;
-- L1 protocol records;
-- L1 no-op boundaries;
-- L1 diagnostic records;
-- L1 regression tests.
-
-Always approval-gated:
-
-- L2 solver behavior changes;
-- LP/MIP logic changes;
-- presolve changes;
-- backend behavior changes;
-- public CLI changes;
-- JSON schema changes;
-- solver dispatch changes.
-
-Always approval-gated:
-
-- L3 phase starts;
-- L3 phase closures;
-- architecture redesign;
-- native implementation;
-- dependency, build, or packaging changes;
-- new solver capability lines.
-
-## Local Mirror Decision Rule
-
-Use this lookup order:
-
-```text
-local mirror -> Research Brain -> user decision
-```
-
-The local mirror includes `.silo-dos/`, `tasks/README.md`, `AGENTS.md`, `ROADMAP.md`,
-`tasks/phases/`, recent `tasks/reports/`, and relevant `notes/`.
-
-If the local mirror lacks a strategic answer, Research Brain may propose a route. If the
-route crosses L2/L3 gates or conflicts with repository files, the user must decide.
-
-## Current Authorized Maintenance — 2026-10-10
-
-The user explicitly approved baseline organization followed by the presolve and MIP status-correctness repairs discovered in the restart audit. These are maintenance of the existing solver scope; native remains deferred, Phase 9 stays open/parked, and Phase 10 has not started.
-
-Execute the three authorized tasks sequentially with separate contracts, reports and local commits. No push was requested. Local-ahead state produced by this approved sequence does not require repeated approval. Preserve unrelated work and do not expand into new capabilities or phase changes.
-
-See `docs/development_restart.md` and matching `tasks/reports/20261010-*` for current evidence. Older create-file suggestions for existing local mirror files are superseded. After completing the authorized repairs, report next-step recommendations and stop.
-
-### Recovery outcome
-
-The baseline and both authorized status repairs are complete in separate local commits. The project environment is `.venv`; historical `resfs/` originals are preserved and locally ignored. Presolve now requires feasible-point evidence for a terminal empty-column unbounded status. MIP now resolves integer feasibility before promoting LP unboundedness, with strict integer coordinates on this proof path. Consult the matching reports for tests and final commit references.
-
-Recommended next scope: establish independent small-instance correctness oracles and adversarial status regressions before expanding LP/MIP capabilities or reconsidering native acceleration. This recommendation does not issue another task or approve a phase transition. Native remains deferred, Phase 9 open/parked, Phase 10 not started.
-
-### Subsequent authorized baseline — 2026-10-10
-
-The user subsequently requested a push followed by the recommended baseline task.
-Recovery commits 6bd9543, a2490ec and a4814f4 were pushed successfully to origin/main;
-the new task started clean with ahead/behind `0 0` at a4814f4. This later authorization
-supersedes the earlier sequence's no-push instruction for those completed commits.
-Task `20261010-04-01_correctness-oracles` adds independent analytical LP checks, exact
-finite integer enumeration and optional test-only HiGHS comparison. See
-`docs/correctness_baseline.md` and its execution report for coverage and limitations.
-The baseline task uses local-commit mode. Phase/native decisions remain unchanged.
-Next recommended scope is a separately approved LP dual-result convention and
-optimality-evidence task; no follow-on task is issued automatically.
-
-### Authorized LP dual evidence — 2026-10-18
-
-The user explicitly approved LP dual conventions, output and optimality verification
-in the existing solver. Task `20261018-01-02_lp-dual-optimality` (revision 01 preserved)
-adds original-row multipliers to both backends, fixed-aware presolve recovery, an
-independent Python checker and compare-time validation, without adding JSON keys.
-See `docs/lp_duality.md` for formulas, worked examples and limits, and the matching
-report for tests and local commit/integration evidence. This continues the approved
-baseline at 5cc88cb in a clean managed worktree, preserving primary-checkout research
-notes. Git mode is local-commit; no push is included. Phase 9 remains open/parked,
-native deferred and Phase 10 not started. A known revised Phase-I source-row cleanup
-robustness obligation is documented for a separate atomic task, without altering the
-current pivot/search algorithm or implying another task's execution approval.
-
-### Development companion series — 2026-10-18
-
-The user approved a dedicated, systematically arranged learning series that grows
-with solver development and can later support thematic material or a textbook.
-`learning/README.md` and `learning/CATALOG.md` are its entry points; stable lesson
-IDs are independent of future chapter order. L0001 curates the completed LP dual
-work with principles, code provenance, research connections, limits and exercises.
-`docs/` keeps current reference material, `notes/` keeps original research history,
-and tasks keep their existing roles. See tasks/README.md section 6.8 for prospective
-learning deliveries; no historical contracts are rewritten. No solver/native/phase
-change or push is included. Next solver recommendation remains the separately scoped
-revised Phase-I cleanup-provenance task, with an L0001 update when that work occurs.
+以上 Git 命令中的 origin/main 是本地跟踪引用；需要确认远端即时状态时再访问远端。
+文档维护检查受影响的链接、索引与实例；求解器改动按合同运行针对性及完整质量检查。

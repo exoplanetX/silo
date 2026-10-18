@@ -1,319 +1,80 @@
 # SILO Technical Route
 
-## Role Of This Route
+## Role / Current State
 
-This file is the repository-local SILO-DOS v0.4 technical route. It records the current
-decision corridor from the project state, not a backlog of work to execute
-automatically.
+本文件维护技术边界与决策门控；当前完成项、核验基线和下一步建议统一查
+[project_profile.md](project_profile.md)。执行历史查
+[任务索引](../tasks/INDEX.md) 和 [decision_log.md](decision_log.md)。
+本文件不重复追加每轮执行流水，也不自动形成待执行队列。
 
-The current route is based on:
+当前阶段 corridor 保持：
 
-- `.silo-dos/v04_architecture.md`
-- `.silo-dos/project_profile.md`
-- `tasks/reports/20260604-12-01_project-milestone-audit_report.md`
-- `tasks/reports/20260604-11-01_phase9-post-defer-audit_report.md`
-- `notes/25_native_implementation_defer_decision.md`
-
-This route does not replace `ROADMAP.md`, `tasks/phases/`, issued task files, or user
-approval.
-
-## Current Route State
-
-Current milestone:
-
-```text
-python_reference_solver_milestone_complete_for_current_educational_scope
-```
-
-Current phase corridor:
-
-```text
+~~~text
 phase9_parked_on_design_bookkeeping_after_native_defer
-```
-
-Interpretation:
-
-- Phase 0 through Phase 8 are complete for their scoped educational/conservative
-  milestones.
-- Phase 9 is open.
-- Phase 9 is parked on design, audit, policy, readiness, and bookkeeping.
-- Native implementation is deferred and unapproved.
-- Phase 10 has not started.
-- No immediate implementation task is required.
-
-## Route Principles
-
-The route is governed by these principles:
-
-- One atomic task at a time.
-- No implicit phase transition.
-- No implicit native implementation.
-- No second task after completing the current task.
-- Reports may recommend next actions, but recommendations are not execution permission.
-- L2/L3 gates require explicit user approval.
-- If route state is ambiguous, stop and produce a Decision Packet.
-
-## Current Allowed Actions
-
-The following actions are allowed only when explicitly requested or approved by the user.
-
-### Remain Parked
-
-SILO may remain parked at the current milestone with no new task.
-
-This is the default strategic posture after the milestone audit and native defer
-decision.
-
-### Process Or Documentation Refinement
-
-Allowed as L0 tasks when scoped narrowly:
-
-- create `.silo-dos/decision_log.md`;
-- create `.silo-dos/experience_map.md`;
-- create `.silo-dos/remote_sync_proof.md`;
-- create `.silo-dos/standing_approval_profile.md`;
-- create `.silo-dos/self_evolution.md`;
-- add `.silo-dos/templates/` files in separate atomic tasks;
-- audit whether `tasks/README.md` should reference `.silo-dos/` after enough files
-  exist.
-
-These tasks must not change solver behavior or phase status.
-
-### Revise Or Reject The Native Candidate
-
-The user may explicitly request a design-only task to revise or reject the selected
-`tableau_leaving_row_ratio_test` native candidate.
-
-Expected risk:
-
-- L3 strategic design if the task changes candidate direction or native implementation
-  posture.
-
-Required boundary:
-
-- no native implementation;
-- no build or dependency change;
-- no solver dispatch change;
-- no public CLI or JSON schema change;
-- no Phase 9 closure unless separately approved.
-
-### Approve A Specific Native Implementation Path
-
-The user may later explicitly approve a native implementation path. This is not approved
-now.
-
-Expected risk:
-
-- L3 strategic for native implementation scaffold or build/dependency path;
-- L2/L3 if solver dispatch or backend behavior is touched.
-
-Required before execution:
-
-- exact implementation candidate;
-- exact files allowed;
-- exact build/dependency policy;
-- generated-artifact exclusion policy;
-- availability-gated tests;
-- no-dispatch boundary unless dispatch is separately approved;
-- explicit user approval sentence.
-
-### Prepare Phase 9 Closure
-
-The user may explicitly approve a Phase 9 closure-readiness audit or closure bookkeeping
-task.
-
-Expected risk:
-
-- L0 for closure-readiness audit;
-- L3 for closure bookkeeping.
-
-Closure must not start Phase 10.
-
-### Start Phase 10 Planning
-
-The user may explicitly approve Phase 10 planning.
-
-Expected risk:
-
-- L3 strategic phase start/planning.
-
-Planning approval does not approve Phase 10 implementation.
-
-## Current Forbidden Actions
-
-Do not do any of the following by default:
-
-- implement native backend code;
-- add native dependencies;
-- modify build or packaging files;
-- change solver dispatch or backend selection behavior;
-- add public native CLI controls;
-- add native JSON schema controls;
-- close Phase 9;
-- start Phase 10;
-- issue Phase 10 planning without explicit user approval;
-- issue Phase 10 implementation work;
-- modify solver source code outside an issued task;
-- modify tests outside an issued task;
-- modify examples outside an issued task;
-- modify `ROADMAP.md` or `tasks/phases/` outside a scoped phase task;
-- modify existing notes or task files outside a scoped maintenance task.
-
-## Decision Gates
-
-### L0 Gate
-
-L0 process, documentation, audit, and bookkeeping tasks may be auto-executed in Mode A
-when the scope is explicit and no forbidden changes are required.
-
-Examples:
-
-- `.silo-dos/` process documentation;
-- audit reports;
-- task-system cleanup.
-
-### L1 Gate
-
-L1 controlled implementation may be auto-executed only when:
-
-- backed by a design note;
-- explicitly scoped;
-- acceptance criteria are clear;
-- no L2/L3 behavior is touched.
-
-Current parked Phase 9 route does not require any immediate L1 task.
-
-### L2 Gate
-
-Stop before L2 tasks unless the user explicitly approves the specific task.
-
-L2 includes:
-
-- solver behavior changes;
-- backend behavior changes;
-- public CLI contract changes;
-- JSON schema changes;
-- presolve, LP, MIP, or dispatch behavior changes.
-
-### L3 Gate
-
-Stop before L3 tasks unless the user explicitly approves the specific task.
-
-L3 includes:
-
-- phase start;
-- phase closure;
-- architecture redesign;
-- native implementation;
-- dependency/build/packaging decisions;
-- new solver capability lines.
-
-## Phase 9 Closure Conditions
-
-Phase 9 closure is not approved now.
-
-A future Phase 9 closure path should satisfy:
-
-1. User explicitly approves closure-readiness review or closure bookkeeping.
-2. A closure-readiness audit confirms no active blockers.
-3. The audit states whether deferred native implementation is acceptable as the Phase 9
-   endpoint for the current roadmap.
-4. The closure task is limited to allowed bookkeeping files.
-5. The closure task does not start Phase 10.
-6. The closure report records that native implementation remains deferred unless the user
-   separately changes that decision.
-
-Possible closure classification:
-
-```text
-phase9_complete_for_deferred_native_boundary_scope
-```
-
-This classification is only a possible future state. It is not current state.
-
-## Phase 10 Planning Conditions
-
-Phase 10 has not started.
-
-Before Phase 10 planning:
-
-1. The user must explicitly approve starting Phase 10 planning.
-2. The task must be planning/design-only unless implementation is separately approved.
-3. The task must not modify solver source code or tests unless explicitly scoped.
-4. The task must define the Phase 10 purpose, scope, non-goals, dependency direction,
-   review gates, and candidate atomic task sequence.
-5. Starting Phase 10 planning must not imply Phase 10 implementation.
-
-If Phase 9 remains open, Phase 10 planning requires explicit acceptance that planning is
-allowed before Phase 9 closure, or a prior Phase 9 closure task.
-
-## Native Implementation Gate
-
-Native implementation remains deferred and unapproved.
-
-Before any native implementation task:
-
-1. The user must explicitly approve the exact task.
-2. The implementation candidate must be named.
-3. The implementation form must be named.
-4. Build, dependency, platform, and generated-artifact policy must be explicit.
-5. Tests must be availability-gated when native runtime support is absent by default.
-6. Default solver dispatch must remain Python-only unless a separate dispatch task is
-   approved.
-7. Public CLI and JSON schema changes must remain out of scope unless separately
-   approved.
-8. The task must stop after one atomic implementation step.
-
-## Current Authorized Maintenance — 2026-10-10
-
-The user explicitly approved baseline organization followed by the presolve and MIP status-correctness repairs discovered in the restart audit. These are maintenance of the existing solver scope; native remains deferred, Phase 9 stays open/parked, and Phase 10 has not started.
-
-Execute the three authorized tasks sequentially with separate contracts, reports and local commits. No push was requested. Local-ahead state produced by this approved sequence does not require repeated approval. Preserve unrelated work and do not expand into new capabilities or phase changes.
-
-See `docs/development_restart.md` and matching `tasks/reports/20261010-*` for current evidence. Older create-file suggestions for existing local mirror files are superseded. After completing the authorized repairs, report next-step recommendations and stop.
-
-### Recovery outcome
-
-The baseline and both authorized status repairs are complete in separate local commits. The project environment is `.venv`; historical `resfs/` originals are preserved and locally ignored. Presolve now requires feasible-point evidence for a terminal empty-column unbounded status. MIP now resolves integer feasibility before promoting LP unboundedness, with strict integer coordinates on this proof path. Consult the matching reports for tests and final commit references.
-
-Recommended next scope: establish independent small-instance correctness oracles and adversarial status regressions before expanding LP/MIP capabilities or reconsidering native acceleration. This recommendation does not issue another task or approve a phase transition. Native remains deferred, Phase 9 open/parked, Phase 10 not started.
-
-### Subsequent authorized baseline — 2026-10-10
-
-The user subsequently requested a push followed by the recommended baseline task.
-Recovery commits 6bd9543, a2490ec and a4814f4 were pushed successfully to origin/main;
-the new task started clean with ahead/behind `0 0` at a4814f4. This later authorization
-supersedes the earlier sequence's no-push instruction for those completed commits.
-Task `20261010-04-01_correctness-oracles` adds independent analytical LP checks, exact
-finite integer enumeration and optional test-only HiGHS comparison. See
-`docs/correctness_baseline.md` and its execution report for coverage and limitations.
-The baseline task uses local-commit mode. Phase/native decisions remain unchanged.
-Next recommended scope is a separately approved LP dual-result convention and
-optimality-evidence task; no follow-on task is issued automatically.
-
-### Authorized LP dual evidence — 2026-10-18
-
-The user explicitly approved LP dual conventions, output and optimality verification
-in the existing solver. Task `20261018-01-02_lp-dual-optimality` (revision 01 preserved)
-adds original-row multipliers to both backends, fixed-aware presolve recovery, an
-independent Python checker and compare-time validation, without adding JSON keys.
-See `docs/lp_duality.md` for formulas, worked examples and limits, and the matching
-report for tests and local commit/integration evidence. This continues the approved
-baseline at 5cc88cb in a clean managed worktree, preserving primary-checkout research
-notes. Git mode is local-commit; no push is included. Phase 9 remains open/parked,
-native deferred and Phase 10 not started. A known revised Phase-I source-row cleanup
-robustness obligation is documented for a separate atomic task, without altering the
-current pivot/search algorithm or implying another task's execution approval.
-
-### Development companion series — 2026-10-18
-
-The user approved a dedicated, systematically arranged learning series that grows
-with solver development and can later support thematic material or a textbook.
-`learning/README.md` and `learning/CATALOG.md` are its entry points; stable lesson
-IDs are independent of future chapter order. L0001 curates the completed LP dual
-work with principles, code provenance, research connections, limits and exercises.
-`docs/` keeps current reference material, `notes/` keeps original research history,
-and tasks keep their existing roles. See tasks/README.md section 6.8 for prospective
-learning deliveries; no historical contracts are rewritten. No solver/native/phase
-change or push is included. Next solver recommendation remains the separately scoped
-revised Phase-I cleanup-provenance task, with an L0001 update when that work occurs.
+~~~
+
+Phase 0–8 按其保守范围完成；Phase 9 open / parked，native implementation
+deferred and unapproved；Phase 10 not started。依据为
+[阶段路线](../ROADMAP.md)、[native 延期决定](../notes/25_native_implementation_defer_decision.md)
+及 [里程碑报告](../tasks/reports/20260604-12-01_project-milestone-audit_report.md)。
+
+## Existing Scope / Maintenance
+
+- 当前 Python LP、presolve 和最小 branch-and-bound 可通过单独批准的任务维护。
+  2026-10 的状态纠错、正确性基准与 LP 对偶工作已完成，证据由当前摘要链接。
+- 窄范围文档、报告、导航与状态维护按 L0 或具体流程风险分类执行。
+- 对现有 .silo-dos 文件先检查内容与存在性；旧设计中的 create-file 建议是历史候选。
+- 模型、算法、数学约定、数值或正确性任务按
+  [tasks/README.md 6.8](../tasks/README.md#68-development-companion-learning)
+  声明学习交付；行政整理说明不适用即可。
+- 推荐项先形成一个 scope-locked 合同。执行完当前任务后停止。
+
+## Risk / Approval Gates
+
+| 风险 | 范围 | 执行条件 |
+|---|---|---|
+| L0 | 文档、报告、审查、有限 bookkeeping | 范围明确、同步条件满足且无高风险改动 |
+| L1 | 有设计依据的被动记录、protocol、no-op 边界、验证支撑 | 适用 standing approval 或具体授权；有验收条件 |
+| L2 | LP/MIP/presolve/后端、求解行为、公共 API/CLI/JSON schema | 用户明确批准具体任务 |
+| L3 | 阶段转换、架构重设、native、依赖/build/packaging、新能力线、流程规则 | 用户明确批准对应范围 |
+
+完整细则查 [standing_approval_profile.md](standing_approval_profile.md)、
+[AGENTS.md](../AGENTS.md)、[任务规则](../tasks/README.md) 与本轮合同。
+当前指令和批准范围不能由旧模板或历史执行记录代替。
+
+## Native Candidate / Implementation Gate
+
+候选仍为 tableau_leaving_row_ratio_test。用户可单独要求保持延期、修订或拒绝候选，
+也可批准一个明确的实现任务；已有候选选择和审批模板均不表示实现获批。
+
+实现前必须明确：候选及实现形式、允许文件、依赖/build/platform 政策、生成物排除、
+availability-gated 测试、Python 默认 dispatch 边界，以及 CLI/schema 的独立授权。
+实现按 L3 管理；dispatch 或公共接口变化按相应 L2/L3 范围审阅。
+
+## Phase 9 Closure / Phase 10 Planning
+
+Phase 9 closure 需要用户明确批准；closure-readiness 审查和正式 closure bookkeeping
+分别分类为 L0 与 L3。未来审查应说明：native 延期是否可作为本阶段终点、是否存在
+阻塞、允许修改的 bookkeeping 文件，以及继续延期的记录。关闭 Phase 9 不自动启动
+Phase 10。可能的 future classification 为
+phase9_complete_for_deferred_native_boundary_scope，当前仍保持 open / parked。
+
+Phase 10 planning 需要明确的 planning 授权，合同应说明目的、范围、非目标、依赖方向、
+门控和候选原子序列。若 Phase 9 仍开放，需明确接受并行规划。
+planning 批准不包含实施授权。
+
+## Source / Git Boundaries
+
+- core 独立；原生算法不调用外部求解器。实际源码入口见
+  [development_layout.md](../docs/development_layout.md)。
+- 修改 src、tests、examples、notes、ROADMAP 或阶段文件均须属于本轮合同的允许范围。
+- 旧 tasks/codex 合同保持不可变；历史建议先与当前摘要核对。
+- 不自动新增 native/build/packaging、公共 CLI/schema、阶段转换或下一项任务。
+- 默认 local-commit；push 权限按任务 Git mode 和用户指令。
+- 同步状态实时查询；脏工作区或 ahead/behind 不明时，依据
+  [remote_sync_proof.md](remote_sync_proof.md) 和本轮明确的恢复授权处理。
+- 已知无关文件可以在批准范围内保留并使用干净隔离 worktree；集成前复核主检出基线、
+  原文件哈希和允许范围。干净 worktree 不能用来声称主工作区干净。
+
+历史执行结论保留在原合同、报告及 Git 历史。本次整理的来源和替代关系见
+[20261018-03-01 报告](../tasks/reports/20261018-03-01_project-navigation_report.md)。

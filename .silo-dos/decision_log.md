@@ -1,5 +1,10 @@
 # SILO Decision Log
 
+Current project status and next-step recommendations are maintained in
+[project_profile.md](project_profile.md). This log preserves durable decisions;
+the dated 2026-06 corridor below is historical and is qualified by the subsequent
+DEC-20261018-PROJECT-NAVIGATION entry.
+
 ## Role Of This Log
 
 This file is the repository-local SILO-DOS v0.4 decision log. It records durable
@@ -178,6 +183,9 @@ Source reports and notes used for the initial entries:
 
 ## Current Decision Corridor
 
+Historical snapshot from 2026-06-04, retained at its original heading/path. Read the
+current project profile and subsequent decisions before selecting new work.
+
 The current decision corridor is:
 
 ```text
@@ -209,3 +217,24 @@ Future durable decisions should be added to this log through a separate atomic t
 Do not edit historical decision entries to reinterpret them unless the user explicitly
 requests a decision-log maintenance task. If a decision is superseded, add a new entry
 that references the earlier decision and states the superseding condition.
+
+## Subsequent Decisions
+
+### DEC-20261018-PROJECT-NAVIGATION
+
+- Date: 2026-10-18.
+- Authority: user requested project organization after the existing local commits
+  were pushed and live origin/main was verified at bdddf58.
+- Source: [contract](../tasks/codex/20261018-03-01_project-navigation.md) and
+  [report](../tasks/reports/20261018-03-01_project-navigation_report.md).
+- Approved scope: one navigation/traceability task; compact project profile, route
+  de-duplication, derived history index, exact historical exceptions and structural
+  checks. Existing file identities and solver behavior remain stable.
+- Supersedes: the old corridor's create-more-mirror-files suggestion and duplicated
+  current-next-step prose. It does not supersede the phase/native decisions above.
+- Completed 2026-10 maintenance is linked from the current profile: status repairs,
+  independent correctness oracles, LP dual evidence and the learning series.
+- Current status: active organization convention. Recommendations live only in the
+  profile; original reports retain their execution evidence and historical advice.
+- Boundary: native remains deferred, Phase 9 open/parked, Phase 10 not started.
+  Research-asset ingestion and the revised Phase-I repair require separate tasks.

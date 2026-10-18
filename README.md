@@ -42,7 +42,8 @@ The native solver path does not call external solvers.
 - Variables must have lower bound `0`.
 - Native LP backends do not support finite variable upper bounds directly.
 - MIP support is limited to a small branch-and-bound reference path.
-- No cuts, heuristics, callbacks, or branch-and-cut yet.
+- Cuts/callbacks provide conservative passive boundaries; real cut materialization,
+  heuristics and branch-and-cut remain future work.
 - Presolve is not enabled by default; solve-time presolve is opt-in.
 - No automatic scaling yet.
 - LP duals cover the current continuous scope; MIP dual values remain empty.
@@ -108,6 +109,9 @@ pytest
 ```
 
 ## Documentation
+
+For development management, start with the [current project snapshot](.silo-dos/project_profile.md),
+the [task/report index](tasks/INDEX.md), and the [directory and code entrypoints](docs/development_layout.md).
 
 Start with [development companion learning](learning/README.md) for mathematical
 explanations, worked examples, research connections, limitations and exercises.

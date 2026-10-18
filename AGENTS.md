@@ -3,6 +3,10 @@
 1. Keep the dependency direction clean:
    core <- modeling <- presolve <- lp <- mip <- cuts/decomposition/uncertainty
 
+   This chain describes development progression. For implemented import directions,
+   see `docs/development_layout.md`: MIP consumes passive cuts/callback interfaces;
+   cuts stays independent of MIP, and core stays independent of all solver layers.
+
 2. The `core` package must not depend on LP, MIP, cuts, decomposition, or uncertainty modules.
 
 3. Native algorithms must not call external solvers.
@@ -24,6 +28,7 @@
 ## Task Management Rules
 
 - `tasks/README.md` is the source of truth for task directory rules and the SILO Development Operating System (SILO-DOS). AI coding agents must read `tasks/README.md` before issuing or executing task files.
+- Read `.silo-dos/project_profile.md` for current status; use `tasks/INDEX.md` to locate history. Regenerate the index after adding contracts/reports and run `scripts/check_project_structure.py`.
 - Long-term development knowledge belongs under `tasks/phases/`.
 - Issued Codex task contracts belong under `tasks/codex/`.
 - Execution memory belongs under `tasks/reports/`.

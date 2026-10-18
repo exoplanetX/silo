@@ -1,0 +1,27 @@
+{
+  "collisions": {
+    "20260522-01-01": [
+      "tasks/codex/20260522-01-01_phase4-cleanup.md",
+      "tasks/codex/20260522-01-01_sdos-rules.md"
+    ],
+    "20260522-02-01": [
+      "tasks/codex/20260522-02-01_agents-sdos-sync.md",
+      "tasks/codex/20260522-02-01_bnb-note.md"
+    ],
+    "20260522-03-01": [
+      "tasks/codex/20260522-03-01_mip-relax.md",
+      "tasks/codex/20260522-03-01_task-id-uniqueness.md"
+    ]
+  },
+  "missing_report": {
+    "20260519-01-01_phase-num.md": "No matching report retained; execution outcome unknown.",
+    "20260519-01-02_phase-num.md": "No matching report retained; execution outcome unknown.",
+    "20260519-02-01_task-rules.md": "No matching report retained; execution outcome unknown.",
+    "20260519-03-01_model-core.md": "No matching report retained; execution outcome unknown.",
+    "20260519-04-01_tableau-mvp.md": "No matching report retained; later cleanup has its own contract/report."
+  },
+  "report_only": {
+    "20260523-02-01_silo-dev-operator-smoke_report.md": "Historical issuance-only smoke operation; report links the generated 03-01 contract.",
+    "20260523-05-01_mip-diagnostics-task-contract_report.md": "Historical contract repair; report identifies the repaired 04-01 contract."
+  }
+}

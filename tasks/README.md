@@ -2,7 +2,7 @@
 
 ## 1. Purpose of `tasks/`
 
-The `tasks/` directory is not a general notes folder. It is used to manage long-term phase plans, issued Codex task prompts, and optional execution reports.
+The `tasks/` directory manages long-term phase plans, issued Codex task prompts and execution reports. Current status is summarized in [project_profile.md](../.silo-dos/project_profile.md); find historical contracts/reports through [INDEX.md](INDEX.md).
 
 ## 2. Folder Roles
 
@@ -24,7 +24,7 @@ Files under `tasks/codex/` are immutable after creation. Coding agents may read 
 tasks/reports/
 ```
 
-Optional execution reports. If Codex or another agent needs to record what was done, what tests passed, or what failed, the report must be created here instead of modifying the issued task file.
+Execution reports are required for executed tasks under section 6.5. Issuance-only or planning contracts may have no execution report yet. Record actual work, checks and failures here instead of modifying an issued task file.
 
 ## 3. Naming Rules
 
@@ -260,3 +260,40 @@ This requirement applies prospectively; do not revise old immutable contracts or
 historical reports to retrofit it. Teaching material has one canonical body under
 `learning/`; current usage and API reference belong under `docs/`, while original
 design/research records remain under `notes/`.
+
+## 7. Current Entry, History Index and Baselines
+
+- `.silo-dos/project_profile.md` is the single current-status summary: completed items,
+  verified code baselines, active scope and recommendations. Technical gates remain in
+  `technical_route.md`; durable decisions remain in `decision_log.md`.
+- Keep execution history in reports rather than appending the same chronology to both
+  current-status and route files. A historical next-step recommendation is not a pending
+  task or approval; cross-check the current summary before issuance.
+- `tasks/INDEX.md` is derived navigation, not an approval/status database. It links every
+  contract and report, including revisions and known historical identity collisions.
+  A report's presence does not establish execution success; an absent report does not
+  establish failure. Read the record and its Git history.
+- Regenerate the small Markdown navigation index after adding a contract/report:
+
+  ```text
+  python scripts/check_project_structure.py --write-index
+  python scripts/check_project_structure.py
+  ```
+
+- The generated index is versioned documentation. Run outputs, caches, large data and
+  binary artifacts remain excluded. `scripts/check_quality.py` checks the index and
+  project structure before the existing pytest/Ruff checks.
+- `tasks/history_exceptions.json` records only exact historical collisions and early
+  record gaps. Do not rename immutable files to hide those exceptions or generalize
+  the list to permit new collisions. Any deliberate resolution needs a scoped task
+  with evidence and a corresponding exception update.
+- New contracts should name the actual starting commit; reports record the baseline
+  actually checked. The report's result commit is obtained with
+  `git log -1 --format=%H -- tasks/reports/<report-file>` after committing, avoiding a
+  self-referential commit hash. Earlier contracts and reports remain unchanged.
+- Keep current file paths stable. Any later migration must explicitly include reference
+  updates and acceptance checks. Research notes/probes require their own asset-ingestion
+  scope; a navigation task does not implicitly promote them into the solver.
+
+Directory responsibilities, actual solver entrypoints, code/process/lesson version
+identities and environment guidance are in [development_layout.md](../docs/development_layout.md).
