@@ -4,6 +4,14 @@ from silo.decomposition.benders import BendersSolver
 from silo.decomposition.benders_cut import BendersCutCandidate, BendersCutType
 from silo.decomposition.column_candidate import ColumnCandidate
 from silo.decomposition.column_generation import ColumnGenerationSolver
+from silo.decomposition.dag_column_generation import (
+    DagColumnGenerationIteration,
+    DagColumnGenerationProblem,
+    DagColumnGenerationResult,
+    DagColumnGenerationStatus,
+    DagMasterRow,
+    solve_dag_column_generation,
+)
 from silo.decomposition.dag_pricing import (
     DagArc,
     DagPricingProblem,
@@ -46,6 +54,12 @@ __all__ = [
     "BendersSolver",
     "ColumnCandidate",
     "ColumnGenerationSolver",
+    "DagColumnGenerationIteration",
+    "DagColumnGenerationProblem",
+    "DagColumnGenerationResult",
+    "DagColumnGenerationStatus",
+    "DagMasterRow",
+    "solve_dag_column_generation",
     "DagArc",
     "DagPricingProblem",
     "DagPricingResult",
