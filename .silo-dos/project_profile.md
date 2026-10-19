@@ -18,15 +18,15 @@
 | 最近求解器核验基线 | 15b403bcd7322a0b25ebb5380539dc5c4002c4ac；[CG数值修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)，2331项测试与Ruff通过；定价保持12bfa35、RMP保持48c242d、LP内核保持ad62e0f |
 | 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.2.0按15b403b核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第1–4步已验收并推送；第5步[数值界一致性合同](../tasks/codex/20261019-05-01_cg-bound-consistency.md)已完成实现、回归与L0004 v0.2.0，见[修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)，待讨论对话验收 |
+| 本轮授权范围 | 第1–5步已验收；第5步见[合同](../tasks/codex/20261019-05-01_cg-bound-consistency.md)与[修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)；本轮仅审查/汇总，第6步未交付，未授权新push |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
-| Git 同步 | 第4步及审查摘要f0c5f31已推送并核对即时远端；第5步签发/实施采用local-commit，实际差异用Git实时核对 |
+| Git 同步 | 第4步及审查摘要f0c5f31已同步；第5步签发/实现/学习和本轮验收摘要为本地提交，当前差异及即时远端以本轮Git检查为准 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
 第 1–4 步均已由讨论对话验收，更新及审查摘要已成功推送至f0c5f31。
 用户随后批准CG数值界一致性任务，本轮签发第5步单个合同；唯一新增签发提交
-属于已知local-ahead，合同明确允许开发对话直接继续。第5步已完成并停止，等待交付审查，
-第6–7步尚未交付。本轮批准不含未来实现推送。
+属于已知local-ahead，合同明确允许开发对话直接继续。第5步已完成并通过本轮讨论审查，
+第6–7步尚未交付。本轮为审查与状态汇总，保持local-commit，不推送。
 实现、测试和审查分别记录；本轮检查通过不代替讨论对话的交付审查。
 
 ## Completed Maintenance / Evidence
@@ -40,7 +40,7 @@
 | 最小RMP适配层 | 48c242d；最小化字段、原子显式增列、完整行冷重建与逐次最优核验 | [RMP报告](../tasks/reports/20261019-02-01_restricted-master_report.md)、[L0002](../learning/lessons/L0002-restricted-master/README.md) |
 | 普通DAG精确定价 | 12bfa35；拓扑全路径最小化、严格标签与完整元组平局、原始列重构及保守数值失败 | [DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)、[L0003](../learning/lessons/L0003-dag-pricing/README.md)；已通过讨论对话审查 |
 | DAG凸组合列生成 | 857397e；显式seed、冷RMP与完整定价、退化增列、数值界/差距及失败轮次 | [CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)、[L0004](../learning/lessons/L0004-column-generation/README.md)；已按保守浮点范围验收，舍入诊断限制见下文 |
-| CG数值界一致性 | 15b403b；保留有符号发布差，追加消去c0的objective_gap与固定32ULP局部判据 | [修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)、L0004 v0.2.0；实现完成待讨论审查 |
+| CG数值界一致性 | 15b403b；保留有符号发布差，追加消去c0的objective_gap与固定32ULP局部判据 | [修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)、L0004 v0.2.0；已通过讨论对话审查 |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -129,9 +129,24 @@ Fraction解析/原始数据/精确平移下界核对通过。113个末轮保留�
 472项新增检查、932项针对性与全量2331项测试、Ruff通过；L0004 v0.2.0的两个完整程序、
 六题和真实修正基线15b403b核对完成，见[修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)。
 签发experiment_auditor的只读证据设计建议已落实，未计作本轮实测或严格误差证明。
-开发对话停在第5步，等待silo-solver-1010验收；第6步未交付。
-建议先验收本数值修正，再单独定义后续合同，推荐GPT-6 Sol/high。
-资源定价、热启动与增量研究保持后续候选，本轮不扩大算法域。
+2026-10-19，silo-solver-1010在f0cc01a上验收第5步：独立重跑全量2331项测试
+（9.05s）、Ruff、目录及差异检查，均通过；12个交付文件符合合同，禁区无改动。
+L0004 v0.2.0两个完整程序重跑通过，十节、六题/解答及真实15b403b基线核对通过。
+额外用不同参数的共享DAG族检查：alpha/beta各取1/8、3/8、5/8、7/8，成本矩阵为
+(-2,5,1,-3)、(7/4,-9/4,7/2,-1/2)、(6,2,-4,1)、(-7,-7,-1,-1)，R/C基项为3/8、-5/8，
+基成本-3/4，矩阵索引从0起，c0偶数索引为-7、奇数索引为5；首弧成本(i+1)/4、末弧(1-j)/8。
+64模型各配两个端点seed、原/反序和两个后端，共512次，全部TOLERANCE_REACHED。
+736轮独立Fraction端点真值、原始行可行性及返回乘数平移下界核对通过；
+89轮保留微小负objective_gap且满足局部预算，末轮精确原始目标最大误差约1.50e-15。
+上述512为本轮补查，未混入2331个版本化测试条目或开发报告的432族计数。
+独立experiment_auditor只读确认合同证据覆盖和独立性，无必须修正项；服务未跑实验、
+未写文件，也未把此前证据设计意见计作数学证明。
+
+当前形成受支持LP核验 -> 最小化RMP -> 普通DAG完整定价 -> 自动CG -> 数值停止的
+小规模参考闭环，支持域仍为连续conv=1及显式可行seed；成熟度限教学与研究基线。
+下一原子任务建议先讨论CG初始可行性恢复/可行性定价：LP Phase I核对当前列集，
+CG可行性定价负责从完整路径域补列，二者对象应分别定义。之后再评估RMP重优化和
+增量定价，使用本闭环作对照。推荐GPT-6 Sol/high；本轮未签发或实施第6步。
 资源约束、热启动、增量研究和性能主张仍待后续任务；native、Phase 9 closure及
 Phase 10保持原有门控。第5步明确修订第4步的严格负gap判据，旧合同与历史证据保留；
 当前数值行为以15b403b为准；32ULP保留工程局部尺度的限制，没有LP误差严格上界。
