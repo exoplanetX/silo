@@ -15,12 +15,12 @@
 | Phase 0–8 | 各自已批准的保守范围完成，具体边界见阶段记录 |
 | Phase 9 | open / parked；native implementation deferred and unapproved |
 | Phase 10 | not started |
-| 最近求解器核验基线 | c460aa78c2abc489839a0da2411b9bd1bca95983；[无界核验报告](../tasks/reports/20261020-01-01_lp-unbounded-check_report.md)，3444项测试与Ruff通过；恢复02aed7d、CG15b403b、定价12bfa35和RMP48c242d保持原样 |
-| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.2.0按15b403b、L0005 v0.1.0按02aed7d、L0006 v0.1.0按c460aa7核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
+| 最近求解器核验基线 | 90b377f723f047f723949aaace87f1385f42bb74；[RMP重优化报告](../tasks/reports/20261020-02-01_rmp-reoptimization_report.md)，3669项测试与Ruff通过；普通cold、CG15b403b、恢复02aed7d、定价12bfa35及第7步无界门控保持 |
+| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.2.0按15b403b、L0005 v0.1.0按02aed7d、L0006 v0.1.0按c460aa7、L0007 v0.1.0按90b377f核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第1–7步已验收；[第8步RMP基复用与重优化](../tasks/codex/20261020-02-01_rmp-reoptimization.md)已获用户批准并签发，待开发对话执行/本对话验收；本步不接CG、不push |
+| 本轮授权范围 | 第1–7步已验收；[第8步RMP基复用与重优化](../tasks/codex/20261020-02-01_rmp-reoptimization.md)实现、验证与L0007已完成，待讨论对话审查；本步不接CG、不push |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
-| Git 同步 | 上次即时远端核对至f0c5f31；第8步签发前main干净、HEAD=a26039f、cached origin/main...HEAD=0/12；用户继续授权覆盖这12个已知提交及本次签发提交；未push，最终差异以Git实查为准 |
+| Git 同步 | 上次即时远端核对至f0c5f31；本轮从已授权签发f8ce202、cached 0/13继续；第8步两次本地提交后实查main干净、cached origin/main...HEAD=0/15，未push，remote_sync_status=local_ahead_origin |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
 第 1–7 步均已由讨论对话验收；远端上次即时核对已同步至第4步审查摘要f0c5f31。
@@ -47,6 +47,7 @@ b886458。用户获知该状态后批准下一步，继续授权覆盖这四个�
 | CG数值界一致性 | 15b403b；保留有符号发布差，追加消去c0的objective_gap与固定32ULP局部判据 | [修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)、L0004 v0.2.0；已通过讨论对话审查 |
 | DAG初始可行性恢复 | 02aed7d；单位人工违背量、全域零成本定价和无人工原始行复核 | [恢复报告](../tasks/reports/20261019-06-01_dag-feasibility_report.md)、[L0005](../learning/lessons/L0005-cg-feasibility/README.md)；已通过讨论对话审查 |
 | LP无界终止核验 | c460aa7；完整原始点/方向逐项Fraction核验，Phase-I伪无界转数值矛盾 | [第7步报告](../tasks/reports/20261020-01-01_lp-unbounded-check_report.md)、[L0006](../learning/lessons/L0006-lp-unboundedness/README.md)；已通过讨论对话审查 |
+| RMP显式基复用 | 90b377f；全行非人工语义快照、原始点门控、Phase II与单次cold回退 | [第8步报告](../tasks/reports/20261020-02-01_rmp-reoptimization_report.md)、[L0007](../learning/lessons/L0007-rmp-reoptimization/README.md)；已实现待审查 |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -185,11 +186,11 @@ theory_architect与experiment_auditor分别只读复核实现数学一致性和�
 | 组件 | 已验证能力 | 主要剩余工作 |
 |---|---|---|
 | 建模、LP与核验 | 简单线性模型、Tableau/Revised、原始行最优性核验、无界候选点/方向精确标量核验、保守预处理 | 一般变量界、对偶单纯形、其余数值状态可靠性与稀疏线性代数待完善 |
-| DAG列生成 | MIN RMP、全域普通DAG定价、退化控制、浮点差距门控、独立初始恢复 | RMP跨模型增列的基映射/重优化、增量定价、资源约束、整数与分支定价 |
+| DAG列生成 | MIN RMP及独立显式基复用、全域普通DAG定价、退化控制、浮点差距门控、独立初始恢复 | CG显式消费重优化入口、增量定价、资源约束、整数与分支定价 |
 | MIP | 支持域内小型MAX分支定界与LP松弛 | 实际割加入、启发式、强分支与规模验证 |
 | 割与其他分解 | 被动接口、记录及toy Benders/CG | 通用Benders与通用ColumnGenerationSolver仍为NOT_SOLVED入口，未形成通用框架 |
 | 随机/鲁棒 | 有限场景记录和小型目标/RHS变换、区间RHS最坏情况变换 | 场景变量复制、非前瞻约束、更一般不确定性及求解集成 |
-| 运行与学习 | 小实例回归、任务追溯、L0001–L0006 | 锁定干净重建环境、成体系规模基准；native保持延期 |
+| 运行与学习 | 小实例回归、任务追溯、L0001–L0007 | 锁定干净重建环境、成体系规模基准；native保持延期 |
 
 第7步已实现并完成开发验证：两个原生LP的Phase-II无界出口使用完整原Model的实际
 有限候选点/方向Fraction核验；未通过返回NUMERICAL_ISSUE。原反例
@@ -227,15 +228,19 @@ experiment_auditor只读复核272族、旧正常路径保留、实际候选及�
 数值边界仍明确：真实无界3*x=1、maxz的浮点点无法精确满足原行，会保守数值拒绝。
 本检查仅覆盖两个原生LP的直接无界出口；presolve独立终态、其他后端、MIP整数可行性
 和一般数值状态各保留其边界。没有通用精确求解、任意尺度或工业性能保证。
-第8步已签发，当前尚待实施/验收：增加显式可选的RMP基快照与增列重优化入口，
-保留普通solve完整行冷求解。仅从完整原始行一行未删的已核验最优基生成快照，
-按原变量/结构列语义键映射新标准形，去除新人工列后重新核验原始可行点并进入Phase II。
-任何旧删行来源均无复用资格；映射、起点或warm失败最多冷回退一次，缓存随最终证据更新/失效。
-合同要求真实144条历史/576次调用中的144次初始cold及432次warm、独立解析真值、
-双cold参考、退化和增列恢复行独立反例，以及L0007原理/代码/研究意义/局限/练习解答。
-签发前144族的1152次双后端cold与另576次Revised全行详情已实测；这是支持域基线，
-不代表新warm实现通过。当前已验收源码和L0001–L0006基线保持上表身份。
-本步先证明固定RMP复用正确；CG接入、增量定价及工作量/时间比较另立原子合同。
+第8步已实现并完成开发验证，代码90b377f，待silo-solver-1010审查。新增显式LP reoptimize
+及RMP solve_reoptimized，普通solve仍完整cold并清空新缓存。全行非人工最终最优基
+经原始核验/元数据核验发快照；按语义键映射移位列，fresh人工列去除但不删原行，
+raw点核验后实际进入Phase II。旧删行来源无资格；失败最多cold一次，最终资格决定缓存。
+本轮改动前另跑1152双后端cold及576全行详情，仅作支持域基线。新144历史/576调用
+实测144cold/432warm/0回退，均最优；cold Phase I144次/288枢轴、Phase II144次/0枢轴，
+warm Phase I0次、Phase II432次/120枢轴，其中336次零枢轴warm仍实际调用Phase II。
+传入基/新增列非基身份由runner观察核对；原项Fraction真值及1152独立双后端cold对照通过。
+A/B/C与两独立EQ的公开路径、真实零步长退化、增列恢复行独立和故障/缓存生命周期通过。
+新增225项检查（144历史、58 LP单元、23 RMP单元），targeted881项，全量3669项与Ruff通过。
+L0007十节、六题/解答、11次公开调用完整程序与解析程序按真实90b377f基线核对。
+本步完成后停止待审，不自动接CG或下个任务；不推送。每轮仍全矩阵重建与解基，无LU缓存。
+后续CG显式接入、增量定价及工作量/时间比较各自另立原子合同，当前没有加速/工业性能主张。
 候选方向舍入的识别率问题单独保留，不把本步数值诊断算作求得最优或完整无界识别。
 随后选择具体OR应用、资源约束或整数层及独立研究实验，每项另行原子合同。
 建议GPT-6 Sol/high用于基映射与等价性检查；推荐不代表实际切换，Phase门控保持。

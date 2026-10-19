@@ -79,7 +79,16 @@ The revised simplex solver now supports Phase I construction for artificial-vari
 
 ## Revised Simplex Warm Starts
 
-`RevisedSimplexSolver.solve_with_details()` returns a detailed result containing the final standard-form problem and basis. A compatible basis can be supplied to `solve_with_details()` to warm start another solve. This is currently a conservative interface intended for small LPs with the same standard-form structure; artificial-variable warm starts and basis mapping across model transformations remain future work.
+`RevisedSimplexSolver.solve_with_details()` returns a detailed result containing the final standard-form problem and basis. A compatible basis can be supplied to `solve_with_details()` to warm start another solve. This bare-basis interface requires the same standard-form structure and rejects models needing artificial variables; general mapping across other model transformations remains future work.
+
+The separate opt-in `RevisedSimplexSolver.reoptimize(model, snapshot=None)` supports
+append-only reuse of a qualified full-row, artificial-free basis. It maps semantic
+column identities after added original variables shift structural columns, checks
+the raw basis point against all original rows, removes fresh artificial columns
+without row deletion, and enters the existing Phase II directly. Each final
+optimal result is independently checked; a rejected/failed warm attempt has at
+most one cold fallback. The old bare-basis entry and ordinary solve retain their
+behavior. See [RMP reoptimization](rmp_reoptimization.md) for diagnostics and limits.
 
 ## Public Reduced-Cost Convention
 
