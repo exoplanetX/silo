@@ -18,14 +18,15 @@
 | 最近求解器核验基线 | 857397e0cebdcfeb1c6c5ff325c17e0aa09c151b；[DAG列生成报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)，1859项测试与Ruff通过；定价保持12bfa35、RMP保持48c242d、LP内核保持ad62e0f |
 | 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.1.0按857397e核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第1–3步已验收并推送；第4步按[合同](../tasks/codex/20261019-04-01_dag-column-generation.md)已完成实现、测试与L0004，见[CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)，待讨论对话验收 |
+| 本轮授权范围 | 第1–4步已验收；第4步见[合同](../tasks/codex/20261019-04-01_dag-column-generation.md)与[CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)；用户明确授权验收后推送，第5步仅讨论建议 |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
-| Git 同步 | 第3步验收摘要c6d0ed1已推送并核对远端；第4步签发及执行采用local-commit，实际差异用Git实时核对 |
+| Git 同步 | 第3步验收摘要c6d0ed1已同步；用户已授权本轮推送第4步三个本地提交及本次审查摘要，结果以实时Git证明和本轮回执为准 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
 第 1–3 步均已由讨论对话验收，已有更新及审查摘要已成功推送至c6d0ed1。
 用户随后明确要求交付执行第4步；本轮签发单个闭环任务，其新增签发提交属于已知
-local-ahead，合同明确允许开发对话直接继续。第4步已实施并停止，等待审查，第5–7步尚未交付。
+local-ahead，合同明确允许开发对话直接继续。第4步已实施并通过本轮讨论审查；
+用户要求通过后直接推送GitHub，本轮据此同步。第5–7步尚未交付。
 实现、测试和审查分别记录；本轮检查通过不代替讨论对话的交付审查。
 
 ## Completed Maintenance / Evidence
@@ -38,7 +39,7 @@ local-ahead，合同明确允许开发对话直接继续。第4步已实施并�
 | Revised Phase-I 来源行清理 | ad62e0f；区分来源行、基位置与列编号，删行后核验原模型 | [修正报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)、[L0001](../learning/lessons/L0001-lp-duality/README.md) |
 | 最小RMP适配层 | 48c242d；最小化字段、原子显式增列、完整行冷重建与逐次最优核验 | [RMP报告](../tasks/reports/20261019-02-01_restricted-master_report.md)、[L0002](../learning/lessons/L0002-restricted-master/README.md) |
 | 普通DAG精确定价 | 12bfa35；拓扑全路径最小化、严格标签与完整元组平局、原始列重构及保守数值失败 | [DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)、[L0003](../learning/lessons/L0003-dag-pricing/README.md)；已通过讨论对话审查 |
-| DAG凸组合列生成 | 857397e；显式seed、冷RMP与完整定价、退化增列、数值界/差距及失败轮次 | [CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)、[L0004](../learning/lessons/L0004-column-generation/README.md)；实现完成待讨论审查 |
+| DAG凸组合列生成 | 857397e；显式seed、冷RMP与完整定价、退化增列、数值界/差距及失败轮次 | [CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)、[L0004](../learning/lessons/L0004-column-generation/README.md)；已按保守浮点范围验收，舍入诊断限制见下文 |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -93,8 +94,34 @@ L0003正文代码及双后端人工桥接重新运行，十节、四题和真实
 共40组双后端/排列完整列LP对照通过。117项新增检查、460项针对性及全量1859项测试、
 Ruff通过；L0004 v0.1.0代码例、四题和真实实现基线857397e已核对。
 本轮一次独立只读复核因模型容量失败，没有形成审查结论，见[CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)。
-开发对话停在第4步，等待silo-solver-1010验收，第5步尚未交付。
-建议先验收本闭环，再单独定义下一步合同；推荐GPT-6 Sol/high。
+2026-10-19，silo-solver-1010在85cdda3上验收第4步：独立重跑全量1859项测试
+（7.81s）、Ruff、结构及差异检查，14个变更文件均在合同允许范围，禁区保持原样。
+L0004正文完整代码双后端重跑，十节、四题及解答、真实实现哈希通过核对。
+另构造54个解析模型：含三段弧的共享DAG有00/01/10/11四条路径，两条边际等式，
+alpha、beta各取1/4、1/2、3/4；成本矩阵依次为(4,1,2,6)、(-3,2,1,-4)、
+(0,0,0,0)、(-4,-4,3,3)、(9/4,-3/2,1/2,13/4)、(1,-5,-2,0)。
+令lambda_11=t，则lambda_00=1-alpha-beta+t、lambda_01=beta-t、lambda_10=alpha-t，
+t位于[max(0,alpha+beta-1),min(alpha,beta)]，线性目标的端点给出独立精确最优。
+每模型采用两个端点的正权重路径作seed，再配原/反序及两个后端，共432次运行。
+图的R/C基系数为1/8、-1/4，行RHS相应平移；基成本按矩阵序号为1/-2，c0为2/-3。
+391次TOLERANCE_REACHED，目标符合解析值；41次按合同的严格L>P规则返回
+NUMERICAL_ISSUE，其中Tableau为24次、Revised为17次；偏差仅2.22e-16至8.88e-16，
+这41次末轮原始目标距解析最优也不超过8.88e-16。605个已发布界记录复算通过，
+包括失败前历史轮；全部轮次另用Fraction对返回乘数核对精确平移下界，均合法。
+这属于自然运行的保守拒绝，未声称432次均收敛，也未更改合同/代码掩盖诊断。
+最小复现可用四条平行路径p00/p01/p10/p11，成本(-4,-4,3,3)，
+R=(1/8,1/8,9/8,9/8)、C=(-1/4,3/4,-1/4,3/4)，conv=1、R=7/8、C=1/2，c0=-3；
+按C/R/conv行序、p11/p00 seed序，Revised给权重0.75和0.25000000000000006，
+P=-1.7500000000000002、D=L=-1.75、rho=0，触发差2.22e-16的数值诊断。
+图可取base_cost=-2、base_coefficients={conv:1,R:1/8,C:-1/4}，弧增加对应0/1指标。
+独立只读experiment_auditor确认合同证据覆盖与40组计数相符，无必须修正项；
+该服务未跑实验、未改文件，其意见未重复计作实测或独立LP真值。
+本轮数学服务因模型容量失败，未形成独立数学复核；主线程承担数学与实测检查。
+
+第4步可按合同验收，当前可用性受上述保守浮点诊断限制。下一原子任务建议优先处理
+CG数值界一致性：保留原始P/D/rho/L和有符号差距，建立明确误差判据，区分舍入范围
+与实质矛盾；加入自然反例/排列/双后端回归并更新L0004。推荐GPT-6 Sol/high。
+这是本轮检查后的优先级建议，尚未签发或授权实施；暂缓扩展资源定价、热启动与增量研究。
 资源约束、热启动、增量研究和性能主张仍待后续任务；native、Phase 9 closure及
 Phase 10保持原有门控。第4步的数值gap与小负rc门控以合同为准。
 
