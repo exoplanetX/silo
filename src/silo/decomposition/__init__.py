@@ -12,6 +12,12 @@ from silo.decomposition.dag_column_generation import (
     DagMasterRow,
     solve_dag_column_generation,
 )
+from silo.decomposition.dag_feasibility import (
+    DagFeasibilityIteration,
+    DagFeasibilityResult,
+    DagFeasibilityStatus,
+    restore_dag_feasibility,
+)
 from silo.decomposition.dag_pricing import (
     DagArc,
     DagPricingProblem,
@@ -60,6 +66,10 @@ __all__ = [
     "DagColumnGenerationStatus",
     "DagMasterRow",
     "solve_dag_column_generation",
+    "DagFeasibilityIteration",
+    "DagFeasibilityResult",
+    "DagFeasibilityStatus",
+    "restore_dag_feasibility",
     "DagArc",
     "DagPricingProblem",
     "DagPricingResult",
