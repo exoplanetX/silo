@@ -12,6 +12,9 @@
 
 L0001 的教学编排在 [系列整理任务](../tasks/codex/20261018-02-01_learning-series.md)
 中完成；算法实现和代码基线来自上表的 LP 开发任务。总目录同时记录两种来源。
+v0.2.0 由 [Phase-I 来源清理任务](../tasks/codex/20261019-01-01_revised-phase1-cleanup.md)
+补充三套身份、手算与证明、数值边界和第六道练习；实际代码基线见篇首元信息与
+[执行报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)。
 
 ## 按主题学习 / 未来专题编排
 

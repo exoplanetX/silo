@@ -80,7 +80,12 @@ Both native LP solvers now populate `dual_values` for optimal results using orig
 row names and signs, including negative RHS normalization and redundant equality
 cleanup. The checker validates original-space primal/dual conditions independently.
 See [LP duality](lp_duality.md) for the formulas, fixed-bound correction, tolerance
-and the existing revised Phase-I cleanup robustness boundary. Nonoptimal LP and
+and finite-precision limits. Revised Phase-I cleanup distinguishes artificial source
+rows from basis slots and remaps the surviving columns independently. It validates
+source metadata, local row-dependence residuals and the retained basis. After actual
+row deletion, an optimal candidate must also pass original-model optimality checks
+at the existing 1e-9 absolute tolerance; failure returns NUMERICAL_ISSUE without
+optimal evidence. This does not establish general numerical robustness. Nonoptimal LP and
 MIP results retain empty optimal-dual mappings.
 
 ## Presolve and Scaling Layer

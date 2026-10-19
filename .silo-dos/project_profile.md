@@ -15,16 +15,16 @@
 | Phase 0–8 | 各自已批准的保守范围完成，具体边界见阶段记录 |
 | Phase 9 | open / parked；native implementation deferred and unapproved |
 | Phase 10 | not started |
-| 最近求解器核验基线 | bb6bafff1cea78943eb8ae9d4b1a1b7d2a4dc52b；[LP 报告](../tasks/reports/20261018-01-02_lp-dual-optimality_report.md) |
-| 学习系列基线 | bdddf5851b72397c641c3dd872a306f66a12b296；[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
+| 最近求解器核验基线 | ad62e0f9dda749e5db8d6ca27749c41fc8f14045；[Phase-I 修正报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)，1399 项测试与 Ruff 通过 |
+| 学习系列基线 | L0001 v0.2.0 按 ad62e0f 核对；初建系列 bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第 1 步 revised Phase-I 来源行清理修正；[执行合同](../tasks/codex/20261019-01-01_revised-phase1-cleanup.md)，已签发，签发时尚未实施 |
+| 本轮授权范围 | 第 1 步 revised Phase-I 来源行清理修正；[执行合同](../tasks/codex/20261019-01-01_revised-phase1-cleanup.md)的实现与检查已完成，待讨论对话审查 |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
 | Git 同步 | 当前任务 local-commit，不 push；已知签发提交的 local-ahead 属本轮继续执行授权，实际状态实时核对 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
 本轮只授权第 1 步，开发对话完成后停止并等待审查；第 2–7 步仍需另行交付。
-此处的“已签发”只表明合同已准备，不代表实现、测试或审查通过。
+实现、测试和审查分别记录；本轮检查通过不代替讨论对话的交付审查。
 
 ## Completed Maintenance / Evidence
 
@@ -33,6 +33,7 @@
 | 开发恢复、预处理与 MIP 状态纠错 | 6bd9543、a2490ec、a4814f4 | [重启记录](../docs/development_restart.md) |
 | 独立小实例正确性基准 | 5cc88cb | [基准报告](../tasks/reports/20261010-04-01_correctness-oracles_report.md) |
 | LP 原始行对偶与最优性核验 | bb6baff，合同 RR=02；RR=01 保留 | [LP 对偶参考](../docs/lp_duality.md)、[报告](../tasks/reports/20261018-01-02_lp-dual-optimality_report.md) |
+| Revised Phase-I 来源行清理 | ad62e0f；区分来源行、基位置与列编号，删行后核验原模型 | [修正报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)、[L0001](../learning/lessons/L0001-lp-duality/README.md) |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -51,10 +52,11 @@ Benders / column generation / branch-and-price 和一般不确定性求解仍待
 应用的归属检查拒绝本对话接管，因此保留在原所有者下。原对话可在不再使用时归档。
 resfs 原件继续保留且受 Git 忽略；独立备份已核对，OneDrive 云端上传未单独验证。
 
-第 1 步 revised Phase-I 冗余行清理的 source-row provenance 已形成
-[详细合同](../tasks/codex/20261019-01-01_revised-phase1-cleanup.md)，交由 silo-solver开发。
-执行中复核已记录构造例与可达性边界，完成来源映射修正、回归与原模型核验，
-并更新 L0001。实现状态以该任务报告、提交和本对话审查为准。
+第 1 步 revised Phase-I 冗余行清理已完成来源映射修正与数值保护，单/多残留构造基、
+置换、原模型核验和全量检查通过，L0001 v0.2.0 已按实际实现提交更新。
+12 个固定 cold-solve 小例均通过核验，尚未确认异位残留基在当前枢轴路径中的可达性。
+当前应由 silo-solver-1010 审查[执行报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)；
+本开发对话完成本轮提交后停止。
 后续 RMP、精确定价和列生成闭环仍为建议，未批准实施；native、Phase 9 closure
 和 Phase 10 保持原有门控。
 
