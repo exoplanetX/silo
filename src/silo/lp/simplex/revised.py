@@ -1,4 +1,6 @@
-from dataclasses import dataclass
+from copy import deepcopy
+from dataclasses import dataclass, replace
+from types import MappingProxyType
 
 import numpy as np
 
@@ -9,6 +11,12 @@ from silo.core.status import SolverStatus
 from silo.lp.base import LPSolver
 from silo.lp.optimality import check_lp_optimality
 from silo.lp.simplex.basis import Basis
+from silo.lp.simplex.basis_snapshot import (
+    RevisedBasisSnapshot,
+    capture_identity,
+    make_snapshot,
+    map_snapshot,
+)
 from silo.lp.simplex.standard_form import (
     COLUMN_ARTIFICIAL,
     COLUMN_ORIGINAL,
@@ -46,12 +54,103 @@ class RevisedSimplexResult:
     used_warm_start: bool = False
 
 
+@dataclass(frozen=True)
+class RevisedReoptimizationResult:
+    details: RevisedSimplexResult
+    snapshot: RevisedBasisSnapshot | None = None
+    used_warm_start: bool = False
+    warm_phase_two_attempted: bool = False
+    warm_iterations: int = 0
+    cold_solve_count: int = 0
+    cold_iterations: int = 0
+    fallback_reason: str = ""
+    snapshot_unavailable_reason: str = ""
+
+
 class RevisedSimplexSolver(LPSolver):
     def __init__(self, iteration_limit: int = 10_000) -> None:
         self.iteration_limit = iteration_limit
 
     def solve(self, model: Model) -> Solution:
         return self.solve_with_details(model).solution
+
+    def reoptimize(
+        self, model: Model, snapshot: RevisedBasisSnapshot | None = None,
+    ) -> RevisedReoptimizationResult:
+        """Opt in to append-only full-row basis reuse, with at most one cold fallback.
+
+        Each warm/cold run inherits iteration_limit separately. No basis search
+        or Phase I occurs on an accepted warm path. Ordinary solve stays cold.
+        """
+        reference = deepcopy(model)
+        identity = None
+        identity_reason = ""
+        try:
+            identity = capture_identity(reference)
+        except (ValueError, TypeError, OverflowError) as exc:
+            identity_reason = f"Invalid original identity: {exc}"
+        attempted, warm_iterations, cold_count = False, 0, 0
+        fallback = ""
+
+        def finish(details, used_warm):
+            new_snapshot, reason = None, identity_reason
+            if details.solution.status == SolverStatus.OPTIMAL and identity is not None:
+                try:
+                    new_snapshot = make_snapshot(
+                        reference, identity, details.problem, details.basis,
+                    )
+                except (ValueError, TypeError, OverflowError) as exc:
+                    reason = str(exc)
+            elif not reason:
+                reason = f"Final status {details.solution.status.value}; no optimal snapshot."
+            return RevisedReoptimizationResult(
+                details=_freeze_reoptimization_details(details), snapshot=new_snapshot,
+                used_warm_start=used_warm, warm_phase_two_attempted=attempted,
+                warm_iterations=warm_iterations, cold_solve_count=cold_count,
+                cold_iterations=details.iterations if cold_count else 0,
+                fallback_reason=fallback, snapshot_unavailable_reason=reason,
+            )
+
+        if snapshot is not None:
+            try:
+                if identity is None:
+                    raise ValueError(identity_reason)
+                fresh = build_standard_form(deepcopy(reference))
+                problem, basis = map_snapshot(reference, identity, fresh, snapshot)
+            except (ValueError, TypeError, OverflowError) as exc:
+                fallback = f"Snapshot rejected: {exc}"
+            else:
+                attempted = True
+                try:
+                    run = _run_primal_revised_simplex(
+                        problem=problem, basis=basis,
+                        objective_coefficients=np.asarray(problem.objective_coefficients,
+                                                          dtype=float),
+                        iteration_limit=self.iteration_limit, phase_name="Phase II",
+                    )
+                except np.linalg.LinAlgError as exc:
+                    fallback = f"Warm basis solve failed: {exc}"
+                else:
+                    warm_iterations = run.iterations
+                    if run.status == SolverStatus.OPTIMAL:
+                        solution = (_optimal_solution(reference, problem, run.basis, run.state)
+                                    if _valid_reoptimization_state(problem, run) else
+                                    Solution(SolverStatus.NUMERICAL_ISSUE,
+                                             message="Warm optimal state/basis is invalid."))
+                    elif run.status == SolverStatus.UNBOUNDED:
+                        solution = _unbounded_solution(reference, problem, run)
+                    else:
+                        solution = Solution(run.status, message=run.message)
+                    solution = _checked_reoptimization_solution(reference, solution)
+                    if solution.status == SolverStatus.OPTIMAL:
+                        return finish(RevisedSimplexResult(solution, problem, run.basis,
+                                                           run.iterations, True), True)
+                    fallback = f"Warm {solution.status.value}: {solution.message}"
+        cold_count = 1
+        # The executable copy is never the independent original verification source.
+        cold = self.solve_with_details(deepcopy(reference))
+        cold = replace(cold, solution=_checked_reoptimization_solution(reference, cold.solution))
+        return finish(cold, False)
 
     def solve_with_details(
         self,
@@ -202,6 +301,59 @@ class RevisedSimplexSolver(LPSolver):
             iterations=iterations,
             used_warm_start=used_warm_start,
         )
+
+
+def _checked_reoptimization_solution(model: Model, solution: Solution) -> Solution:
+    if solution.status != SolverStatus.OPTIMAL:
+        return Solution(solution.status, message=solution.message)
+    checked = check_lp_optimality(model, solution, tolerance=DEFAULT_TOLERANCE)
+    if not checked.passed:
+        return Solution(
+            SolverStatus.NUMERICAL_ISSUE,
+            message=f"Reoptimization original-model optimality failed: {checked.message}",
+        )
+    return solution
+
+
+def _valid_reoptimization_state(problem: StandardFormProblem, run: RevisedRunResult) -> bool:
+    if not isinstance(run.state, BasisState) or not isinstance(run.basis, Basis):
+        return False
+    try:
+        if any(type(j) is not int for j in (*run.basis.basic_columns, *run.basis.nonbasic_columns)):
+            return False
+        run.basis.validate(column_count=len(problem.columns), row_count=len(problem.row_names))
+        return all(np.asarray(values).shape == (size,) and np.all(np.isfinite(values))
+                   for values, size in (
+                       (run.state.primal_values, len(problem.columns)),
+                       (run.state.reduced_costs, len(problem.columns)),
+                       (run.state.basic_values, len(problem.row_names)),
+                       (run.state.simplex_multipliers, len(problem.row_names)),
+                   ))
+    except (ValueError, TypeError):
+        return False
+
+
+def _freeze_reoptimization_details(details: RevisedSimplexResult) -> RevisedSimplexResult:
+    solution = replace(details.solution, **{
+        name: MappingProxyType(dict(getattr(details.solution, name))) for name in
+        ('primal_values', 'slack_values', 'dual_values', 'reduced_costs', 'basis_status')
+    })
+    problem, basis = deepcopy(details.problem), deepcopy(details.basis)
+    if isinstance(basis, Basis):
+        basis = Basis(tuple(basis.basic_columns), tuple(basis.nonbasic_columns))
+    if isinstance(problem, StandardFormProblem):
+        try:
+            initial = problem.initial_basis
+            problem = replace(
+                problem, columns=tuple(problem.columns), row_names=tuple(problem.row_names),
+                matrix=tuple(tuple(row) for row in problem.matrix), rhs=tuple(problem.rhs),
+                objective_coefficients=tuple(problem.objective_coefficients),
+                artificial_columns=tuple(problem.artificial_columns),
+                initial_basis=Basis(tuple(initial.basic_columns), tuple(initial.nonbasic_columns)),
+            )
+        except (TypeError, AttributeError):
+            problem = None  # Bad metadata cannot invalidate independently valid math evidence.
+    return replace(details, solution=solution, problem=problem, basis=basis)
 
 
 def _unbounded_solution(

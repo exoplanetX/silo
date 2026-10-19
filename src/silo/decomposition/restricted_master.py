@@ -1,4 +1,4 @@
-"""Cold-solve MIN restricted masters over the native MAX LP interface.
+"""MIN restricted masters with cold solves and explicit full-row basis reuse.
 
 Only the caller's current columns are optimized. Nonoptimal backend statuses are
 diagnostics, without certified full-master infeasibility or unboundedness claims.
@@ -41,11 +41,24 @@ class RestrictedMasterResult:
             object.__setattr__(self, name, MappingProxyType(dict(getattr(self, name))))
 
 
+@dataclass(frozen=True)
+class RestrictedMasterReoptimizationResult:
+    result: RestrictedMasterResult
+    used_warm_start: bool = False
+    warm_phase_two_attempted: bool = False
+    warm_iterations: int = 0
+    cold_solve_count: int = 0
+    cold_iterations: int = 0
+    fallback_reason: str = ""
+    snapshot_available: bool = False
+    snapshot_unavailable_reason: str = ""
+
+
 class RestrictedMasterProblem:
     """Own a full MIN model and explicitly append columns, preserving every row.
 
-    Variables must be continuous with bounds [0, +infinity). Each solve creates
-    fresh full-row models and uses a cold native solve, with no presolve or reuse.
+    Variables must be continuous with bounds [0, +infinity). Ordinary solve is
+    cold. solve_reoptimized explicitly opts into append-only full-row reuse.
     """
 
     def __init__(self, model: Model) -> None:
@@ -64,6 +77,7 @@ class RestrictedMasterProblem:
             ):
                 raise ValueError("Restricted master variables require continuous bounds [0, +inf).")
         self._model = _copy_model(model)
+        self._basis_snapshot = None
 
     def add_column(
         self, *, name: str, cost: float, row_coefficients: Mapping[str, float],
@@ -100,26 +114,53 @@ class RestrictedMasterProblem:
         Internal objective, constant, multipliers and reduced costs are negated.
         A separate reference copy protects verification from backend mutation.
         """
+        self._basis_snapshot = None
         native = _copy_model(self._model, negate_objective=True)
         reference = _copy_model(native)
         backend = RevisedSimplexSolver() if solver is None else solver
         solution = backend.solve(native)
-        if solution.status != SolverStatus.OPTIMAL:
-            return RestrictedMasterResult(status=solution.status, message=solution.message)
-        checked = check_lp_optimality(reference, solution, tolerance=DEFAULT_TOLERANCE)
-        if not checked.passed:
-            return RestrictedMasterResult(
-                status=SolverStatus.NUMERICAL_ISSUE,
-                message=f"Restricted master optimality evidence failed: {checked.message}",
-            )
-        return RestrictedMasterResult(
-            status=SolverStatus.OPTIMAL,
-            objective_value=-solution.objective_value,
-            primal_values=solution.primal_values,
-            dual_values={name: -value for name, value in solution.dual_values.items()},
-            reduced_costs={name: -value for name, value in solution.reduced_costs.items()},
-            message=f"Restricted master optimal for current columns. {solution.message}",
+        return _publish_result(reference, solution)
+
+    def solve_reoptimized(self, solver: RevisedSimplexSolver | None = None
+                          ) -> RestrictedMasterReoptimizationResult:
+        """Explicit append-only reuse; the RMP owns and invalidates its cache."""
+        backend = RevisedSimplexSolver() if solver is None else solver
+        if not isinstance(backend, RevisedSimplexSolver):
+            raise TypeError("RMP reoptimization requires a native RevisedSimplexSolver.")
+        native = _copy_model(self._model, negate_objective=True)
+        reference = _copy_model(native)
+        outcome = backend.reoptimize(native, self._basis_snapshot)
+        result = _publish_result(reference, outcome.details.solution)
+        self._basis_snapshot = outcome.snapshot if result.status == SolverStatus.OPTIMAL else None
+        reason = outcome.snapshot_unavailable_reason
+        if result.status != SolverStatus.OPTIMAL:
+            reason = f"Final RMP {result.status.value}: {result.message}"
+        return RestrictedMasterReoptimizationResult(
+            result=result, used_warm_start=outcome.used_warm_start
+            and result.status == SolverStatus.OPTIMAL,
+            warm_phase_two_attempted=outcome.warm_phase_two_attempted,
+            warm_iterations=outcome.warm_iterations, cold_solve_count=outcome.cold_solve_count,
+            cold_iterations=outcome.cold_iterations, fallback_reason=outcome.fallback_reason,
+            snapshot_available=self._basis_snapshot is not None, snapshot_unavailable_reason=reason,
         )
+
+
+def _publish_result(reference, solution) -> RestrictedMasterResult:
+    if solution.status != SolverStatus.OPTIMAL:
+        return RestrictedMasterResult(status=solution.status, message=solution.message)
+    checked = check_lp_optimality(reference, solution, tolerance=DEFAULT_TOLERANCE)
+    if not checked.passed:
+        return RestrictedMasterResult(
+            status=SolverStatus.NUMERICAL_ISSUE,
+            message=f"Restricted master optimality evidence failed: {checked.message}",
+        )
+    return RestrictedMasterResult(
+        status=SolverStatus.OPTIMAL, objective_value=-solution.objective_value,
+        primal_values=solution.primal_values,
+        dual_values={name: -value for name, value in solution.dual_values.items()},
+        reduced_costs={name: -value for name, value in solution.reduced_costs.items()},
+        message=f"Restricted master optimal for current columns. {solution.message}",
+    )
 
 
 def _copy_model(model: Model, *, negate_objective: bool = False) -> Model:
