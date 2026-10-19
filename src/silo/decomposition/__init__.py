@@ -16,6 +16,7 @@ from silo.decomposition.master import (
     MasterProblemContext,
     MasterProblemResult,
 )
+from silo.decomposition.restricted_master import RestrictedMasterProblem, RestrictedMasterResult
 from silo.decomposition.subproblem import (
     Subproblem,
     SubproblemContext,
@@ -46,6 +47,8 @@ __all__ = [
     "MasterProblem",
     "MasterProblemContext",
     "MasterProblemResult",
+    "RestrictedMasterProblem",
+    "RestrictedMasterResult",
     "Subproblem",
     "SubproblemContext",
     "SubproblemResult",
