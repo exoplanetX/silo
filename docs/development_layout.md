@@ -33,7 +33,8 @@
 |---|---|---|
 | CLI 和后端选择 | [main.py](../src/silo/cli/main.py)、[solvers.py](../src/silo/cli/solvers.py) | --solver 与 --lp-solver 的适用命令分别管理 |
 | Tableau Phase I/II | [tableau.py](../src/silo/lp/simplex/tableau.py) 的 TableauSimplexSolver.solve | 两阶段实际流程位于本模块 |
-| Revised Phase I/II | [revised.py](../src/silo/lp/simplex/revised.py) 的 RevisedSimplexSolver.solve | 已记录 source-row cleanup 边界 |
+| Revised Phase I/II | [revised.py](../src/silo/lp/simplex/revised.py) 的 RevisedSimplexSolver.solve | 来源行/基位置清理已修正；有限精度边界仍保留 |
+| 最小 RMP 适配层 | [restricted_master.py](../src/silo/decomposition/restricted_master.py) | MIN目标/对偶转换，完整行冷重建、显式加列与逐次最优核验 |
 | LP 最优性核验 | [optimality.py](../src/silo/lp/optimality.py) | 原始输入坐标；有限精度与支持域见 API 文档 |
 | 预处理与恢复 | [presolver.py](../src/silo/presolve/presolver.py) | 保留变换与原坐标恢复关系 |
 | 最小 MIP B&B | [branch_and_bound.py](../src/silo/mip/branch_and_bound.py) | 使用 LP 松弛和被动 cut/callback 边界 |
@@ -41,13 +42,15 @@
 
 tableau 与 revised 是并存的两种后端，分别维护算法行为并做独立核验。
 cuts/decomposition/uncertainty 的 conservative/toy 完成状态不表示生产级算法已经实现。
+RMP 已能求解当前显式列集合；完整定价、CG循环及原有ColumnGenerationSolver入口仍待后续任务。
 
 ## 实际导入边界
 
 下面箭头表示“左侧导入右侧”，列出关键模块边界，省略部分共享工具依赖：
 
 ~~~text
-modeling, presolve, lp, cuts, decomposition, uncertainty -> core
+modeling, presolve, lp, cuts, uncertainty -> core
+decomposition -> lp, core
 mip -> lp, cuts, core
 cli -> io, lp, mip, presolve, core
 interfaces -> core
@@ -56,6 +59,7 @@ interfaces -> core
 AGENTS 中的长链用于表达开发递进。Phase 6 已实现的 mip → cuts 是对被动记录、
 separator/callback protocols 的依赖；cuts 保持独立于 mip，避免形成回路。
 core 保持独立；外部求解器调用仅限 interfaces、examples 或比较测试。
+RMP只通过LPSolver和既有最优性核验器消费LP；下层不反向导入decomposition。
 结构检查解析显式 Python 导入；它不证明动态导入或所有运行时行为符合边界。
 
 ## 版本、任务与核验基线

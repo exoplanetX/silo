@@ -16,6 +16,7 @@
 | LP 求解命令 | [solve](cli_solve.md) |
 | 预处理诊断 | [presolve](presolve_cli.md) |
 | LP 对偶与核验 API | [对偶接口参考](lp_duality.md) |
+| 当前列集合的最小化受限主问题 | [RMP 接口](restricted_master.md) |
 | 两后端比较 | [compare](backend_compare.md) |
 | MIP 求解与示例 | [mip-solve](mip_solve_cli.md)、[示例](mip_examples.md) |
 | 恢复开发上下文 | [开发重启记录](development_restart.md) |

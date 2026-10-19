@@ -4,7 +4,7 @@
 规则见 [tasks/README.md](README.md)，当前状态见
 [project_profile](../.silo-dos/project_profile.md)。请修改来源文件后重新生成索引。
 
-共 141 份合同、137 份报告。报告存在只表示有记录；
+共 141 份合同、138 份报告。报告存在只表示有记录；
 批准范围、执行是否成功及代码基线需要阅读合同、报告与对应 Git 提交。
 未出现同名报告的合同可能尚未执行；索引不据此推断完成或失败。
 
@@ -12,7 +12,7 @@
 
 | 任务身份 / 合同 | 报告 | 说明 |
 |---|---|---|
-| [20261019-02-01_restricted-master](codex/20261019-02-01_restricted-master.md) | 尚无同名报告 |  |
+| [20261019-02-01_restricted-master](codex/20261019-02-01_restricted-master.md) | [报告](reports/20261019-02-01_restricted-master_report.md) |  |
 | [20261019-01-01_revised-phase1-cleanup](codex/20261019-01-01_revised-phase1-cleanup.md) | [报告](reports/20261019-01-01_revised-phase1-cleanup_report.md) |  |
 | [20261018-04-02_research-assets](codex/20261018-04-02_research-assets.md) | [报告](reports/20261018-04-02_research-assets_report.md) |  |
 | [20261018-04-01_research-assets](codex/20261018-04-01_research-assets.md) | [报告](reports/20261018-04-01_research-assets_report.md) |  |

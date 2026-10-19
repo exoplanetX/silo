@@ -15,10 +15,10 @@
 | Phase 0–8 | 各自已批准的保守范围完成，具体边界见阶段记录 |
 | Phase 9 | open / parked；native implementation deferred and unapproved |
 | Phase 10 | not started |
-| 最近求解器核验基线 | ad62e0f9dda749e5db8d6ca27749c41fc8f14045；[Phase-I 修正报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)，1399 项测试与 Ruff 通过 |
-| 学习系列基线 | L0001 v0.2.0 按 ad62e0f 核对；初建系列 bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
+| 最近求解器核验基线 | 48c242d2fba886807d1230fb7a72b85c3f212b0e；[RMP报告](../tasks/reports/20261019-02-01_restricted-master_report.md)，1483项测试与Ruff通过；LP内核保持ad62e0f |
+| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第 1 步已经审查通过；第 2 步最小 RMP 适配层已批准签发，见[执行合同](../tasks/codex/20261019-02-01_restricted-master.md)，待开发对话执行 |
+| 本轮授权范围 | 第1步已验收；第2步最小RMP的实现、测试、L0002已完成，见[执行合同](../tasks/codex/20261019-02-01_restricted-master.md)，待讨论对话审查 |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
 | Git 同步 | 当前任务 local-commit，不 push；已知签发提交的 local-ahead 属本轮继续执行授权，实际状态实时核对 |
 
@@ -35,6 +35,7 @@
 | 独立小实例正确性基准 | 5cc88cb | [基准报告](../tasks/reports/20261010-04-01_correctness-oracles_report.md) |
 | LP 原始行对偶与最优性核验 | bb6baff，合同 RR=02；RR=01 保留 | [LP 对偶参考](../docs/lp_duality.md)、[报告](../tasks/reports/20261018-01-02_lp-dual-optimality_report.md) |
 | Revised Phase-I 来源行清理 | ad62e0f；区分来源行、基位置与列编号，删行后核验原模型 | [修正报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)、[L0001](../learning/lessons/L0001-lp-duality/README.md) |
+| 最小RMP适配层 | 48c242d；最小化字段、原子显式增列、完整行冷重建与逐次最优核验 | [RMP报告](../tasks/reports/20261019-02-01_restricted-master_report.md)、[L0002](../learning/lessons/L0002-restricted-master/README.md) |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -61,9 +62,11 @@ resfs 原件继续保留且受 Git 忽略；独立备份已核对，OneDrive 云
 近相关等式仍可能误报 UNBOUNDED，属于已复现的既有数值债；范围和反例记录在
 [第 2 步合同](../tasks/codex/20261019-02-01_restricted-master.md)，本轮不修复底层状态判定。
 
-用户已批准第 2 步最小受限主问题（RMP）接口：沿用原生 LP，显式转换最小化目标、
-乘数与约化成本；加列后从完整行集合冷重建并核验，交付 L0002。
-当前仅签发，尚未实现；由 silo-solver开发执行一个合同后停止，交讨论对话审查。
+第2步最小RMP已实现：沿用原生LP，显式转换最小化目标、乘数与约化成本，原子加列后
+从完整行集合冷重建；每个最优候选先在完整输入上核验，再发布只读最小化快照。
+84项新增检查及全量1483项测试通过；L0002 v0.1.0和四道习题已实际核对。
+当前由silo-solver-1010审查[第2步报告](../tasks/reports/20261019-02-01_restricted-master_report.md)，
+开发对话完成本轮本地提交后停止。RMP仅覆盖当前列集合，非最优状态保留为后端诊断。
 精确定价、列生成闭环与研究加速仍待后续任务；native、Phase 9 closure 和 Phase 10
 保持原有门控。
 
