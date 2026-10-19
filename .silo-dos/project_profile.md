@@ -18,13 +18,13 @@
 | 最近求解器核验基线 | 12bfa358850b3fe55b31086c4f98741852973b31；[DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)，1742项测试与Ruff通过；RMP保持48c242d、LP内核保持ad62e0f |
 | 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第1、2步已验收；第3步普通DAG精确定价已完成实现、测试与L0003，见[执行合同](../tasks/codex/20261019-03-01_dag-pricing.md)与[DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)，等待讨论对话审查 |
+| 本轮授权范围 | 第1–3步已验收；本轮登记第3步审查结论并按用户明确指令推送已完成更新，第4步仍待另行交付 |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
-| Git 同步 | 当前任务 local-commit，不 push；已知签发提交的 local-ahead 属本轮继续执行授权，实际状态实时核对 |
+| Git 同步 | 用户已明确授权第3步验收后推送已完成更新；本轮按该指令同步，实际状态用Git实时核对 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
-第 1、2 步已经讨论对话验收。第 3 步普通 DAG 路径精确定价已执行，当前停止并等待审查；
-第 4–7 步仍需另行交付。授权包含从已说明的六个本地 ahead 提交及本次签发提交继续。
+第 1–3 步均已由讨论对话验收。本轮用户要求验收通过后推送GitHub；该明确指令覆盖
+此前九个已完成本地提交及本次审查摘要提交。第 4–7 步仍需另行交付，尚未实施。
 实现、测试和审查分别记录；本轮检查通过不代替讨论对话的交付审查。
 
 ## Completed Maintenance / Evidence
@@ -36,7 +36,7 @@
 | LP 原始行对偶与最优性核验 | bb6baff，合同 RR=02；RR=01 保留 | [LP 对偶参考](../docs/lp_duality.md)、[报告](../tasks/reports/20261018-01-02_lp-dual-optimality_report.md) |
 | Revised Phase-I 来源行清理 | ad62e0f；区分来源行、基位置与列编号，删行后核验原模型 | [修正报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)、[L0001](../learning/lessons/L0001-lp-duality/README.md) |
 | 最小RMP适配层 | 48c242d；最小化字段、原子显式增列、完整行冷重建与逐次最优核验 | [RMP报告](../tasks/reports/20261019-02-01_restricted-master_report.md)、[L0002](../learning/lessons/L0002-restricted-master/README.md) |
-| 普通DAG精确定价 | 12bfa35；拓扑全路径最小化、严格标签与完整元组平局、原始列重构及保守数值失败 | [DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)、[L0003](../learning/lessons/L0003-dag-pricing/README.md)；实现完成待讨论审查 |
+| 普通DAG精确定价 | 12bfa35；拓扑全路径最小化、严格标签与完整元组平局、原始列重构及保守数值失败 | [DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)、[L0003](../learning/lessons/L0003-dag-pricing/README.md)；已通过讨论对话审查 |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -77,10 +77,18 @@ RMP仅覆盖当前列集合，非最优状态保留为后端诊断。
 Ruff通过；两个LP后端人工RMP桥接均得目标12 -> 10、rc=-2 -> 0。
 L0003 v0.1.0的代码例和四题已按真实实现提交12bfa35核对。
 具体域、浮点边界和证据见[DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)。
-开发对话已停在第3步，等待silo-solver-1010审查，尚无讨论对话验收结论。
-第4步仅建议连接RMP与完整定价的窄范围控制器，需另行批准合同；建议GPT-6 Sol/high，
-重点是列身份、行坐标、失败传播与终止条件。资源约束定价、CG自动闭环及研究加速仍待
-后续任务，native、Phase 9 closure和Phase 10保持原有门控。
+2026-10-19，silo-solver-1010在8efabeeb3a1e232ec0ca4b216a48661062f3b270上验收第3步：
+独立重跑1742项测试、Ruff、结构及差异检查；另以5节点全向前10弧的全部1024个子图、
+三组对偶完成3072次定价核对，独立Fraction枚举5184个路径值，含549个空域输入，全部通过。
+新图族的节点/弧顺序与拓扑编号不同，成本、行系数和基项含正负值；未复用生产私有助手。
+L0003正文代码及双后端人工桥接重新运行，十节、四题和真实代码基线通过核对。
+独立只读数学复核未发现必须先修项；未把它重复计作实验结果。第3步可验收，无需修补实现。
+
+下一步仅建议第4步：用同一DAG列域连接RMP与定价，先限制含sum(lambda)=1凸组合行的
+小型可行主问题，处理路径身份、显式初始列、失败传播、完整定价终止及可解释的目标差距。
+无改善标志可能含小负rc，不能直接标记数学上的完整LP最优；需对停止语义与下界另作合同。
+建议GPT-6 Sol/high。当前未签发或实施第4步；资源约束、热启动、增量研究和性能主张
+仍待后续任务，native、Phase 9 closure及Phase 10保持原有门控。
 
 ## Source / Directory Map
 
