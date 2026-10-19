@@ -15,10 +15,10 @@
 | Phase 0–8 | 各自已批准的保守范围完成，具体边界见阶段记录 |
 | Phase 9 | open / parked；native implementation deferred and unapproved |
 | Phase 10 | not started |
-| 最近求解器核验基线 | 15b403bcd7322a0b25ebb5380539dc5c4002c4ac；[CG数值修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)，2331项测试与Ruff通过；定价保持12bfa35、RMP保持48c242d、LP内核保持ad62e0f |
-| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.2.0按15b403b核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
+| 最近求解器核验基线 | 02aed7d5d180fbe1cbef67abec1b084777c6a369；[恢复报告](../tasks/reports/20261019-06-01_dag-feasibility_report.md)，3046项测试与Ruff通过；旧CG保持15b403b、定价12bfa35、RMP48c242d、LP内核ad62e0f |
+| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.2.0按15b403b、L0005 v0.1.0按02aed7d核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第1–5步已验收；第6步[CG可行性恢复合同](../tasks/codex/20261019-06-01_dag-feasibility.md)已获用户授权并签发，等待开发对话实现/交付；未授权新push |
+| 本轮授权范围 | 第1–5步已验收；第6步[CG可行性恢复合同](../tasks/codex/20261019-06-01_dag-feasibility.md)已完成实现、测试与L0005，见[恢复报告](../tasks/reports/20261019-06-01_dag-feasibility_report.md)，待讨论对话验收；未授权新push |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
 | Git 同步 | 第4步及审查摘要f0c5f31已同步；第5步四个本地提交及本次第6步签发提交获准继续，保持local-commit；即时差异以本轮Git检查为准 |
 
@@ -26,7 +26,7 @@
 第 1–5 步均已由讨论对话验收；远端已同步至第4步审查摘要f0c5f31。
 第5步签发、实现、学习和验收摘要四个已知本地提交为8ee397e、15b403b、f0cc01a、
 b886458。用户获知该状态后批准下一步，继续授权覆盖这四个提交及本次第6步
-合同/摘要/INDEX签发提交。第6步为单个可行性恢复任务，开发对话完成后停止待审查；
+合同/摘要/INDEX签发提交。第6步可行性恢复已完成，开发对话当前停止待审查；
 第7步尚未交付。保持local-commit，本轮及本合同均不推送。
 实现、测试和审查分别记录；本轮检查通过不代替讨论对话的交付审查。
 
@@ -42,6 +42,7 @@ b886458。用户获知该状态后批准下一步，继续授权覆盖这四个�
 | 普通DAG精确定价 | 12bfa35；拓扑全路径最小化、严格标签与完整元组平局、原始列重构及保守数值失败 | [DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)、[L0003](../learning/lessons/L0003-dag-pricing/README.md)；已通过讨论对话审查 |
 | DAG凸组合列生成 | 857397e；显式seed、冷RMP与完整定价、退化增列、数值界/差距及失败轮次 | [CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)、[L0004](../learning/lessons/L0004-column-generation/README.md)；已按保守浮点范围验收，舍入诊断限制见下文 |
 | CG数值界一致性 | 15b403b；保留有符号发布差，追加消去c0的objective_gap与固定32ULP局部判据 | [修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)、L0004 v0.2.0；已通过讨论对话审查 |
+| DAG初始可行性恢复 | 02aed7d；单位人工违背量、全域零成本定价和无人工原始行复核 | [恢复报告](../tasks/reports/20261019-06-01_dag-feasibility_report.md)、[L0005](../learning/lessons/L0005-cg-feasibility/README.md)；实现完成待讨论审查 |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -143,19 +144,22 @@ L0004 v0.2.0两个完整程序重跑通过，十节、六题/解答及真实15b4
 独立experiment_auditor只读确认合同证据覆盖和独立性，无必须修正项；服务未跑实验、
 未写文件，也未把此前证据设计意见计作数学证明。
 
-当前形成受支持LP核验 -> 最小化RMP -> 普通DAG完整定价 -> 自动CG -> 数值停止的
-小规模参考闭环，支持域仍为连续conv=1及显式可行seed；成熟度限教学与研究基线。
-用户已批准并签发[第6步：CG初始可行性恢复与可行性定价](../tasks/codex/20261019-06-01_dag-feasibility.md)。
-独立恢复器从非空合法路径seed出发，允许耦合行不可行；辅助目标采用单位总违背量，
-全域零成本定价补真实列，F小后移除人工变量并独立核验完整原始行。
-成功只返回保持原图/原成本/c0的可行seed问题，由调用者显式交现有CG优化原目标。
-正违背下界限定为浮点数值证据；须核对人工列对偶约束，不发布严格Farkas结论。
-合同要求三类手算例、81模型/648次解析族及新L0005；目前仅完成签发前双后端公开API
-桥接和两项独立只读复核，新模块实现及其测试尚待开发交付。
-随后再评估RMP重优化和增量定价，使用本闭环作对照。推荐GPT-6 Sol/high。
+第6步已按[合同](../tasks/codex/20261019-06-01_dag-feasibility.md)实现独立DAG可行性恢复，
+从非空合法路径seed出发允许耦合行不可行，以单位总违背量和全域零成本定价补真实列。
+F小后移除人工变量，另建零目标完整原始行RMP核验；成功保留原图/原成本/c0交回seed问题。
+恢复与原目标CG通过调用者两次显式调用连接，旧CG依然要求可行seed；支持域保持连续conv=1普通DAG。
+648组解析回归得到200成功/448数值正违背下界，辅助LP1144次、原始复核200次；
+200次成功均显式交旧CG并对照完整原目标LP。三例双后端核对恢复后原目标9、正违背1及退化1->1->0。
+715项新增检查、1647项针对性及全量3046项测试与Ruff通过，L0005 v0.1.0完整程序/五题/真实代码基线核对。
+数值边界单列保留：10个辅助末轮的人工rc精确越界2^-52，其中8个形式平移目标超解析值2^-54。
+精确对偶条件成立的定价轮严格Fraction下界通过，其余按既有1e-9核验的浮点证据解释，未投影乘数。
+人工pi_r=2/rc=-1伪下界和小F却原始行不可行等反例均被拒绝，详见[恢复报告](../tasks/reports/20261019-06-01_dag-feasibility_report.md)。
+签发前公开API桥接及两项只读复核未计作新恢复器实测；成熟度限教学与研究基线，不发布严格Farkas结论。
+开发对话停在第6步，等待silo-solver-1010验收。建议先审查本恢复器和见证边界，再单独定义后续合同；
+推荐GPT-6 Sol/high，第7步尚未交付。
 资源约束、热启动、增量研究和性能主张仍待后续任务；native、Phase 9 closure及
 Phase 10保持原有门控。第5步明确修订第4步的严格负gap判据，旧合同与历史证据保留；
-当前数值行为以15b403b为准；32ULP保留工程局部尺度的限制，没有LP误差严格上界。
+旧CG数值规则仍为15b403b，独立恢复器基线02aed7d；32ULP保留工程局部尺度限制，没有LP误差严格上界。
 
 ## Source / Directory Map
 
