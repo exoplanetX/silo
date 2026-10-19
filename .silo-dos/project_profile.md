@@ -18,12 +18,13 @@
 | 最近求解器核验基线 | ad62e0f9dda749e5db8d6ca27749c41fc8f14045；[Phase-I 修正报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)，1399 项测试与 Ruff 通过 |
 | 学习系列基线 | L0001 v0.2.0 按 ad62e0f 核对；初建系列 bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第 1 步 revised Phase-I 来源行清理修正；[执行合同](../tasks/codex/20261019-01-01_revised-phase1-cleanup.md)的实现与检查已完成，待讨论对话审查 |
+| 本轮授权范围 | 第 1 步已经审查通过；第 2 步最小 RMP 适配层已批准签发，见[执行合同](../tasks/codex/20261019-02-01_restricted-master.md)，待开发对话执行 |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
 | Git 同步 | 当前任务 local-commit，不 push；已知签发提交的 local-ahead 属本轮继续执行授权，实际状态实时核对 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
-本轮只授权第 1 步，开发对话完成后停止并等待审查；第 2–7 步仍需另行交付。
+第 1 步已经讨论对话验收。本轮只授权第 2 步最小 RMP 适配层，完成后停止并等待审查；
+第 3–7 步仍需另行交付。授权包含从已说明的三个本地 ahead 提交及本次签发提交继续。
 实现、测试和审查分别记录；本轮检查通过不代替讨论对话的交付审查。
 
 ## Completed Maintenance / Evidence
@@ -55,10 +56,16 @@ resfs 原件继续保留且受 Git 忽略；独立备份已核对，OneDrive 云
 第 1 步 revised Phase-I 冗余行清理已完成来源映射修正与数值保护，单/多残留构造基、
 置换、原模型核验和全量检查通过，L0001 v0.2.0 已按实际实现提交更新。
 12 个固定 cold-solve 小例均通过核验，尚未确认异位残留基在当前枢轴路径中的可达性。
-当前应由 silo-solver-1010 审查[执行报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)；
-本开发对话完成本轮提交后停止。
-后续 RMP、精确定价和列生成闭环仍为建议，未批准实施；native、Phase 9 closure
-和 Phase 10 保持原有门控。
+2026-10-19，silo-solver-1010 已验收第 1 步，独立重跑 1399 项测试、Ruff 与结构检查，
+并用一个组合冗余行模型的 288 个精确可行基核对清理，L0001 v0.2.0 通过审查。
+近相关等式仍可能误报 UNBOUNDED，属于已复现的既有数值债；范围和反例记录在
+[第 2 步合同](../tasks/codex/20261019-02-01_restricted-master.md)，本轮不修复底层状态判定。
+
+用户已批准第 2 步最小受限主问题（RMP）接口：沿用原生 LP，显式转换最小化目标、
+乘数与约化成本；加列后从完整行集合冷重建并核验，交付 L0002。
+当前仅签发，尚未实现；由 silo-solver开发执行一个合同后停止，交讨论对话审查。
+精确定价、列生成闭环与研究加速仍待后续任务；native、Phase 9 closure 和 Phase 10
+保持原有门控。
 
 ## Source / Directory Map
 
