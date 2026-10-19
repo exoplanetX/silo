@@ -15,15 +15,15 @@
 | Phase 0–8 | 各自已批准的保守范围完成，具体边界见阶段记录 |
 | Phase 9 | open / parked；native implementation deferred and unapproved |
 | Phase 10 | not started |
-| 最近求解器核验基线 | 48c242d2fba886807d1230fb7a72b85c3f212b0e；[RMP报告](../tasks/reports/20261019-02-01_restricted-master_report.md)，1483项测试与Ruff通过；LP内核保持ad62e0f |
-| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
+| 最近求解器核验基线 | 12bfa358850b3fe55b31086c4f98741852973b31；[DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)，1742项测试与Ruff通过；RMP保持48c242d、LP内核保持ad62e0f |
+| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第1、2步已验收；第3步普通DAG精确定价已批准签发，见[执行合同](../tasks/codex/20261019-03-01_dag-pricing.md)，待开发对话执行 |
+| 本轮授权范围 | 第1、2步已验收；第3步普通DAG精确定价已完成实现、测试与L0003，见[执行合同](../tasks/codex/20261019-03-01_dag-pricing.md)与[DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)，等待讨论对话审查 |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
 | Git 同步 | 当前任务 local-commit，不 push；已知签发提交的 local-ahead 属本轮继续执行授权，实际状态实时核对 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
-第 1、2 步已经讨论对话验收。本轮只授权第 3 步普通 DAG 路径精确定价，完成后停止并等待审查；
+第 1、2 步已经讨论对话验收。第 3 步普通 DAG 路径精确定价已执行，当前停止并等待审查；
 第 4–7 步仍需另行交付。授权包含从已说明的六个本地 ahead 提交及本次签发提交继续。
 实现、测试和审查分别记录；本轮检查通过不代替讨论对话的交付审查。
 
@@ -36,6 +36,7 @@
 | LP 原始行对偶与最优性核验 | bb6baff，合同 RR=02；RR=01 保留 | [LP 对偶参考](../docs/lp_duality.md)、[报告](../tasks/reports/20261018-01-02_lp-dual-optimality_report.md) |
 | Revised Phase-I 来源行清理 | ad62e0f；区分来源行、基位置与列编号，删行后核验原模型 | [修正报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)、[L0001](../learning/lessons/L0001-lp-duality/README.md) |
 | 最小RMP适配层 | 48c242d；最小化字段、原子显式增列、完整行冷重建与逐次最优核验 | [RMP报告](../tasks/reports/20261019-02-01_restricted-master_report.md)、[L0002](../learning/lessons/L0002-restricted-master/README.md) |
+| 普通DAG精确定价 | 12bfa35；拓扑全路径最小化、严格标签与完整元组平局、原始列重构及保守数值失败 | [DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)、[L0003](../learning/lessons/L0003-dag-pricing/README.md)；实现完成待讨论审查 |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -70,11 +71,16 @@ resfs 原件继续保留且受 Git 忽略；独立备份已核对，OneDrive 云
 288次RMP求解，目标均为7 -> 7 -> 0；L0002代码例、习题及真实基线通过核对。
 RMP仅覆盖当前列集合，非最优状态保留为后端诊断。
 
-用户已批准第3步：固定普通DAG全部s-t路径列域，以拓扑DP求最小约化成本，
-用测试中的独立完整路径枚举核对，并交付L0003。当前仅签发，尚未实现。
-具体基线、数学对象、数值/状态规则、允许文件和验收见[第3步合同](../tasks/codex/20261019-03-01_dag-pricing.md)。
-由silo-solver开发完成一个合同后停止，交本对话审查；资源约束定价、CG自动闭环及
-研究加速仍待后续任务，native、Phase 9 closure和Phase 10保持原有门控。
+第3步普通DAG精确定价已实现：以拓扑DP最小化全部s-t路径的约化成本，严格比较中间标签，
+精确平局按完整弧ID元组，独立重构原始列数据并检查数值一致性。
+259项新增检查覆盖64子图×3组对偶的完整路径真值，386项相关检查与全量1742项测试、
+Ruff通过；两个LP后端人工RMP桥接均得目标12 -> 10、rc=-2 -> 0。
+L0003 v0.1.0的代码例和四题已按真实实现提交12bfa35核对。
+具体域、浮点边界和证据见[DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)。
+开发对话已停在第3步，等待silo-solver-1010审查，尚无讨论对话验收结论。
+第4步仅建议连接RMP与完整定价的窄范围控制器，需另行批准合同；建议GPT-6 Sol/high，
+重点是列身份、行坐标、失败传播与终止条件。资源约束定价、CG自动闭环及研究加速仍待
+后续任务，native、Phase 9 closure和Phase 10保持原有门控。
 
 ## Source / Directory Map
 
