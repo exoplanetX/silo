@@ -7,8 +7,14 @@ from silo.core.model import Model
 from silo.core.solution import Solution
 from silo.core.status import SolverStatus
 from silo.lp.base import LPSolver
+from silo.lp.optimality import check_lp_optimality
 from silo.lp.simplex.basis import Basis
-from silo.lp.simplex.standard_form import COLUMN_ORIGINAL, StandardFormProblem, build_standard_form
+from silo.lp.simplex.standard_form import (
+    COLUMN_ARTIFICIAL,
+    COLUMN_ORIGINAL,
+    StandardFormProblem,
+    build_standard_form,
+)
 from silo.utils.numerics import DEFAULT_TOLERANCE
 
 
@@ -303,6 +309,14 @@ def _remove_artificial_columns(
     problem: StandardFormProblem,
     basis: Basis,
 ) -> tuple[StandardFormProblem, Basis] | Solution:
+    source_rows = _artificial_source_rows(problem)
+    if isinstance(source_rows, Solution):
+        return source_rows
+    try:
+        basis.validate(column_count=len(problem.columns), row_count=len(problem.row_names))
+    except ValueError as exc:
+        return _cleanup_failure(f"invalid basis: {exc}")
+
     artificial_set = set(problem.artificial_columns)
     basis = _pivot_artificial_basics_out(problem, basis, artificial_set)
     if isinstance(basis, Solution):
@@ -315,17 +329,18 @@ def _remove_artificial_columns(
     )
     if isinstance(state_result, Solution):
         return state_result
+    if not _finite_basis_state(state_result):
+        return _cleanup_failure("nonfinite basis state")
 
-    redundant_rows: set[int] = set()
-    for row_index, basic_column in enumerate(basis.basic_columns):
+    redundant_basis_slots: list[int] = []
+    redundant_rows: list[int] = []
+    for basis_slot, basic_column in enumerate(basis.basic_columns):
         if basic_column not in artificial_set:
             continue
-        if abs(state_result.basic_values[row_index]) > DEFAULT_TOLERANCE:
-            return Solution(
-                status=SolverStatus.NUMERICAL_ISSUE,
-                message="Revised simplex could not remove a positive artificial basic variable.",
-            )
-        redundant_rows.add(row_index)
+        if abs(state_result.basic_values[basis_slot]) > DEFAULT_TOLERANCE:
+            return _cleanup_failure("nonzero artificial basic value")
+        redundant_basis_slots.append(basis_slot)
+        redundant_rows.append(source_rows[basic_column])
 
     kept_columns = [
         column_index
@@ -337,14 +352,25 @@ def _remove_artificial_columns(
         for row_index in range(len(problem.row_names))
         if row_index not in redundant_rows
     ]
+    kept_basis_slots = [
+        basis_slot
+        for basis_slot in range(len(basis.basic_columns))
+        if basis_slot not in redundant_basis_slots
+    ]
+    if redundant_basis_slots:
+        failure = _check_cleanup_dependence(
+            problem, basis, redundant_basis_slots, redundant_rows, kept_columns,
+        )
+        if failure is not None:
+            return failure
     column_map = {
         old_column: new_column
         for new_column, old_column in enumerate(kept_columns)
     }
 
     new_basic_columns = tuple(
-        column_map[basis.basic_columns[row_index]]
-        for row_index in kept_rows
+        column_map[basis.basic_columns[basis_slot]]
+        for basis_slot in kept_basis_slots
     )
     basic_set = set(new_basic_columns)
     new_basis = Basis(
@@ -378,7 +404,88 @@ def _remove_artificial_columns(
         column_count=len(new_problem.columns),
         row_count=len(new_problem.row_names),
     )
+    # Structural validation alone cannot establish numerical invertibility.
+    retained_state = _compute_basis_state(
+        new_problem, new_basis, np.asarray(new_problem.objective_coefficients, dtype=float),
+    )
+    if isinstance(retained_state, Solution):
+        return retained_state
+    if not _finite_basis_state(retained_state):
+        return _cleanup_failure("nonfinite retained basis state")
     return new_problem, new_basis
+
+
+def _cleanup_failure(reason: str) -> Solution:
+    return Solution(
+        status=SolverStatus.NUMERICAL_ISSUE,
+        message=f"Revised simplex Phase-I cleanup: {reason}.",
+    )
+
+
+def _artificial_source_rows(problem: StandardFormProblem) -> dict[int, int] | Solution:
+    artificial = problem.artificial_columns
+    if len(set(artificial)) != len(artificial) or any(
+        not isinstance(j, int) or j < 0 or j >= len(problem.columns) for j in artificial
+    ):
+        return _cleanup_failure("duplicate or invalid artificial column index")
+    if set(artificial) != {
+        j for j, column in enumerate(problem.columns) if column.role == COLUMN_ARTIFICIAL
+    }:
+        return _cleanup_failure("artificial column inventory disagrees with column roles")
+
+    matrix = _matrix(problem)
+    source_rows: dict[int, int] = {}
+    for column_index in artificial:
+        column = problem.columns[column_index]
+        source = column.source_constraint
+        if not source:
+            return _cleanup_failure(f"missing source for artificial column {column.name!r}")
+        matches = [i for i, name in enumerate(problem.row_names) if name == source]
+        if not matches:
+            return _cleanup_failure(f"artificial column source {source!r} not found")
+        if len(matches) != 1 or matches[0] in source_rows.values():
+            return _cleanup_failure(f"ambiguous artificial column source {source!r}")
+        row_index = matches[0]
+        unit_column = np.zeros(len(problem.row_names))
+        unit_column[row_index] = 1.0
+        if not np.allclose(matrix[:, column_index], unit_column,
+                           rtol=0, atol=DEFAULT_TOLERANCE):
+            return _cleanup_failure(
+                f"artificial column {column.name!r} incompatible with source {source!r}",
+            )
+        source_rows[column_index] = row_index
+    return source_rows
+
+
+def _check_cleanup_dependence(
+    problem: StandardFormProblem,
+    basis: Basis,
+    basis_slots: list[int],
+    source_rows: list[int],
+    non_artificial_columns: list[int],
+) -> Solution | None:
+    matrix = _matrix(problem)
+    selector = np.eye(len(problem.row_names))[:, basis_slots]
+    try:
+        # Q = (B^-1)[I,:], obtained without explicitly forming the inverse.
+        q = np.linalg.solve(matrix[:, list(basis.basic_columns)].T, selector).T
+    except np.linalg.LinAlgError as exc:
+        return _cleanup_failure(f"could not verify redundant-row dependence: {exc}")
+    residuals = (
+        q[:, source_rows] - np.eye(len(basis_slots)),
+        q @ matrix[:, non_artificial_columns],
+        q @ np.asarray(problem.rhs, dtype=float),
+    )
+    if any(not np.all(np.isfinite(r)) or np.any(np.abs(r) > DEFAULT_TOLERANCE)
+           for r in residuals):
+        return _cleanup_failure("could not verify redundant-row dependence")
+    return None
+
+
+def _finite_basis_state(state: BasisState) -> bool:
+    return all(np.all(np.isfinite(values)) for values in (
+        state.primal_values, state.basic_values, state.reduced_costs, state.simplex_multipliers,
+    ))
 
 
 def _pivot_artificial_basics_out(
@@ -510,7 +617,7 @@ def _optimal_solution(
     state: BasisState,
 ) -> Solution:
     primal_values = _original_primal_values(problem, state.primal_values)
-    return Solution(
+    solution = Solution(
         status=SolverStatus.OPTIMAL,
         objective_value=_objective_value(
             primal_values=state.primal_values,
@@ -524,6 +631,15 @@ def _optimal_solution(
         basis_status=_original_basis_status(problem, basis),
         message="Revised simplex solved the LP.",
     )
+    if len(problem.row_names) < len(model.constraints):
+        # A locally tiny dependence residual can grow at the reduced optimum.
+        # Certify the restored candidate against every original row before claiming optimality.
+        checked = check_lp_optimality(model, solution, tolerance=DEFAULT_TOLERANCE)
+        if not checked.passed:
+            return _cleanup_failure(
+                f"post-cleanup original-model optimality check failed: {checked.message}",
+            )
+    return solution
 
 
 def _original_dual_values(

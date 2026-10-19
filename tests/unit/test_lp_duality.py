@@ -15,6 +15,7 @@ from silo.lp.optimality import check_lp_optimality
 from silo.lp.simplex.basis import Basis
 from silo.lp.simplex.revised import (
     RevisedSimplexSolver,
+    _optimal_solution,
     _remove_artificial_columns,
     _run_primal_revised_simplex,
 )
@@ -87,10 +88,8 @@ def test_all_fixed_presolve_has_bound_contribution_and_zero_row_duals(backend):
     assert check_lp_optimality(model, solution).passed
 
 
-def test_existing_revised_cleanup_slot_source_limit_fails_without_dual_claim():
-    # This is a supplied feasible Phase-I basis, not a claim that the current
-    # deterministic entering rule can reach it. Preserve the known guard until
-    # a separately scoped source-row cleanup fix is approved.
+def test_revised_cleanup_source_row_mapping_preserves_original_dual_evidence():
+    # A supplied feasible Phase-I basis; cold-pivot reachability is a separate question.
     model = Model(variables=[Variable("x"), Variable("z")], constraints=[
         Constraint("a", {"x": 1}, ConstraintSense.EQ, 1),
         Constraint("b", {"z": 1}, ConstraintSense.EQ, 2),
@@ -102,11 +101,19 @@ def test_existing_revised_cleanup_slot_source_limit_fails_without_dual_claim():
     cleaned = _remove_artificial_columns(problem, basis)
     assert isinstance(cleaned, tuple)
     reduced, new_basis = cleaned
+    assert reduced.row_names == ("a", "c")
+    assert new_basis.basic_columns == (0, 1)
+    assert np.asarray(reduced.matrix) == pytest.approx(np.eye(2))
     result = _run_primal_revised_simplex(
         reduced, new_basis, np.asarray(reduced.objective_coefficients), 10, "Phase II",
     )
-    assert result.status == SolverStatus.NUMERICAL_ISSUE
-    assert result.state is None
+    assert result.status == SolverStatus.OPTIMAL
+    assert result.state is not None
+    solution = _optimal_solution(model, reduced, result.basis, result.state)
+    assert solution.primal_values == {"x": 1, "z": 2}
+    assert solution.objective_value == 3
+    assert solution.dual_values == {"a": 1, "b": 0, "c": 1}
+    assert check_lp_optimality(model, solution).passed
 
 
 @pytest.mark.parametrize("backend", ["tableau", "revised"])

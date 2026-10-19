@@ -4,10 +4,43 @@ from pathlib import Path
 import pytest
 
 from silo.cli.main import _solve_model
+from silo.core.constraint import Constraint
+from silo.core.enums import ConstraintSense, OptimizationSense
+from silo.core.model import Model
+from silo.core.objective import Objective
+from silo.core.variable import Variable
 from silo.io.json_reader import read_json_model
 from silo.lp.optimality import check_lp_optimality
 from silo.lp.simplex.revised import RevisedSimplexSolver
 from tests.verification.oracles import LP_CASES, make_model
+
+
+@pytest.mark.parametrize("backend", ["tableau", "revised"])
+@pytest.mark.parametrize("presolve", [False, True])
+def test_cleanup_with_negative_rhs_and_mixed_rows_has_original_optimality(backend, presolve):
+    # Exact original equations force z=2; -x>=-1 bounds max x at 1.
+    model = Model(
+        variables=[Variable("x"), Variable("z")],
+        constraints=[
+            Constraint("negative_eq", {"z": -1}, ConstraintSense.EQ, -2),
+            Constraint("duplicate", {"z": 1}, ConstraintSense.EQ, 2),
+            Constraint("negative_ge", {"x": -1}, ConstraintSense.GE, -1),
+            Constraint("floor", {"x": 1}, ConstraintSense.GE, 0),
+            Constraint("loose", {"x": 1, "z": 1}, ConstraintSense.LE, 4),
+            Constraint("empty", {}, ConstraintSense.EQ, 0),
+        ],
+        objective=Objective({"x": 1, "z": 1}, OptimizationSense.MAXIMIZE, constant=7),
+    )
+    solution = _solve_model(model, backend, presolve)
+    checked = check_lp_optimality(model, solution)
+    assert checked.passed, checked
+    assert solution.primal_values == {"x": pytest.approx(1), "z": pytest.approx(2)}
+    assert checked.primal_objective == checked.dual_objective == pytest.approx(10)
+    assert solution.dual_values["negative_ge"] == pytest.approx(-1)
+    assert -solution.dual_values["negative_eq"] + solution.dual_values["duplicate"] == (
+        pytest.approx(1)
+    )
+    assert solution.dual_values["floor"] == solution.dual_values["loose"] == 0
 
 
 @pytest.mark.parametrize("case", [case for case in LP_CASES if case.status == "optimal"],
