@@ -25,7 +25,7 @@ The solver rejects minimization models, finite upper bounds, nonzero lower bound
 - Artificial variables for equality rows.
 - Negative RHS normalization.
 - Infeasible LP detection through the Phase I artificial objective.
-- Unbounded LP detection in Phase II.
+- Phase-II unbounded candidates checked against the complete original model.
 - Solution diagnostics for primal values, slacks, original-row dual values, reduced costs,
   and basis status. See [LP duality and optimality checks](lp_duality.md) for signs,
   presolve recovery, fixed-bound contributions and the independent Python checker.
@@ -41,6 +41,15 @@ The solver rejects minimization models, finite upper bounds, nonzero lower bound
 - No external solver call in native algorithms.
 
 The tableau path is intended to remain simple enough for tests and documentation to explain every mathematical convention.
+
+Both native backends publish Phase-II UNBOUNDED only after exact scalar checks
+of an original-model feasible point and strictly improving recession direction.
+Invalid or missing candidates return NUMERICAL_ISSUE; Phase-I unboundedness is
+also a numerical contradiction. Floats retain their actual binary values, and
+integers retain their original values. A rounded point for 3*x=1 may be rejected
+even when the LP really is unbounded. This strengthens direct terminal exits;
+normal pivot tolerances and other independent status paths retain their scope.
+See [LP unboundedness](lp_unboundedness.md) for evidence, diagnostics and limits.
 
 ## Native LP Solver Backends
 

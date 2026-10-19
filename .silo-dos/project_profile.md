@@ -15,12 +15,12 @@
 | Phase 0–8 | 各自已批准的保守范围完成，具体边界见阶段记录 |
 | Phase 9 | open / parked；native implementation deferred and unapproved |
 | Phase 10 | not started |
-| 最近求解器核验基线 | 02aed7d5d180fbe1cbef67abec1b084777c6a369；[恢复报告](../tasks/reports/20261019-06-01_dag-feasibility_report.md)，3046项测试与Ruff通过；旧CG保持15b403b、定价12bfa35、RMP48c242d、LP内核ad62e0f |
-| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.2.0按15b403b、L0005 v0.1.0按02aed7d核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
+| 最近求解器核验基线 | c460aa78c2abc489839a0da2411b9bd1bca95983；[无界核验报告](../tasks/reports/20261020-01-01_lp-unbounded-check_report.md)，3444项测试与Ruff通过；恢复02aed7d、CG15b403b、定价12bfa35和RMP48c242d保持原样 |
+| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.2.0按15b403b、L0005 v0.1.0按02aed7d、L0006 v0.1.0按c460aa7核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第1–6步已验收；用户已批准并签发[第7步LP无界核验与误报修正](../tasks/codex/20261020-01-01_lp-unbounded-check.md)，等待开发对话实施；未授权新push |
+| 本轮授权范围 | 第1–6步已验收；[第7步LP无界核验](../tasks/codex/20261020-01-01_lp-unbounded-check.md)实现、验证和L0006已完成，待讨论对话审查；未授权新push或第8步 |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
-| Git 同步 | 上次即时远端核对至f0c5f31；第5/6步及验收共8个已知本地提交和本次第7步签发提交获准继续，保持local-commit；即时差异以本轮Git检查为准 |
+| Git 同步 | 上次即时远端核对至f0c5f31；本轮从已授权cached 0/9继续，第7步两次本地提交后实查main干净、cached origin/main...HEAD=0/11；未push，remote_sync_status=local_ahead_origin |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
 第 1–6 步均已由讨论对话验收；远端上次即时核对已同步至第4步审查摘要f0c5f31。
@@ -44,6 +44,7 @@ b886458。用户获知该状态后批准下一步，继续授权覆盖这四个�
 | DAG凸组合列生成 | 857397e；显式seed、冷RMP与完整定价、退化增列、数值界/差距及失败轮次 | [CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)、[L0004](../learning/lessons/L0004-column-generation/README.md)；已按保守浮点范围验收，舍入诊断限制见下文 |
 | CG数值界一致性 | 15b403b；保留有符号发布差，追加消去c0的objective_gap与固定32ULP局部判据 | [修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)、L0004 v0.2.0；已通过讨论对话审查 |
 | DAG初始可行性恢复 | 02aed7d；单位人工违背量、全域零成本定价和无人工原始行复核 | [恢复报告](../tasks/reports/20261019-06-01_dag-feasibility_report.md)、[L0005](../learning/lessons/L0005-cg-feasibility/README.md)；已通过讨论对话审查 |
+| LP无界终止核验 | c460aa7；完整原始点/方向逐项Fraction核验，Phase-I伪无界转数值矛盾 | [第7步报告](../tasks/reports/20261020-01-01_lp-unbounded-check_report.md)、[L0006](../learning/lessons/L0006-lp-unboundedness/README.md)；已实现待审查 |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -67,8 +68,8 @@ resfs 原件继续保留且受 Git 忽略；独立备份已核对，OneDrive 云
 12 个固定 cold-solve 小例均通过核验，尚未确认异位残留基在当前枢轴路径中的可达性。
 2026-10-19，silo-solver-1010 已验收第 1 步，独立重跑 1399 项测试、Ruff 与结构检查，
 并用一个组合冗余行模型的 288 个精确可行基核对清理，L0001 v0.2.0 通过审查。
-近相关等式仍可能误报 UNBOUNDED，属于已复现的既有数值债；范围和反例记录在
-[第 2 步合同](../tasks/codex/20261019-02-01_restricted-master.md)，本轮不修复底层状态判定。
+第2步签发时曾记录近相关等式误报UNBOUNDED的既有数值债，范围和反例保留在
+[第2步合同](../tasks/codex/20261019-02-01_restricted-master.md)；第7步现已为直接LP无界出口加入原始候选保护，结果见下文。
 
 第2步最小RMP已实现：沿用原生LP，显式转换最小化目标、乘数与约化成本，原子加列后
 从完整行集合冷重建；每个最优候选先在完整输入上核验，再发布只读最小化快照。
@@ -181,31 +182,30 @@ theory_architect与experiment_auditor分别只读复核实现数学一致性和�
 
 | 组件 | 已验证能力 | 主要剩余工作 |
 |---|---|---|
-| 建模、LP与核验 | 简单线性模型、Tableau/Revised两种实现、原始行最优性核验、保守预处理 | 一般变量界、对偶单纯形、数值状态可靠性与稀疏线性代数待完善 |
+| 建模、LP与核验 | 简单线性模型、Tableau/Revised、原始行最优性核验、无界候选点/方向精确标量核验、保守预处理 | 一般变量界、对偶单纯形、其余数值状态可靠性与稀疏线性代数待完善 |
 | DAG列生成 | MIN RMP、全域普通DAG定价、退化控制、浮点差距门控、独立初始恢复 | RMP跨模型增列的基映射/重优化、增量定价、资源约束、整数与分支定价 |
 | MIP | 支持域内小型MAX分支定界与LP松弛 | 实际割加入、启发式、强分支与规模验证 |
 | 割与其他分解 | 被动接口、记录及toy Benders/CG | 通用Benders与通用ColumnGenerationSolver仍为NOT_SOLVED入口，未形成通用框架 |
 | 随机/鲁棒 | 有限场景记录和小型目标/RHS变换、区间RHS最坏情况变换 | 场景变量复制、非前瞻约束、更一般不确定性及求解集成 |
-| 运行与学习 | 小实例回归、任务追溯、L0001–L0005 | 锁定干净重建环境、成体系规模基准；native保持延期 |
+| 运行与学习 | 小实例回归、任务追溯、L0001–L0006 | 锁定干净重建环境、成体系规模基准；native保持延期 |
 
-本轮还重新运行已知近相关等式模型x-(1+5e-10)z=1e10、x-z=1e10、x>=0、z>=0、max z；
-精确解z=0、最优值0，当前Revised和Tableau均返回UNBOUNDED。它是既有LP数值债，
-本步未触碰的内核仍保留该问题；OPTIMAL核验不覆盖全部非最优终止状态。
-建议后续优先级：先以该反例修正LP无界状态的依据/保守数值诊断，再做RMP基热启动与
-重优化，随后用当前冷参考闭环研究增量定价并加入同解/工作量/时间比较；之后选择一个
-具体OR应用，逐步加入资源定价或整数层，完成独立可复现实验。以上至少五个后续工作包
-（状态可靠性、RMP重优化、增量定价、应用结构、研究实验），每包仍需拆原子任务；
-近期主线完成不等于通用或工业级solver完成。用户已批准并签发
-[第7步LP无界核验与误报修正](../tasks/codex/20261020-01-01_lp-unbounded-check.md)，
-采用完整原Model的实际有限候选点/方向Fraction核验；依据不足返回NUMERICAL_ISSUE，
-保留已验证的真正无界路径。仅在两个原生LP后端的无界终止候选处加强核验，
-不变更全局容差或Solution/CLI/JSON，不重做一般数值求解；Phase-I伪无界作为数值矛盾。
-合同要求240核心族及32对照共272次端到端、原始候选独立oracle、上层回归和L0006。
-签发前公开API运行240核心族：192有限中96OPT/96误无界，48真正无界均正确识别；
-大epsilon组80OPT/16误无界，小epsilon组16OPT/80误无界，q和行序也影响阈值。
-两项只读复核支持候选原始核验与证据设计；服务未跑实验/写文件，分组差异由主线程
-按实测裁决。新实现及测试尚待开发交付；1/3等浮点候选可能保守数值拒绝须明确说明。
-推荐GPT-6 Sol/high；第8步与后续重优化尚未交付，Phase门控保持。
+第7步已实现并完成开发验证：两个原生LP的Phase-II无界出口使用完整原Model的实际
+有限候选点/方向Fraction核验；未通过返回NUMERICAL_ISSUE。原反例
+x-(1+5e-10)z=1e10、x-z=1e10、maxz现在双后端均数值诊断；其精确解仍为z=0，
+诊断不计作已求得最优。Phase-I内部伪无界转数值矛盾，正常枢轴与全局容差保持原样。
+240核心族从96最优/144无界改为96最优/48真无界/96数值诊断；32对照为4最优/
+12真无界/4不可行/12数值诊断。共272次保留100旧最优和60真无界，108误报全部拒绝。
+每个公开无界结果的实际候选均由独立原项Fraction oracle核对。核心大epsilon保留80最优，
+小epsilon保留16最优；行/变量排列和双后端均覆盖。新增398项检查，全量3444项与Ruff通过；
+L0006十节、六题/解答、16次双后端完整程序与标量核对通过，代码基线c460aa7。
+本步待silo-solver-1010审查，停止执行；签发前两项只读服务意见未重复计作实测或实现验收。
+
+数值边界仍明确：真实无界3*x=1、maxz的浮点点无法精确满足原行，会保守数值拒绝。
+本检查仅覆盖两个原生LP的直接无界出口；presolve独立终态、其他后端、MIP整数可行性
+和一般数值状态各保留其边界。没有通用精确求解、任意尺度或工业性能保证。
+后续建议在本步验收后单独设计RMP基热启动/重优化，再研究增量定价与工作量/时间比较，
+随后选择具体OR应用、资源约束或整数层及独立研究实验；每项仍需原子合同。
+建议GPT-6 Sol/high用于基映射与等价性检查；第8步尚未交付，Phase门控保持。
 资源约束、热启动、增量研究和性能主张仍待后续任务；native、Phase 9 closure及
 Phase 10保持原有门控。第5步明确修订第4步的严格负gap判据，旧合同与历史证据保留；
 旧CG数值规则仍为15b403b，独立恢复器基线02aed7d；32ULP保留工程局部尺度限制，没有LP误差严格上界。

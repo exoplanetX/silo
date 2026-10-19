@@ -13,6 +13,7 @@
 | [L0003：DAG精确定价与完整性核验](lessons/L0003-dag-pricing/README.md) | 2026-10-19 | `decomposition.dag-pricing` | checked | [普通DAG定价](../tasks/codex/20261019-03-01_dag-pricing.md) |
 | [L0004：列生成闭环、退化与最优性差距](lessons/L0004-column-generation/README.md) | 2026-10-19 | `decomposition.dag-column-generation` | checked v0.2.0 | [DAG列生成闭环](../tasks/codex/20261019-04-01_dag-column-generation.md)、[数值一致性](../tasks/codex/20261019-05-01_cg-bound-consistency.md) |
 | [L0005：列生成的可行性恢复与辅助主问题](lessons/L0005-cg-feasibility/README.md) | 2026-10-19 | `decomposition.dag-feasibility` | checked | [可行性恢复](../tasks/codex/20261019-06-01_dag-feasibility.md) |
+| [L0006：LP无界判定：可行点、改善方向与数值核验](lessons/L0006-lp-unboundedness/README.md) | 2026-10-20 | `lp.unboundedness` | checked | [LP无界终止核验](../tasks/codex/20261020-01-01_lp-unbounded-check.md) |
 
 L0001 的教学编排在 [系列整理任务](../tasks/codex/20261018-02-01_learning-series.md)
 中完成；算法实现和代码基线来自上表的 LP 开发任务。总目录同时记录两种来源。
@@ -25,7 +26,7 @@ v0.2.0 由 [Phase-I 来源清理任务](../tasks/codex/20261019-01-01_revised-ph
 | 主题单元 | 建议先掌握 | 已有篇目 | 待积累的问题 |
 |---|---|---|---|
 | 基础：模型与可行性 | 线性代数、线性约束 | 待积累 | 变量域、原始对象、标准化与原坐标 |
-| LP：单纯形与对偶 | 基、线性方程组、可行解 | [L0001](lessons/L0001-lp-duality/README.md) | Phase I、冗余行、重优化 |
+| LP：单纯形与对偶 | 基、线性方程组、可行解 | [L0001](lessons/L0001-lp-duality/README.md) → [L0006](lessons/L0006-lp-unboundedness/README.md) | Phase I、冗余行、重优化 |
 | 预处理与数值 | LP 基础、浮点误差 | L0001 第 5、8 节 | 变换恢复、缩放与误差传播 |
 | 整数优化 | LP 松弛、上下界 | 待积累 | 分支定界、节点状态、剪枝依据 |
 | 分解与定价 | 对偶、约化成本、反复求解 | [L0002](lessons/L0002-restricted-master/README.md) → [L0003](lessons/L0003-dag-pricing/README.md) → [L0004](lessons/L0004-column-generation/README.md) → [L0005](lessons/L0005-cg-feasibility/README.md)，先读L0001 | 资源约束定价、增量维护与更一般主问题 |

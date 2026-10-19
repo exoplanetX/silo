@@ -39,6 +39,7 @@
 | DAG凸组合列生成 | [dag_column_generation.py](../src/silo/decomposition/dag_column_generation.py) | 合法seed、冷RMP、完整定价、退化增列与数值差距门控 |
 | DAG可行性恢复 | [dag_feasibility.py](../src/silo/decomposition/dag_feasibility.py) | 单位人工违背量、全域零成本定价与无人工原始行复核；调用者显式进入原目标CG |
 | LP 最优性核验 | [optimality.py](../src/silo/lp/optimality.py) | 原始输入坐标；有限精度与支持域见 API 文档 |
+| LP 无界候选核验 | [unboundedness.py](../src/silo/lp/unboundedness.py) | 两后端终止处调用；完整原模型的点/方向逐项 Fraction 核验 |
 | 预处理与恢复 | [presolver.py](../src/silo/presolve/presolver.py) | 保留变换与原坐标恢复关系 |
 | 最小 MIP B&B | [branch_and_bound.py](../src/silo/mip/branch_and_bound.py) | 使用 LP 松弛和被动 cut/callback 边界 |
 | 待发展骨架 | [phase_one.py](../src/silo/lp/simplex/phase_one.py)、[phase_two.py](../src/silo/lp/simplex/phase_two.py)、[scipy_backend.py](../src/silo/interfaces/scipy_backend.py) | 当前分别原样返回模型或返回 NOT_SOLVED；文件名不表示功能已接通 |
@@ -65,6 +66,7 @@ interfaces -> core
 AGENTS 中的长链用于表达开发递进。Phase 6 已实现的 mip → cuts 是对被动记录、
 separator/callback protocols 的依赖；cuts 保持独立于 mip，避免形成回路。
 core 保持独立；外部求解器调用仅限 interfaces、examples 或比较测试。
+LP无界核验只读core模型与原始候选，使用标准库精确标量运算和既有支持域常量；不反向依赖求解器或上层模块。
 RMP只通过LPSolver和既有最优性核验器消费LP；下层不反向导入decomposition。
 DAG定价模块本身只依赖标准库和utils常量；RMP人工桥接及完整路径枚举只在测试/教学中。
 新DAG控制器消费core模型、既有RMP/定价和LP后端接口，不访问RMP私有状态；完整列枚举仍只在测试。
