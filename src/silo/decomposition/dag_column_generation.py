@@ -7,7 +7,7 @@ prices and is scoped to this graph, row system and tolerance.
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
-from math import fsum, isfinite
+from math import fsum, isfinite, ulp
 from types import MappingProxyType
 
 from silo.core.constraint import Constraint
@@ -88,6 +88,12 @@ def _registry_copy(paths):
 
 @dataclass(frozen=True)
 class DagColumnGenerationIteration:
+    """One round's snapshot, with signed published and c0-cancelled gaps.
+
+    objective_gap and roundoff_allowance are appended compatibility fields.
+    Failed rounds leave all new numerical evidence fields at None.
+    """
+
     iteration: int
     column_paths: Mapping[str, tuple[str, ...]]
     master_result: RestrictedMasterResult
@@ -98,6 +104,8 @@ class DagColumnGenerationIteration:
     numerical_lower_bound: float | None = None
     numerical_gap: float | None = None
     accepted_path: tuple[str, ...] | None = None
+    objective_gap: float | None = None
+    roundoff_allowance: float | None = None
 
     def __post_init__(self):
         object.__setattr__(self, 'column_paths', _registry_copy(self.column_paths))
@@ -180,7 +188,7 @@ def solve_dag_column_generation(
                           f'RMP round {iteration}: {snapshot.status.value}. {snapshot.message}',
                           iteration)
         try:
-            upper, dual = _master_objectives(problem, columns, snapshot)
+            upper, dual, primal_terms, dual_terms = _master_objectives(problem, columns, snapshot)
             last_master, last_iteration, last_paths = snapshot, iteration, dict(paths)
             pricing = price_dag(problem.graph, snapshot.dual_values, tolerance=tolerance)
             if not isinstance(pricing, DagPricingResult):
@@ -192,12 +200,21 @@ def solve_dag_column_generation(
                               iteration)
             path, cost, coefficients, rho = _check_candidate(
                 problem.graph, pricing, snapshot.dual_values, tolerance)
-            lower = _sum((dual, min(0.0, rho)))
+            delta = min(0.0, rho)
+            lower = _sum([problem.objective_constant, *dual_terms, delta])
             gap = _sum((upper, -lower))
-            if lower > upper:
-                raise _NumericalFailure('Numerical lower bound exceeds the upper bound.')
-            if rho >= -tolerance and gap > tolerance:
-                raise _NumericalFailure('Numerical gap exceeds tolerance despite pricing tolerance')
+            objective_gap = _sum([*primal_terms, *(-v for v in dual_terms), -delta])
+            absolute_scale = _sum([*(abs(v) for v in primal_terms),
+                                   *(abs(v) for v in dual_terms), abs(delta)])
+            # Fixed local engineering allowance, excluding the common c0.
+            # This is not a bound on LP linear-algebra errors.
+            allowance = _product(32, ulp(absolute_scale))
+            if objective_gap < 0 and (allowance > tolerance or -objective_gap > allowance):
+                raise _NumericalFailure(
+                    'Numerical bound inconsistency: negative objective gap exceeds local roundoff '
+                    f'rule (g={objective_gap}, eta={allowance}, tolerance={tolerance}).')
+            if rho >= -tolerance and objective_gap > tolerance:
+                raise _NumericalFailure('Objective gap exceeds tolerance despite pricing tolerance')
             if rho < -tolerance and path in paths.values():
                 raise _NumericalFailure('Significantly negative pricing path is already existing.')
         except _NumericalFailure as exc:
@@ -206,10 +223,15 @@ def solve_dag_column_generation(
 
         accepted = path if rho < -tolerance and iteration < iteration_limit else None
         history.append(DagColumnGenerationIteration(
-            iteration, paths, snapshot, pricing, upper, dual, rho, lower, gap, accepted))
+            iteration, paths, snapshot, pricing, upper, dual, rho, lower, gap, accepted,
+            objective_gap=objective_gap, roundoff_allowance=allowance))
         if rho >= -tolerance:
+            message = 'Full-DAG price and objective gap meet tolerance.'
+            if objective_gap < 0:
+                message += (f' Negative objective gap accepted by local roundoff rule '
+                            f'(g={objective_gap}, eta={allowance}).')
             return finish(DagColumnGenerationStatus.TOLERANCE_REACHED,
-                          'Full-DAG price and numerical primal/lower-bound gap meet tolerance.')
+                          message)
         if iteration == iteration_limit:
             return finish(DagColumnGenerationStatus.ITERATION_LIMIT,
                           'Round limit reached; no unsolved new column was appended.')
@@ -288,12 +310,12 @@ def _master_objectives(problem, columns, snapshot):
         if ((row.sense == ConstraintSense.LE and pi[row.name] > DEFAULT_TOLERANCE)
             or (row.sense == ConstraintSense.GE and pi[row.name] < -DEFAULT_TOLERANCE)):
             raise _NumericalFailure('Master dual row sign is inconsistent.')
-    upper = _sum([problem.objective_constant,
-                  *(_product(data[0], x[name]) for name, data in columns.items())])
+    primal_terms = tuple(_product(data[0], x[name]) for name, data in columns.items())
+    dual_terms = tuple(_product(row.rhs, pi[row.name]) for row in problem.rows)
+    upper = _sum([problem.objective_constant, *primal_terms])
     _close(snapshot.objective_value, upper)
-    dual = _sum([problem.objective_constant,
-                 *(_product(row.rhs, pi[row.name]) for row in problem.rows)])
-    return upper, dual
+    dual = _sum([problem.objective_constant, *dual_terms])
+    return upper, dual, primal_terms, dual_terms
 
 
 class _NumericalFailure(ArithmeticError):

@@ -1,5 +1,5 @@
 from dataclasses import FrozenInstanceError, replace
-from math import inf, nan
+from math import fsum, inf, nan, nextafter, ulp
 
 import pytest
 
@@ -140,6 +140,7 @@ def test_backend_failure_is_scoped_to_rmp(status):
     assert result.iterations[0].master_result.status == status
     assert result.iterations[0].pricing_result is None
     assert result.iterations[0].numerical_gap is None
+    assert result.iterations[0].objective_gap is result.iterations[0].roundoff_allowance is None
 
 
 def test_fake_backend_optimal_evidence_is_rejected_by_real_rmp():
@@ -158,6 +159,7 @@ def test_pricing_failure_never_becomes_convergence(monkeypatch, status):
     assert result.status == cg.DagColumnGenerationStatus.PRICING_FAILURE
     assert result.failure_iteration == result.last_valid_master_iteration == 1
     assert result.iterations[0].rho is result.iterations[0].numerical_upper_bound is None
+    assert result.iterations[0].objective_gap is result.iterations[0].roundoff_allowance is None
 
 
 @pytest.mark.parametrize('change', [dict(arc_ids=('bad',)), dict(cost=2),
@@ -244,6 +246,7 @@ def test_later_master_failure_does_not_relabel_old_evidence(monkeypatch):
     assert result.column_set_iteration == 1 and len(result.column_paths) == 2
     assert len(result.iterations[1].column_paths) == 3
     assert result.iterations[1].numerical_lower_bound is None
+    assert result.iterations[1].objective_gap is result.iterations[1].roundoff_allowance is None
     assert set(result.column_paths) == set(result.last_valid_master.primal_values)
 
 
@@ -308,3 +311,125 @@ def test_controller_import_boundary_and_no_private_rmp_access():
     assert not any('interfaces' in module or 'oracle' in module for module in imports)
     assert not any(isinstance(node, ast.Attribute) and node.attr == '_model'
                    for node in ast.walk(tree))
+
+
+def _synthetic_convexity_snapshot(monkeypatch, *, cost=1, other=1, weight=1, pi=1,
+                                  c0=0, tolerance=1e-9):
+    # Explicit dependency fault injection, not a claim of natural LP reachability.
+    graph = replace(single().graph, arcs=[DagArc('seed', 's', 't', cost),
+                                         DagArc('other', 's', 't', other)])
+    problem = replace(single(), graph=graph, objective_constant=c0)
+    snapshot = RestrictedMasterResult(SolverStatus.OPTIMAL, fsum([c0, cost*weight]),
+        {'path_0': weight}, {'conv': pi}, {'path_0': cost-pi})
+    monkeypatch.setattr(cg.RestrictedMasterProblem, 'solve', lambda *a, **kw: snapshot)
+    return cg.solve_dag_column_generation(problem, tolerance=tolerance)
+
+
+@pytest.mark.parametrize('case', ['inside', 'equal', 'outside', 'equal_budget', 'over_budget'])
+def test_negative_objective_gap_local_exception_boundaries(monkeypatch, case):
+    weight = 1 - 2**-47
+    if case == 'inside':
+        weight = nextafter(weight, 1)
+    if case == 'outside':
+        weight = nextafter(weight, 0)
+    gap = fsum([weight, -1])
+    scale = fsum([abs(weight), 1])
+    eta = 32*ulp(scale)
+    tolerance = eta if case == 'equal_budget' else (
+        nextafter(eta, 0) if case == 'over_budget' else 1e-9)
+    if case in ('equal', 'equal_budget', 'over_budget'):
+        assert -gap == eta
+    elif case == 'inside':
+        assert -gap < eta
+    else:
+        assert -gap > eta
+    expected = case not in ('outside', 'over_budget')
+    assert (eta <= tolerance and -gap <= eta) is expected
+    result = _synthetic_convexity_snapshot(monkeypatch, weight=weight, tolerance=tolerance)
+    record = result.iterations[-1]
+    if expected:
+        assert result.status == cg.DagColumnGenerationStatus.TOLERANCE_REACHED
+        assert record.objective_gap == gap < 0 and record.roundoff_allowance == eta
+        assert record.numerical_gap == gap
+        assert record.master_result.primal_values['path_0'] == weight
+        assert 'roundoff' in result.message.lower()
+    else:
+        assert result.status == cg.DagColumnGenerationStatus.NUMERICAL_ISSUE
+        assert record.numerical_gap is record.objective_gap is record.roundoff_allowance is None
+
+
+def test_eta_larger_than_user_tolerance_allows_nonnegative_gap(monkeypatch):
+    result = _synthetic_convexity_snapshot(monkeypatch, tolerance=1e-15)
+    record = result.iterations[-1]
+    assert result.status == cg.DagColumnGenerationStatus.TOLERANCE_REACHED
+    assert record.roundoff_allowance > 1e-15 and record.objective_gap == 0
+
+
+@pytest.mark.parametrize('gap', [nextafter(1e-9, 0), 1e-9, nextafter(1e-9, inf)])
+def test_positive_gap_threshold_is_not_padded_by_roundoff(monkeypatch, gap):
+    pi, rho = -8e-10, -gap + 8e-10
+    expected = fsum([0, -pi, -min(0, rho)])
+    eta = 32*ulp(fsum([abs(pi), abs(rho)]))
+    assert expected == gap and rho >= -1e-9
+    if gap > 1e-9:
+        assert gap - 1e-9 < eta  # Even this much smaller excess must be rejected.
+    result = _synthetic_convexity_snapshot(monkeypatch, cost=0, other=-gap, pi=pi)
+    if gap <= 1e-9:
+        assert result.status == cg.DagColumnGenerationStatus.TOLERANCE_REACHED
+        assert result.iterations[-1].objective_gap == gap
+    else:
+        assert result.status == cg.DagColumnGenerationStatus.NUMERICAL_ISSUE
+
+
+@pytest.mark.parametrize('c0', [0, 2**40, -(2**40)])
+@pytest.mark.parametrize('conflict', ['positive', 'negative'])
+def test_substantive_gap_conflicts_survive_large_constants(monkeypatch, c0, conflict):
+    cost, other, pi, weight = (0, -1.5e-9, -8e-10, 1) if conflict == 'positive' else (
+        1, 1, 1, 1-5e-10)
+    p, d, delta = cost*weight, pi, min(0, other-pi)
+    gap = fsum([p, -d, -delta])
+    scale = fsum([abs(p), abs(d), abs(delta)])
+    eta = 32*ulp(scale)
+    if conflict == 'negative':
+        assert -gap > eta, (gap, scale, eta)
+    else:
+        assert gap > 1e-9
+    if c0:
+        assert fsum([fsum([c0, p]), -fsum([c0, d, delta])]) == 0
+    result = _synthetic_convexity_snapshot(monkeypatch, cost=cost, other=other,
+                                          weight=weight, pi=pi, c0=c0)
+    assert result.status == cg.DagColumnGenerationStatus.NUMERICAL_ISSUE
+    assert result.iterations[-1].objective_gap is result.iterations[-1].roundoff_allowance is None
+
+
+def test_zero_absolute_scale_uses_actual_ulp_zero_and_signed_cancellation():
+    zero = cg.solve_dag_column_generation(single()).iterations[-1]
+    assert zero.objective_gap == zero.numerical_gap == 0
+    assert zero.roundoff_allowance == 32*ulp(0) > 0
+    record = cg.solve_dag_column_generation(single(-1)).iterations[-1]
+    assert record.objective_gap == 0 and record.roundoff_allowance == 32*ulp(2)
+
+
+@pytest.mark.parametrize('cost', [1e308, -1e308])
+def test_absolute_contribution_sum_overflow_is_not_a_valid_allowance(monkeypatch, cost):
+    assert fsum([cost, -cost]) == 0  # The signed sum is finite; the absolute sum overflows.
+    result = _synthetic_convexity_snapshot(monkeypatch, cost=cost, other=cost, pi=cost)
+    assert result.status == cg.DagColumnGenerationStatus.NUMERICAL_ISSUE
+    record = result.iterations[-1]
+    assert record.numerical_gap is record.objective_gap is record.roundoff_allowance is None
+
+
+def test_appended_fields_preserve_legacy_positional_constructor_and_immutability():
+    master = RestrictedMasterResult(SolverStatus.OPTIMAL)
+    registry = {'legacy': ['seed']}
+    legacy = cg.DagColumnGenerationIteration(7, registry, master, None, 1, 1, 0, 1, 0, ('seed',))
+    assert legacy.accepted_path == ('seed',)
+    assert legacy.objective_gap is legacy.roundoff_allowance is None
+    registry['legacy'].append('other')
+    assert legacy.column_paths == {'legacy': ('seed',)}
+    with pytest.raises(FrozenInstanceError):
+        legacy.objective_gap = 0
+    first = cg.solve_dag_column_generation(single(-1))
+    second = cg.solve_dag_column_generation(single())
+    assert first.iterations[0].objective_gap == 1
+    assert second.iterations[0].objective_gap == 0

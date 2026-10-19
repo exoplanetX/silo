@@ -1,5 +1,6 @@
 from dataclasses import replace
 from fractions import Fraction
+from math import fsum, ulp
 
 import pytest
 
@@ -121,17 +122,23 @@ def _assert_run(problem, optimum, backend):
     for record in result.iterations:
         pi = record.master_result.dual_values
         x = record.master_result.primal_values
-        p = problem.objective_constant + sum(float(columns[path][0]) * x[name]
-                                             for name, path in record.column_paths.items())
-        d = problem.objective_constant + sum(row.rhs * pi[row.name] for row in problem.rows)
+        p_terms = [float(columns[path][0]) * x[name]
+                   for name, path in record.column_paths.items()]
+        d_terms = [row.rhs * pi[row.name] for row in problem.rows]
+        p = fsum([problem.objective_constant, *p_terms])
+        d = fsum([problem.objective_constant, *d_terms])
         rho = min(float(cost) - sum(float(a[j]) * pi[j] for j in problem.graph.row_names)
                   for cost, a in columns.values())
-        lower = d + min(0, rho)
+        delta = min(0, record.rho)
+        lower = fsum([problem.objective_constant, *d_terms, delta])
         assert record.numerical_upper_bound == pytest.approx(p, abs=1e-9, rel=0)
         assert record.dual_objective == pytest.approx(d, abs=1e-9, rel=0)
         assert record.rho == pytest.approx(rho, abs=1e-9, rel=0)
         assert record.numerical_lower_bound == pytest.approx(lower, abs=1e-9, rel=0)
         assert record.numerical_gap == pytest.approx(p - lower, abs=1e-9, rel=0)
+        assert record.objective_gap == fsum([*p_terms, *(-v for v in d_terms), -delta])
+        assert record.roundoff_allowance == 32*ulp(fsum([
+            *(abs(v) for v in p_terms), *(abs(v) for v in d_terms), abs(delta)]))
         assert lower <= optimum + 1e-9 and p >= optimum - 1e-9
         assert min(x.values()) >= -1e-9
         for row in problem.rows:
