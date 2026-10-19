@@ -9,6 +9,7 @@ from silo.lp.base import LPSolver
 from silo.lp.simplex.basis import BASIC, NONBASIC_LOWER
 from silo.lp.simplex.pricing import choose_entering_column
 from silo.lp.simplex.ratio_test import choose_leaving_row
+from silo.lp.unboundedness import check_lp_unboundedness
 from silo.utils.numerics import DEFAULT_TOLERANCE
 
 
@@ -116,6 +117,7 @@ class SimplexTableau:
 class SimplexRunResult:
     status: SolverStatus
     message: str = ""
+    entering_column: int | None = None
 
 
 class TableauSimplexSolver(LPSolver):
@@ -135,6 +137,11 @@ class TableauSimplexSolver(LPSolver):
                 iteration_limit=self.iteration_limit,
                 phase_name="Phase I",
             )
+            if phase_one_result.status == SolverStatus.UNBOUNDED:
+                return Solution(
+                    status=SolverStatus.NUMERICAL_ISSUE,
+                    message="Tableau Phase I became unbounded; the artificial problem is bounded.",
+                )
             if phase_one_result.status != SolverStatus.OPTIMAL:
                 return Solution(status=phase_one_result.status, message=phase_one_result.message)
             if abs(tableau.objective_value()) > DEFAULT_TOLERANCE:
@@ -162,7 +169,45 @@ class TableauSimplexSolver(LPSolver):
                 basis_status=tableau.basis_status(),
                 message="Tableau simplex solved the LP.",
             )
+        if phase_two_result.status == SolverStatus.UNBOUNDED:
+            return _unbounded_solution(model, tableau, phase_two_result)
         return Solution(status=phase_two_result.status, message=phase_two_result.message)
+
+
+def _unbounded_solution(
+    model: Model, tableau: SimplexTableau, result: SimplexRunResult,
+) -> Solution:
+    """Project raw current tableau coordinates without cleaning the candidate."""
+    entering = result.entering_column
+    count = len(tableau.variable_names)
+    originals = tableau.original_variable_count
+    if (originals != len(model.variables) or originals > count
+            or tableau.variable_names[:originals] != tuple(model.variable_names())
+            or len(tableau.basis) != len(tableau.rows)
+            or any(type(j) is not int or not 0 <= j < count for j in tableau.basis)
+            or len(set(tableau.basis)) != len(tableau.basis)
+            or any(len(row) != count + 1 for row in tableau.rows)
+            or type(entering) is not int or not 0 <= entering < count
+            or entering in tableau.basis):
+        return Solution(
+            status=SolverStatus.NUMERICAL_ISSUE,
+            message="Phase II unbounded candidate has invalid basis/entering coordinates.",
+        )
+    point = {n: 0.0 for n in model.variable_names()}
+    direction = dict(point)
+    if entering < originals:
+        direction[tableau.variable_names[entering]] = 1.0
+    for i, column in enumerate(tableau.basis):
+        if column < originals:
+            name = tableau.variable_names[column]
+            point[name] = tableau.rows[i][-1]
+            direction[name] = -tableau.rows[i][entering]
+    checked = check_lp_unboundedness(model, point, direction)
+    return Solution(
+        status=SolverStatus.UNBOUNDED if checked.passed else SolverStatus.NUMERICAL_ISSUE,
+        message=f"{result.message} {checked.message}" if checked.passed
+        else f"Phase II unbounded candidate rejected: {checked.message}",
+    )
 
 
 def _validate_supported_lp(model: Model) -> None:
@@ -412,6 +457,7 @@ def _run_simplex_iterations(
                     f"{phase_name} detected an unbounded improving direction with no "
                     "positive pivot row."
                 ),
+                entering_column=entering_column,
             )
 
         tableau.pivot(leaving_row, entering_column)

@@ -15,6 +15,7 @@ from silo.lp.simplex.standard_form import (
     StandardFormProblem,
     build_standard_form,
 )
+from silo.lp.unboundedness import check_lp_unboundedness
 from silo.utils.numerics import DEFAULT_TOLERANCE
 
 
@@ -33,6 +34,7 @@ class RevisedRunResult:
     state: BasisState | None = None
     message: str = ""
     iterations: int = 0
+    entering_column: int | None = None
 
 
 @dataclass(frozen=True)
@@ -190,13 +192,72 @@ class RevisedSimplexSolver(LPSolver):
                 iterations=iterations,
                 used_warm_start=used_warm_start,
             )
+        solution = (_unbounded_solution(model, problem, phase_two_result)
+                    if phase_two_result.status == SolverStatus.UNBOUNDED else
+                    Solution(status=phase_two_result.status, message=phase_two_result.message))
         return RevisedSimplexResult(
-            solution=Solution(status=phase_two_result.status, message=phase_two_result.message),
+            solution=solution,
             problem=problem,
             basis=phase_two_result.basis,
             iterations=iterations,
             used_warm_start=used_warm_start,
         )
+
+
+def _unbounded_solution(
+    model: Model, problem: StandardFormProblem, result: RevisedRunResult,
+) -> Solution:
+    """Re-solve only at a terminal candidate to retain uncleaned basis values."""
+    def failure(reason: str) -> Solution:
+        return Solution(status=SolverStatus.NUMERICAL_ISSUE,
+                        message=f"Phase II unbounded candidate rejected: {reason}")
+
+    basis, entering = result.basis, result.entering_column
+    count, rows = len(problem.columns), len(problem.row_names)
+    if not isinstance(basis, Basis) or any(
+        type(j) is not int for j in (*basis.basic_columns, *basis.nonbasic_columns)
+    ):
+        return failure("invalid basis coordinates.")
+    try:
+        basis.validate(column_count=count, row_count=rows)
+    except ValueError as exc:
+        return failure(f"invalid basis coordinates: {exc}")
+    originals = [(j, c.original_name) for j, c in enumerate(problem.columns)
+                 if c.role == COLUMN_ORIGINAL]
+    if (type(entering) is not int or entering not in basis.nonbasic_columns
+            or len(problem.matrix) != rows or len(problem.rhs) != rows
+            or any(len(row) != count for row in problem.matrix)
+            or len(originals) != problem.original_variable_count
+            or len(originals) != len(model.variables)
+            or {n for _, n in originals} != set(model.variable_names())
+            or any(problem.columns[j].name != n for j, n in originals)):
+        return failure("invalid original/basis/entering coordinates.")
+    try:
+        matrix = _matrix(problem)
+        rhs = np.asarray(problem.rhs, dtype=float)
+    except (ValueError, TypeError, OverflowError) as exc:
+        return failure(f"nonnumeric basis coordinates: {exc}")
+    try:
+        basic_matrix = matrix[:, list(basis.basic_columns)]
+        raw_point = np.linalg.solve(basic_matrix, rhs)
+        raw_direction = np.linalg.solve(basic_matrix, matrix[:, entering])
+    except np.linalg.LinAlgError as exc:
+        return failure(f"point/direction basis solve failed: {exc}")
+    # No _clean_zero: tiny negative coordinates and tiny nonzero slopes matter.
+    point = np.zeros(count)
+    direction = np.zeros(count)
+    point[list(basis.basic_columns)] = raw_point
+    direction[entering] = 1.0
+    direction[list(basis.basic_columns)] = -raw_direction
+    checked = check_lp_unboundedness(
+        model, {n: float(point[j]) for j, n in originals},
+        {n: float(direction[j]) for j, n in originals},
+    )
+    return Solution(
+        status=SolverStatus.UNBOUNDED if checked.passed else SolverStatus.NUMERICAL_ISSUE,
+        message=f"{result.message} {checked.message}" if checked.passed
+        else f"Phase II unbounded candidate rejected: {checked.message}",
+    )
 
 
 def _run_primal_revised_simplex(
@@ -248,6 +309,7 @@ def _run_primal_revised_simplex(
                     "improving direction."
                 ),
                 iterations=iterations,
+                entering_column=entering_column,
             )
 
         basis = basis.pivot(leaving_row=leaving_row, entering_column=entering_column)
