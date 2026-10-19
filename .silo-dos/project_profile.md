@@ -1,6 +1,6 @@
 # SILO Project Profile
 
-## Current Snapshot — 2026-10-18
+## Current Snapshot — 2026-10-19
 
 本文件是当前项目状态的单一摘要入口。任务规则以
 [tasks/README.md](../tasks/README.md)、本轮合同和用户指令为准；阶段范围以
@@ -18,11 +18,13 @@
 | 最近求解器核验基线 | bb6bafff1cea78943eb8ae9d4b1a1b7d2a4dc52b；[LP 报告](../tasks/reports/20261018-01-02_lp-dual-optimality_report.md) |
 | 学习系列基线 | bdddf5851b72397c641c3dd872a306f66a12b296；[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 剩余研究资产纳管、备份核验和 GitHub push；[合同 RR=02](../tasks/codex/20261018-04-02_research-assets.md) |
-| Git 同步 | 本轮 push-on-success，包含 cd83009；实际同步状态实时核对，执行证据见报告和结束回执 |
+| 本轮授权范围 | 第 1 步 revised Phase-I 来源行清理修正；[执行合同](../tasks/codex/20261019-01-01_revised-phase1-cleanup.md)，已签发，签发时尚未实施 |
+| 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
+| Git 同步 | 当前任务 local-commit，不 push；已知签发提交的 local-ahead 属本轮继续执行授权，实际状态实时核对 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
-本轮整理完成后停止；后续建议需要单独的原子任务。
+本轮只授权第 1 步，开发对话完成后停止并等待审查；第 2–7 步仍需另行交付。
+此处的“已签发”只表明合同已准备，不代表实现、测试或审查通过。
 
 ## Completed Maintenance / Evidence
 
@@ -49,9 +51,12 @@ Benders / column generation / branch-and-price 和一般不确定性求解仍待
 应用的归属检查拒绝本对话接管，因此保留在原所有者下。原对话可在不再使用时归档。
 resfs 原件继续保留且受 Git 忽略；独立备份已核对，OneDrive 云端上传未单独验证。
 
-下一项求解器建议仍是 revised Phase-I 冗余行清理的 source-row provenance：
-先复核已记录构造例与可达性，再单独定义正确性任务，并更新 L0001。
-该建议未执行；native、Phase 9 closure 和 Phase 10 保持原有门控。
+第 1 步 revised Phase-I 冗余行清理的 source-row provenance 已形成
+[详细合同](../tasks/codex/20261019-01-01_revised-phase1-cleanup.md)，交由 silo-solver开发。
+执行中复核已记录构造例与可达性边界，完成来源映射修正、回归与原模型核验，
+并更新 L0001。实现状态以该任务报告、提交和本对话审查为准。
+后续 RMP、精确定价和列生成闭环仍为建议，未批准实施；native、Phase 9 closure
+和 Phase 10 保持原有门控。
 
 ## Source / Directory Map
 
@@ -68,7 +73,13 @@ resfs 原件继续保留且受 Git 忽略；独立备份已核对，OneDrive 云
 | 同步状态解释 | [remote_sync_proof.md](remote_sync_proof.md) |
 | 经验与流程改进 | [experience_map.md](experience_map.md)、[self_evolution.md](self_evolution.md) |
 
-本对话负责开发推进与执行协调，silo-solver-1010 集中讨论研究问题。
+对话职责自 2026-10-19 起按用户指令明确划分：
+
+- **silo-solver-1010**（`01a1254a-b349-77d0-8c66-d4b711cd511f`）：讨论思路、
+  设计/交付任务、审查开发结果；不在本对话实施已交付的 solver 代码任务。
+- **silo-solver开发**（`01a15208-bea9-7030-aacc-95d785e8fa58`）：执行明确批准的
+  单个合同，完成实现、测试、伴学材料、报告和合同约定的 Git 操作后停止。
+
 进入执行的决定应形成仓库合同或决策记录；任务解释不依赖聊天历史。
 .silo-dos 中的旧架构、集成设计及 Research Brain 桥接文件按需阅读，
 其中未执行的候选动作应先与本页和当前文件存在性核对。
