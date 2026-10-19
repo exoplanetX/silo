@@ -11,7 +11,7 @@
 | [L0001：LP 对偶约定与最优性核验](lessons/L0001-lp-duality/README.md) | 2026-10-18 | `lp.duality` | checked | [LP 对偶开发](../tasks/codex/20261018-01-02_lp-dual-optimality.md) |
 | [L0002：受限主问题与列接口](lessons/L0002-restricted-master/README.md) | 2026-10-19 | `decomposition.restricted-master` | checked | [最小RMP适配层](../tasks/codex/20261019-02-01_restricted-master.md) |
 | [L0003：DAG精确定价与完整性核验](lessons/L0003-dag-pricing/README.md) | 2026-10-19 | `decomposition.dag-pricing` | checked | [普通DAG定价](../tasks/codex/20261019-03-01_dag-pricing.md) |
-| [L0004：列生成闭环、退化与最优性差距](lessons/L0004-column-generation/README.md) | 2026-10-19 | `decomposition.dag-column-generation` | checked | [DAG列生成闭环](../tasks/codex/20261019-04-01_dag-column-generation.md) |
+| [L0004：列生成闭环、退化与最优性差距](lessons/L0004-column-generation/README.md) | 2026-10-19 | `decomposition.dag-column-generation` | checked v0.2.0 | [DAG列生成闭环](../tasks/codex/20261019-04-01_dag-column-generation.md)、[数值一致性](../tasks/codex/20261019-05-01_cg-bound-consistency.md) |
 
 L0001 的教学编排在 [系列整理任务](../tasks/codex/20261018-02-01_learning-series.md)
 中完成；算法实现和代码基线来自上表的 LP 开发任务。总目录同时记录两种来源。

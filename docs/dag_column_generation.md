@@ -41,7 +41,7 @@ solve_dag_column_generation(problem, *, solver=None, tolerance=1e-9, iteration_l
 
 | `DagColumnGenerationStatus` | 含义 |
 |---|---|
-| `TOLERANCE_REACHED` | rho≥-tolerance，且本轮数值差距介于0与tolerance之间 |
+| `TOLERANCE_REACHED` | rho≥-tolerance、objective_gap≤tolerance，且有符号差距通过局部一致性判据 |
 | `ITERATION_LIMIT` | 本轮仍需显著改善列，预算已用尽；未追加未经下轮求解的列 |
 | `MASTER_FAILURE` | 当前RMP非OPTIMAL，保留其实际状态与message；初始失败不推出完整域不可行 |
 | `PRICING_FAILURE` | 定价非OPTIMAL，包括合法seed下出现矛盾的NO_PATH；不发布本轮界 |
@@ -52,18 +52,43 @@ solve_dag_column_generation(problem, *, solver=None, tolerance=1e-9, iteration_l
 
 ## 数值界与读取顺序
 
-每轮从当前列、原始RHS和快照重新计算
-`P=c0+c^T*lambda`、`D=c0+b^T*pi`、`rho=min_U(c-a^T*pi)`，再计算
-`L=D+min(0,rho)`、`gap=P-L`。P还与RMP发布目标按既有1e-9核对。
+每轮从当前列、原始RHS和快照生成并保存有限乘积`p_i=c_i*x_i`、`d_j=b_j*pi_j`，
+rho仍由完整定价并重构。令delta=min(0,rho)，用math.fsum直接汇总：
+
+~~~text
+P = fsum([c0, *p])
+D = fsum([c0, *d])
+L = fsum([c0, *d, delta])
+g_raw = fsum([P, -L])
+g = fsum([*p, *(-v for v in d), -delta])
+A = fsum([*(abs(v) for v in p), *(abs(v) for v in d), abs(delta)])
+eta = 32 * ulp(A)
+~~~
+
+P还与RMP发布目标按既有1e-9核对。L从原始项求和，g消去公共c0；
+精确算术中L=D+delta、g=P-L，浮点发布量可能不逐位满足这些等式。
 只有同轮RMP、定价、字段与界检查全部有效，迭代记录才发布：
 
 - `numerical_upper_bound`：P；`dual_objective`：D；`rho`：重构的最小约化成本。
-- `numerical_lower_bound`：L；`numerical_gap`：P-L，保留实际小正差距。
+- `numerical_lower_bound`：L；`numerical_gap`：g_raw，保留发布量差的有符号原值。
 - `pricing_result`：原始定价快照；`accepted_path`：实际接受供下一轮求解的路径，或None。
+- `objective_gap`：g；`roundoff_allowance`：eta。二者追加在原有accepted_path之后，
+  默认None，旧位置参数构造继续有效。
 
-L>P直接诊断，不裁剪或归零。rho已在容差内而gap过大也诊断；不能只读`is_improving=False`。
+停止和界一致性使用g：g≥0通过一致性；g<0仅在eta≤tolerance且-g≤eta时通过，
+其余负g诊断。eta>tolerance只禁用负差距例外，非负g仍按普通规则。
+rho容差内而g>tolerance仍诊断；正向阈值不增加eta，rho改善仍严格为rho<-tolerance。
+微小负g停止时message说明采用局部舍入判据。g_raw和g都不裁剪、取绝对值或互相替换。
+大c0可能使g_raw=0而g仍显著为正；不能只读g_raw或`is_improving=False`。
+
+eta不含c0，A=0采用实际ulp(0)。32是固定工程局部尺度，不能理解为LP误差严格上界；
+其计算溢出或任何乘积/总和非有限均诊断。原始行、符号、权重、候选及目标核验未放松。
 界是浮点核验与定价支持的数值估计。精确上下界定理需要当前原始可行、行乘数符号正确、
 完整域定价及每条路径凸组合系数/RHS均为1。小负rho仍可能留下微小改善。
+
+版本区别：初版857397e对任何L>P直接失败，且使用g_raw停止；本次数值修正改为以上
+原始贡献求和与局部判据。旧合同/报告保留其历史含义，当前规则见
+[第5步合同](../tasks/codex/20261019-05-01_cg-bound-consistency.md)。
 
 结果`DagColumnGenerationResult`含status、message、failure_iteration、不可变iterations，
 以及column_paths、column_set_iteration、last_valid_master、last_valid_master_iteration。
@@ -72,7 +97,8 @@ L>P直接诊断，不裁剪或归零。rho已在容差内而gap过大也诊断�
 先读CG状态和失败轮号，再按轮号读取证据。结果注册表与最后有效RMP对应同一成功轮；
 后续RMP失败时，失败尝试的列集在该轮迭代中，顶层保留带轮号的历史有效列集。
 首次RMP失败时顶层只有该尝试的列注册表，无有效RMP。seed重构先溢出时没有已求解轮或注册表。
-定价失败时仍可保留本轮有效RMP，但该轮界字段全部None。历史记录不会伪装为失败轮的新界。
+定价或数值检查失败时仍可保留本轮有效RMP，但该轮界/g_raw/g/eta字段全部None。
+历史记录不会伪装为失败轮的新界。
 
 ## 当前边界
 

@@ -15,17 +15,17 @@
 | Phase 0–8 | 各自已批准的保守范围完成，具体边界见阶段记录 |
 | Phase 9 | open / parked；native implementation deferred and unapproved |
 | Phase 10 | not started |
-| 最近求解器核验基线 | 857397e0cebdcfeb1c6c5ff325c17e0aa09c151b；[DAG列生成报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)，1859项测试与Ruff通过；定价保持12bfa35、RMP保持48c242d、LP内核保持ad62e0f |
-| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.1.0按857397e核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
+| 最近求解器核验基线 | 15b403bcd7322a0b25ebb5380539dc5c4002c4ac；[CG数值修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)，2331项测试与Ruff通过；定价保持12bfa35、RMP保持48c242d、LP内核保持ad62e0f |
+| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.2.0按15b403b核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第1–4步已验收并推送；用户已批准第5步[数值界一致性合同](../tasks/codex/20261019-05-01_cg-bound-consistency.md)，交开发对话实施，结果待验收 |
+| 本轮授权范围 | 第1–4步已验收并推送；第5步[数值界一致性合同](../tasks/codex/20261019-05-01_cg-bound-consistency.md)已完成实现、回归与L0004 v0.2.0，见[修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)，待讨论对话验收 |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
 | Git 同步 | 第4步及审查摘要f0c5f31已推送并核对即时远端；第5步签发/实施采用local-commit，实际差异用Git实时核对 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
 第 1–4 步均已由讨论对话验收，更新及审查摘要已成功推送至f0c5f31。
 用户随后批准CG数值界一致性任务，本轮签发第5步单个合同；唯一新增签发提交
-属于已知local-ahead，合同明确允许开发对话直接继续。第5步实现/测试待交付审查，
+属于已知local-ahead，合同明确允许开发对话直接继续。第5步已完成并停止，等待交付审查，
 第6–7步尚未交付。本轮批准不含未来实现推送。
 实现、测试和审查分别记录；本轮检查通过不代替讨论对话的交付审查。
 
@@ -40,6 +40,7 @@
 | 最小RMP适配层 | 48c242d；最小化字段、原子显式增列、完整行冷重建与逐次最优核验 | [RMP报告](../tasks/reports/20261019-02-01_restricted-master_report.md)、[L0002](../learning/lessons/L0002-restricted-master/README.md) |
 | 普通DAG精确定价 | 12bfa35；拓扑全路径最小化、严格标签与完整元组平局、原始列重构及保守数值失败 | [DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)、[L0003](../learning/lessons/L0003-dag-pricing/README.md)；已通过讨论对话审查 |
 | DAG凸组合列生成 | 857397e；显式seed、冷RMP与完整定价、退化增列、数值界/差距及失败轮次 | [CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)、[L0004](../learning/lessons/L0004-column-generation/README.md)；已按保守浮点范围验收，舍入诊断限制见下文 |
+| CG数值界一致性 | 15b403b；保留有符号发布差，追加消去c0的objective_gap与固定32ULP局部判据 | [修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)、L0004 v0.2.0；实现完成待讨论审查 |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -118,18 +119,22 @@ P=-1.7500000000000002、D=L=-1.75、rho=0，触发差2.22e-16的数值诊断。
 该服务未跑实验、未改文件，其意见未重复计作实测或独立LP真值。
 本轮数学服务因模型容量失败，未形成独立数学复核；主线程承担数学与实测检查。
 
-第4步已按合同验收并推送，当前可用性受上述保守浮点诊断限制。
-用户已明确批准第5步[数值界一致性任务](../tasks/codex/20261019-05-01_cg-bound-consistency.md)：
-保留P/D/rho/L及原始有符号numerical_gap，追加消去公共c0的objective_gap与局部
-roundoff_allowance，以固定32ULP工程约定容纳微小负差距，正向差距/rho阈值不扩大。
-要求432族、最小自然反例、局部例外边界、大c0与实质矛盾保护，更新L0004至v0.2.0。
-签发前在旧源码上重现391/41计数，并仅对末轮快照作新判据前瞻分类，432次均满足；
-这不代替新实现回归。独立experiment_auditor只读审查补强三项证据边界，未跑实验/改文件。
-推荐GPT-6 Sol/high。开发对话完成本地提交后停止，等待本对话验收；实现尚待开展。
+第4步已验收并推送，其旧判据下的保守诊断和历史证据保留。
+第5步已按[数值界一致性合同](../tasks/codex/20261019-05-01_cg-bound-consistency.md)完成修正：
+保留P/D/rho/L和有符号numerical_gap，从原始乘积消去c0计算objective_gap，
+以固定32ULP的roundoff_allowance处理微小负g；正向差距/rho阈值与原始核验未放松。
+实际先重现旧版391/41及自然反例，再运行新版432族全部正常停止，646轮逐轮独立
+Fraction解析/原始数据/精确平移下界核对通过。113个末轮保留微小负g并符合局部判据。
+另有20次真实常数平移、局部边界和实质正负冲突保护，原40组完整列LP对照保留通过。
+472项新增检查、932项针对性与全量2331项测试、Ruff通过；L0004 v0.2.0的两个完整程序、
+六题和真实修正基线15b403b核对完成，见[修正报告](../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)。
+签发experiment_auditor的只读证据设计建议已落实，未计作本轮实测或严格误差证明。
+开发对话停在第5步，等待silo-solver-1010验收；第6步未交付。
+建议先验收本数值修正，再单独定义后续合同，推荐GPT-6 Sol/high。
 资源定价、热启动与增量研究保持后续候选，本轮不扩大算法域。
 资源约束、热启动、增量研究和性能主张仍待后续任务；native、Phase 9 closure及
 Phase 10保持原有门控。第5步明确修订第4步的严格负gap判据，旧合同与历史证据保留；
-在新实现交付前，当前源码行为仍以857397e为准。
+当前数值行为以15b403b为准；32ULP保留工程局部尺度的限制，没有LP误差严格上界。
 
 ## Source / Directory Map
 

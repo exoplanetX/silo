@@ -2,14 +2,15 @@
 lesson_id: L0004
 title: 列生成闭环、退化与最优性差距
 topic: decomposition.dag-column-generation
-version: 0.1.0
+version: 0.2.0
 status: checked
 created: 2026-10-19
 updated: 2026-10-19
-verified_code: 857397e0cebdcfeb1c6c5ff325c17e0aa09c151b
+verified_code: 15b403bcd7322a0b25ebb5380539dc5c4002c4ac
 verified_on: 2026-10-19
 source_tasks:
   - 20261019-04-01_dag-column-generation
+  - 20261019-05-01_cg-bound-consistency
 ---
 
 # L0004｜列生成闭环、退化与最优性差距
@@ -115,9 +116,45 @@ L=D+\min(0,\rho)\le z^\star\le P,
 精确算术、可行seed、正确RMP/定价和足够预算下，有限路径与不重复增列支持有限终止。
 本实现有预算和浮点限制，发布更窄的数值状态。
 
-实现只有rho≥-tolerance且0≤P-L≤tolerance时返回TOLERANCE_REACHED。
-rho容差内而gap过大时诊断；L>P也诊断，不裁剪。小负rho仍可能有微小改善，
-浮点界估计也没有严格舍入保证。精确最优结论需要上述精确条件及真正闭合的差距。
+当前实现以原始贡献消去c0后的有符号g作停止依据：rho≥-tolerance、g≤tolerance，
+并通过下一节的一致性判据，才返回TOLERANCE_REACHED。小负rho仍可能有微小改善，
+小负g的工程接受也不提供严格舍入保证。精确最优结论仍依赖上述精确条件和真正闭合的差距。
+
+### 4.4 原始贡献、公共常数与局部舍入判据
+
+先保存浮点乘积p_i=c_i*x_i、d_j=b_j*pi_j，delta=min(0,rho)。当前实现求值顺序为
+
+\[
+P=\mathrm{fsum}(c_0,\{p_i\}),\quad
+D=\mathrm{fsum}(c_0,\{d_j\}),\quad
+L=\mathrm{fsum}(c_0,\{d_j\},\delta),
+\]
+\[
+g_{\rm raw}=\mathrm{fsum}(P,-L),\qquad
+g=\mathrm{fsum}(\{p_i\},\{-d_j\},-\delta).
+\]
+
+列表记号表示把每个原始项放入同一次求和。精确算术中g=P-L，浮点中先分别汇总两个
+含大c0的目标可能丢掉小差距；g从原始贡献直接消去公共常数，保留更多局部信息。
+L也直接汇总c0、全部d_j和delta，避免先把c0舍入进D再加delta。
+numerical_gap保留g_raw，objective_gap保留g，两者都不裁剪，不能混成一个字段。
+
+以原始贡献的绝对和定义局部尺度
+
+\[
+A=\mathrm{fsum}(\{|p_i|\},\{|d_j|\},|\delta|),\qquad
+\eta=32\,\mathrm{ulp}(A).
+\]
+
+ulp是该浮点尺度的末位单位；A=0使用实际ulp(0)，不加单位地板。g≥0正常通过一致性；
+g<0仅在eta≤用户tolerance且-g≤eta时接受。eta超过用户容差时，只禁用新增负g例外，
+原有非负g仍按普通规则。rho容差内但g>tolerance继续诊断，正向阈值不加eta；
+rho<-tolerance的严格改善条件不变。所有乘积、尺度、和与差距须有限。
+
+系数32是固定工程约定，不能据通过率调大，也不是LP线性代数误差的严格上界。
+本规则保留权重、乘数和负值，仅改变控制器如何解释局部舍入矛盾。
+v0.1.0在857397e上对任何L>P直接失败并用g_raw停止；v0.2.0以本节求值和g判据替代，
+旧合同/历史报告保持原意。第3节精确手算仍成立，其中g_raw与g恰好相同。
 
 ## 5. 算法到代码的映射
 
@@ -127,15 +164,17 @@ rho容差内而gap过大时诊断；L>P也诊断，不裁剪。小负rho仍可�
 | 路径身份 | 完整弧ID元组；path_0等内部变量名与路径的只读注册表 |
 | 初始列和候选真实数据 | `_path_ids`、`_reconstruct`从公开图结构重新汇总 |
 | 冷求解/新pi/单列增广 | `solve_dag_column_generation`，沿用RMP与完整DAG定价 |
-| 原始目标、行符号、D | `_master_objectives`用当前列及快照核对，既有绝对容差1e-9 |
+| 原始目标、行符号、D | `_master_objectives`核对并保存/复用原始目标乘积，既有绝对容差1e-9 |
 | 候选字段与改善分类 | `_check_candidate`；容差内漂移字段不能写回RMP |
-| 下界与停止 | L=D+min(0,rho)、真实gap检查，专用CG停止枚举 |
+| 下界与停止 | 直接原项求L、g_raw、objective_gap与32ULP局部尺度，专用CG停止枚举 |
 | 历史证据 | 独立逐轮快照、有效RMP及列集轮号，失败轮界为None |
 
 最后预算轮若仍需新列，直接ITERATION_LIMIT，不加入没有下一轮预算求解的列。
 同轮已满足停止时优先成功。若后续RMP失败，顶层注册表仍对应带轮号的最后有效RMP；
 失败尝试的注册表单独在失败轮记录，当前界为None。首次失败没有有效历史RMP。
 seed重构先溢出时没有已求解轮次和注册表。
+迭代字段objective_gap和roundoff_allowance追加在原字段之后，默认None，保持旧位置参数
+构造。失败轮这两个新字段与原界字段一起为None，不拿历史值填补。
 
 成本来自多次冷RMP、每轮拓扑DP、候选重构及快照核对。路径数可能指数增长，
 不把有限终止解释为多项式轮数，也不据此声称总体线性复杂度或性能优势。
@@ -172,7 +211,60 @@ for backend in (RevisedSimplexSolver(), TableauSimplexSolver()):
                for name, path in result.column_paths.items()}
     assert weights == {('d1',): 0, ('d2',): 0, ('o12',): .5, ('o21',): .5}
     assert result.iterations[-1].numerical_gap == 0
+    assert result.iterations[-1].objective_gap == 0
     print(type(backend).__name__, weights)
+```
+
+下面的第二个完整程序核对自然舍入反例与公共常数消去，保留后端实际返回的权重：
+
+```python
+from silo.core.enums import ConstraintSense as S
+from silo.decomposition import (
+    DagArc, DagPricingProblem, DagMasterRow, DagColumnGenerationProblem,
+    DagColumnGenerationStatus, solve_dag_column_generation,
+)
+from silo.lp.simplex.revised import RevisedSimplexSolver
+from silo.lp.simplex.tableau import TableauSimplexSolver
+
+graph = DagPricingProblem(
+    ['s', 't'], [DagArc(f'p{i}{j}', 's', 't', -2 if i == 0 else 5, {'R': i, 'C': j})
+                 for i in range(2) for j in range(2)],
+    's', 't', ['R', 'conv', 'C'], -2, {'conv': 1, 'R': .125, 'C': -.25},
+)
+problem = DagColumnGenerationProblem(
+    graph, [DagMasterRow('C', S.EQ, .5), DagMasterRow('R', S.EQ, .875),
+            DagMasterRow('conv', S.EQ, 1)], 'conv', [('p11',), ('p00',)], -3,
+)
+result = solve_dag_column_generation(problem)
+assert result.status == DagColumnGenerationStatus.TOLERANCE_REACHED
+record = result.iterations[-1]
+assert record.master_result.primal_values == {'path_0': .75, 'path_1': .25000000000000006}
+assert record.numerical_upper_bound == -1.7500000000000002
+assert record.numerical_lower_bound == -1.75
+assert record.numerical_gap < 0 and record.objective_gap < 0
+assert -record.objective_gap <= record.roundoff_allowance <= 1e-9
+print('natural', record.numerical_gap, record.objective_gap, record.roundoff_allowance)
+
+for cheap in (0, 1 - 5e-10):
+    allowances = set()
+    for backend in (RevisedSimplexSolver(), TableauSimplexSolver()):
+        for c0 in (0, 2**40, -(2**40), 2**60, -(2**60)):
+            graph = DagPricingProblem(
+                ['s', 't'], [DagArc('seed', 's', 't', 1), DagArc('cheap', 's', 't', cheap)],
+                's', 't', ['conv'], base_coefficients={'conv': 1},
+            )
+            problem = DagColumnGenerationProblem(
+                graph, [DagMasterRow('conv', S.EQ, 1)], 'conv', [('seed',)], c0,
+            )
+            result = solve_dag_column_generation(problem, solver=backend)
+            assert result.status == DagColumnGenerationStatus.TOLERANCE_REACHED
+            first = result.iterations[0]
+            assert first.objective_gap == 1 - cheap
+            assert len(result.iterations) == (2 if cheap == 0 else 1)
+            allowances.add(first.roundoff_allowance)
+            if abs(c0) == 2**60:
+                assert first.numerical_gap == 0 and first.objective_gap > 0
+    assert len(allowances) == 1
 ```
 
 [单元测试](../../../tests/unit/test_dag_column_generation.py)核对limit、阈值、身份、快照、
@@ -183,7 +275,11 @@ for backend in (RevisedSimplexSolver(), TableauSimplexSolver()):
 九个模型各做两个后端×两组排列，另对GE模型做替代seed的四组，共40组CG/完整列LP比较。
 完整LP和CG共享原生LP依赖，因此同时给出独立解析目标及主例P(t)，防止后端一致性被当作
 独立数学证明。有限模型族支持参考实现的核验，不替代第4节一般推导。
-本例与四题的实际核验记录见[执行报告](../../../tasks/reports/20261019-04-01_dag-column-generation_report.md)。
+原闭环证据保留于[第4步报告](../../../tasks/reports/20261019-04-01_dag-column-generation_report.md)。
+[舍入回归](../../../tests/verification/test_dag_cg_bound_consistency.py)新增54个模型的两个端点seed、
+两种排列和两个后端，共432次运行。独立DFS/Fraction重构原列、解析端点最优及返回pi的
+精确平移下界，与浮点g/eta复算分开核对；不引用生产私有助手。
+两个程序及六题实际核验见[第5步报告](../../../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)。
 
 ## 7. 研究意义与可扩展问题
 
@@ -191,6 +287,8 @@ for backend in (RevisedSimplexSolver(), TableauSimplexSolver()):
 退化与真实差距记录可用于后续增量方法的对照基线，先保护数学对象与失败语义，再研究效率。
 普通DAG CG的正确实现本身不构成论文创新；后续特色机制须有明确新结构和独立对照证据。
 资源定价、VRP、分支、整数路径选择及工业规模都需要后续单独建模和验证。
+后续比较迭代与耗时时，应区分真实求解困难和保守数值误诊，否则容易把拒绝率变化
+误归为算法加速。本次数值修正没有开展性能比较。
 
 ## 8. 局限、反例与失效条件
 
@@ -199,8 +297,14 @@ L约1-5e-10，正gap约5e-10，正常TOLERANCE_REACHED。解析最优仍严格�
 这个状态保留容差允许的微小改善，不能改写为严格零差距。
 
 即使rho在阈值内，P-D也可能让gap超限。例如P-D=8e-10、rho=-7e-10，gap=1.5e-9，
-默认容差下必须诊断。若舍入导致L>P，保守失败；数值界没有区间算术或有向舍入保证。
+默认容差下必须诊断。若出现微小负g，须同时满足局部eta和用户容差；
+大c0不进入eta，也不能掩盖g。数值界没有区间算术或有向舍入保证。
 原生LP既有近相关等式状态问题也继续保留，后端UNBOUNDED只是当前诊断。
+
+自然例中成本(-4,-4,3,3)、R/C基系数1/8和-1/4、行R=7/8、C=1/2、conv=1，
+seed按p11/p00排列；Revised给权重(.75,.25000000000000006)，P=-1.7500000000000002、
+D=L=-1.75、rho=0。g_raw=g=-2.22e-16，eta约5.68e-14，按局部规则接受并保留原值。
+它说明旧诊断可能来自舍入；有限自然例通过不证明32覆盖所有LP误差。
 
 seed不可行只说明当前受限列集失败：GE例r≥1/2，路径r=(0,1,2)，seed仅r=0时不可行，
 完整域却可行。需要可行性定价才能自动恢复，本篇停止并保留诊断。
@@ -212,8 +316,8 @@ seed不可行只说明当前受限列集失败：GE例r≥1/2，路径r=(0,1,2)�
 
 ## 9. 练习与解答入口
 
-[四道练习](exercises.md)依次覆盖耦合退化、凸组合对偶平移、真实差距/小负rc、
-seed失败与研究边界；完成后阅读[完整解答](solutions.md)。题号L0004-E01至E04保持稳定。
+[六道练习](exercises.md)覆盖耦合退化、凸组合对偶平移、差距/小负rc、seed失败、
+局部ULP与公共常数消去；完成后阅读[完整解答](solutions.md)。E01–E04身份保留，追加E05/E06。
 
 ## 10. 开发来源与修订记录
 
@@ -221,8 +325,11 @@ seed失败与研究边界；完成后阅读[完整解答](solutions.md)。题号
 |---|---|---|
 | 原子合同 | [第4步](../../../tasks/codex/20261019-04-01_dag-column-generation.md) | 固定主问题、停止及允许范围 |
 | 实际执行 | [CG报告](../../../tasks/reports/20261019-04-01_dag-column-generation_report.md) | 真值、故障、环境、检查及真实提交 |
+| 数值修正 | [第5步合同](../../../tasks/codex/20261019-05-01_cg-bound-consistency.md)、[报告](../../../tasks/reports/20261019-05-01_cg-bound-consistency_report.md) | 原始贡献、局部判据及432族 |
+| 初版代码 | 857397e0cebdcfeb1c6c5ff325c17e0aa09c151b，讲解v0.1.0 | 保留严格L>P诊断的历史基线 |
 | 代码基线 | 篇首verified_code | 用git show回看包含本控制器的真实实现版本 |
 
 | 日期 | 讲解版本 | 修订 |
 |---|---|---|
 | 2026-10-19 | 0.1.0 | 建立自动循环、退化、平移下界、数值停止、失败与E01–E04 |
+| 2026-10-19 | 0.2.0 | 追加有符号原项差距、固定32ULP局部例外、自然反例/大c0及E05/E06；更新E03判据 |

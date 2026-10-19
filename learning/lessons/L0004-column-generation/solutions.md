@@ -1,6 +1,7 @@
 # L0004解答
 
-[正文](README.md) · [题目](exercises.md) · [执行报告](../../../tasks/reports/20261019-04-01_dag-column-generation_report.md)
+[正文](README.md) · [题目](exercises.md) · [原闭环报告](../../../tasks/reports/20261019-04-01_dag-column-generation_report.md) ·
+[数值修正报告](../../../tasks/reports/20261019-05-01_cg-bound-consistency_report.md)
 
 ## L0004-E01
 
@@ -38,8 +39,10 @@ RHS1使目标变化为delta，因此L=D+delta。当前可行lambda扩为完整�
 完整凸组合模型的精确值为1-5e-10<1，尚有微小改善。
 (b)gap=(P-D)-rho=1.5e-9，NUMERICAL_ISSUE；
 只看is_improving=False会漏掉原对偶差。
-(c)数值界顺序冲突，NUMERICAL_ISSUE，不裁剪L或把gap归零。
-(d)gap=1e-9，rho恰在负阈值，严格改善为False，两个停止条件都满足。
+(c)还需原项g、局部eta与用户容差。v0.2.0使用g：非负g按普通阈值检查，
+负g仅在eta≤tolerance且-g≤eta时接受，否则NUMERICAL_ISSUE。
+g_raw=P-L照原值保留，L>P本身不再直接决定失败；v0.1.0的严格规则保留在历史版本。
+(d)g=1e-9，rho恰在负阈值，严格改善为False，停止条件满足。
 
 这些是解析实数判断；实现的二进制数按实际表示与既有容差检查。
 测试用Fraction确认成本差严格为正，未把近似完整LP的返回目标当符号精确值。
@@ -54,7 +57,38 @@ RHS1使目标变化为delta，因此L=D+delta。当前可行lambda扩为完整�
 第二轮失败时，顶层last_valid_master_iteration与column_set_iteration保留1，
 顶层注册表对应第一轮有效快照；失败轮自己的注册表和RMP诊断在iterations中，
 该轮rho及上下界/gap为None。历史界只能按历史轮号使用。
+v0.2.0追加的objective_gap/roundoff_allowance也为None。
 
 资源预算/时间窗会改变完整合法列域。普通DAG最短路未处理这些资源状态，
 其rho不再是该新域的最小值依据；需先定义资源可行性、状态、精确定价证明与独立真值，
 再重新核对列/对偶一致性及停止条件。本篇没有VRP或资源定价能力。
+
+## L0004-E05
+
+按实际二进制浮点乘积，p=(2.25,-1.0000000000000002)，
+d=(0,6.125,-4.875)，delta=0。fsum得到P=-1.7500000000000002、D=L=-1.75，
+g_raw=g=-2.220446049250313e-16。A=14.25，ulp(A)=2^-49，
+eta=32*2^-49=5.684341886080802e-14。默认容差1e-9下eta≤tolerance且-g≤eta，
+新版TOLERANCE_REACHED并在message说明局部舍入接受；权重和两个负差距均不改写。
+旧版因L>P直接NUMERICAL_ISSUE。这是自然运行反例，区别于依赖快照注入。
+
+g=-eta且eta在预算内时接受；略越界时拒绝；eta超过用户容差时，负g例外全部禁用。
+eta>tolerance而g=0仍可正常停止，前提rho也符合停止条件。
+实现黑箱边界测试采用weight=1-2^-47、cost=pi=1，得到g=-2^-47、A=2-2^-47、
+eta=2^-47；相邻可表示weight给出内外边界，避免虚假的“近似相等”测试。
+32只描述选定局部尺度的若干ULP，未推导LP枢轴/线性代数误差，不能升级为严格误差上界。
+
+## L0004-E06
+
+初轮p=d=1、delta=-1。c0=正负2^60时，P=D=L可能都舍入为c0，g_raw=0，
+但从原项g=fsum(1,-1,1)=1。rho=-1仍显著改善，继续加列；第二轮便宜路径权重1，g=0。
+初轮A=3，eta=32*ulp(3)，独立于c0。
+
+改便宜成本为1-5e-10时，rho约-5e-10，g约5e-10，默认容差正常一轮停止；
+大c0下g_raw可为0，g仍严格为正。应保留这两个字段与小负rho，不能将其写成严格零差距。
+真实数值使用该二进制成本，Fraction确认差仍严格大于0。
+
+合成注入中g=fsum(0,8e-10,7e-10)=1.5e-9，超过默认容差，即使g_raw为0、
+rho未超过改善阈值，也必须NUMERICAL_ISSUE。原始异常尺度A=1.5e-9很小，
+把巨大c0加入A会扩大ULP预算，并破坏同一列/乘数/rho下的平移不变性。
+本规则明确排除c0；实质负g也须独立检查-g>eta，不能因常数平移获准。
