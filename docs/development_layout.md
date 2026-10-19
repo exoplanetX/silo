@@ -36,6 +36,7 @@
 | Revised Phase I/II | [revised.py](../src/silo/lp/simplex/revised.py) 的 RevisedSimplexSolver.solve | 来源行/基位置清理已修正；有限精度边界仍保留 |
 | 最小 RMP 适配层 | [restricted_master.py](../src/silo/decomposition/restricted_master.py) | MIN目标/对偶转换，完整行冷重建、显式加列与逐次最优核验 |
 | 普通DAG精确定价 | [dag_pricing.py](../src/silo/decomposition/dag_pricing.py) | 全s-t路径最小约化成本，独立于LP/RMP；不含资源约束或CG控制器 |
+| DAG凸组合列生成 | [dag_column_generation.py](../src/silo/decomposition/dag_column_generation.py) | 合法seed、冷RMP、完整定价、退化增列与数值差距门控 |
 | LP 最优性核验 | [optimality.py](../src/silo/lp/optimality.py) | 原始输入坐标；有限精度与支持域见 API 文档 |
 | 预处理与恢复 | [presolver.py](../src/silo/presolve/presolver.py) | 保留变换与原坐标恢复关系 |
 | 最小 MIP B&B | [branch_and_bound.py](../src/silo/mip/branch_and_bound.py) | 使用 LP 松弛和被动 cut/callback 边界 |
@@ -44,7 +45,8 @@
 tableau 与 revised 是并存的两种后端，分别维护算法行为并做独立核验。
 cuts/decomposition/uncertainty 的 conservative/toy 完成状态不表示生产级算法已经实现。
 RMP已能求解当前显式列集合，普通DAG定价覆盖其图定义的完整路径域。
-资源约束定价、通用CG循环及原有ColumnGenerationSolver入口仍待后续任务。
+带凸组合等式的普通DAG自动CG已形成参考循环；资源约束定价和原有通用
+ColumnGenerationSolver入口仍待后续任务。
 
 ## 实际导入边界
 
@@ -63,6 +65,7 @@ separator/callback protocols 的依赖；cuts 保持独立于 mip，避免形成
 core 保持独立；外部求解器调用仅限 interfaces、examples 或比较测试。
 RMP只通过LPSolver和既有最优性核验器消费LP；下层不反向导入decomposition。
 DAG定价模块本身只依赖标准库和utils常量；RMP人工桥接及完整路径枚举只在测试/教学中。
+新DAG控制器消费core模型、既有RMP/定价和LP后端接口，不访问RMP私有状态；完整列枚举仍只在测试。
 结构检查解析显式 Python 导入；它不证明动态导入或所有运行时行为符合边界。
 
 ## 版本、任务与核验基线

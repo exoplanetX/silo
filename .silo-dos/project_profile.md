@@ -15,17 +15,17 @@
 | Phase 0–8 | 各自已批准的保守范围完成，具体边界见阶段记录 |
 | Phase 9 | open / parked；native implementation deferred and unapproved |
 | Phase 10 | not started |
-| 最近求解器核验基线 | 12bfa358850b3fe55b31086c4f98741852973b31；[DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)，1742项测试与Ruff通过；RMP保持48c242d、LP内核保持ad62e0f |
-| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
+| 最近求解器核验基线 | 857397e0cebdcfeb1c6c5ff325c17e0aa09c151b；[DAG列生成报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)，1859项测试与Ruff通过；定价保持12bfa35、RMP保持48c242d、LP内核保持ad62e0f |
+| 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.1.0按857397e核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第1–3步已验收并推送；用户已批准第4步，按[新合同](../tasks/codex/20261019-04-01_dag-column-generation.md)交由开发对话实施，结果待验收 |
+| 本轮授权范围 | 第1–3步已验收并推送；第4步按[合同](../tasks/codex/20261019-04-01_dag-column-generation.md)已完成实现、测试与L0004，见[CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)，待讨论对话验收 |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
 | Git 同步 | 第3步验收摘要c6d0ed1已推送并核对远端；第4步签发及执行采用local-commit，实际差异用Git实时核对 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
 第 1–3 步均已由讨论对话验收，已有更新及审查摘要已成功推送至c6d0ed1。
 用户随后明确要求交付执行第4步；本轮签发单个闭环任务，其新增签发提交属于已知
-local-ahead，合同明确允许开发对话直接继续。第4步实施结果待审查，第5–7步尚未交付。
+local-ahead，合同明确允许开发对话直接继续。第4步已实施并停止，等待审查，第5–7步尚未交付。
 实现、测试和审查分别记录；本轮检查通过不代替讨论对话的交付审查。
 
 ## Completed Maintenance / Evidence
@@ -38,6 +38,7 @@ local-ahead，合同明确允许开发对话直接继续。第4步实施结果�
 | Revised Phase-I 来源行清理 | ad62e0f；区分来源行、基位置与列编号，删行后核验原模型 | [修正报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)、[L0001](../learning/lessons/L0001-lp-duality/README.md) |
 | 最小RMP适配层 | 48c242d；最小化字段、原子显式增列、完整行冷重建与逐次最优核验 | [RMP报告](../tasks/reports/20261019-02-01_restricted-master_report.md)、[L0002](../learning/lessons/L0002-restricted-master/README.md) |
 | 普通DAG精确定价 | 12bfa35；拓扑全路径最小化、严格标签与完整元组平局、原始列重构及保守数值失败 | [DAG定价报告](../tasks/reports/20261019-03-01_dag-pricing_report.md)、[L0003](../learning/lessons/L0003-dag-pricing/README.md)；已通过讨论对话审查 |
+| DAG凸组合列生成 | 857397e；显式seed、冷RMP与完整定价、退化增列、数值界/差距及失败轮次 | [CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)、[L0004](../learning/lessons/L0004-column-generation/README.md)；实现完成待讨论审查 |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -85,12 +86,15 @@ L0003 v0.1.0的代码例和四题已按真实实现提交12bfa35核对。
 L0003正文代码及双后端人工桥接重新运行，十节、四题和真实代码基线通过核对。
 独立只读数学复核未发现必须先修项；未把它重复计作实验结果。第3步可验收，无需修补实现。
 
-第4步已获用户明确授权并签发[执行合同](../tasks/codex/20261019-04-01_dag-column-generation.md)：
-连接现有RMP与普通DAG定价，限定含sum(lambda)=1的连续主问题，显式输入初始路径，
-交付路径身份、逐轮增列、失败/上限处理、凸组合对偶平移下界和容差内停止。
-完整列LP与解析耦合主例用于核对；新建L0004伴学篇目。签发前用既有API显式桥接，
-两个LP后端均得目标2 -> 2 -> -1.5，确认目标不变的一轮仍须继续；自动循环尚待实现。
-建议GPT-6 Sol/high。开发对话完成本地提交后停止，交由本对话验收。
+第4步已按[执行合同](../tasks/codex/20261019-04-01_dag-column-generation.md)完成普通DAG
+凸组合连续主问题自动CG：显式合法seed、路径元组身份、冷RMP与完整定价、每轮一列，
+处理退化、失败和预算，计算P/D/rho/L及实际gap并按容差停止。
+自动主例两后端均跨过P不变的一轮，得到2 -> 2 -> -1.5；另8个不同小模型及替代seed
+共40组双后端/排列完整列LP对照通过。117项新增检查、460项针对性及全量1859项测试、
+Ruff通过；L0004 v0.1.0代码例、四题和真实实现基线857397e已核对。
+本轮一次独立只读复核因模型容量失败，没有形成审查结论，见[CG报告](../tasks/reports/20261019-04-01_dag-column-generation_report.md)。
+开发对话停在第4步，等待silo-solver-1010验收，第5步尚未交付。
+建议先验收本闭环，再单独定义下一步合同；推荐GPT-6 Sol/high。
 资源约束、热启动、增量研究和性能主张仍待后续任务；native、Phase 9 closure及
 Phase 10保持原有门控。第4步的数值gap与小负rc门控以合同为准。
 
