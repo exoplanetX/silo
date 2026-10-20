@@ -1,4 +1,4 @@
-"""Cold RMP / full-DAG pricing loop for a fixed continuous convexity master.
+"""Cold-default RMP / full-DAG pricing with explicit optional reoptimization.
 
 Bounds are floating-point estimates. TOLERANCE_REACHED retains small negative
 prices and is scoped to this graph, row system and tolerance.
@@ -22,8 +22,13 @@ from silo.decomposition.dag_pricing import (
     DagPricingStatus,
     price_dag,
 )
-from silo.decomposition.restricted_master import RestrictedMasterProblem, RestrictedMasterResult
+from silo.decomposition.restricted_master import (
+    RestrictedMasterProblem,
+    RestrictedMasterReoptimizationResult,
+    RestrictedMasterResult,
+)
 from silo.lp.base import LPSolver
+from silo.lp.simplex.revised import RevisedSimplexSolver
 from silo.utils.numerics import DEFAULT_TOLERANCE
 
 
@@ -92,6 +97,7 @@ class DagColumnGenerationIteration:
 
     objective_gap and roundoff_allowance are appended compatibility fields.
     Failed rounds leave all new numerical evidence fields at None.
+    Opt-in rounds retain the actual public RMP reoptimization outcome.
     """
 
     iteration: int
@@ -106,6 +112,7 @@ class DagColumnGenerationIteration:
     accepted_path: tuple[str, ...] | None = None
     objective_gap: float | None = None
     roundoff_allowance: float | None = None
+    rmp_reoptimization: RestrictedMasterReoptimizationResult | None = None
 
     def __post_init__(self):
         object.__setattr__(self, 'column_paths', _registry_copy(self.column_paths))
@@ -132,15 +139,22 @@ class DagColumnGenerationResult:
 def solve_dag_column_generation(
     problem: DagColumnGenerationProblem, *, solver: LPSolver | None = None,
     tolerance: float = DEFAULT_TOLERANCE, iteration_limit: int = 100,
+    reoptimize_rmp: bool = False,
 ) -> DagColumnGenerationResult:
     """Solve at most iteration_limit RMP/pricing rounds, adding one path per round.
 
     Final registry and last_valid_master belong to the same successful master
     round. A later failed attempt has its own registry in iterations, and no new
     bounds. If the first master fails, only its attempted registry is returned.
+    reoptimize_rmp=True consumes one public opt-in RMP result per round; any
+    internal cold fallback belongs to the RMP, within the same CG round.
     """
     if not isinstance(problem, DagColumnGenerationProblem):
         raise TypeError('problem must be a DagColumnGenerationProblem.')
+    if type(reoptimize_rmp) is not bool:
+        raise TypeError('reoptimize_rmp must be a bool.')
+    if reoptimize_rmp and solver is not None and not isinstance(solver, RevisedSimplexSolver):
+        raise TypeError('RMP reoptimization requires a native RevisedSimplexSolver.')
     tolerance = _finite_input(tolerance)
     if tolerance <= 0:
         raise ValueError('tolerance must be positive.')
@@ -180,10 +194,16 @@ def solve_dag_column_generation(
     )
     master = RestrictedMasterProblem(model)
     for iteration in range(1, iteration_limit + 1):
-        snapshot = master.solve(solver)
+        if reoptimize_rmp:
+            outcome = master.solve_reoptimized(solver)
+            snapshot = outcome.result
+        else:
+            outcome = None
+            snapshot = master.solve(solver)
         pricing = None
         if snapshot.status != SolverStatus.OPTIMAL:
-            history.append(DagColumnGenerationIteration(iteration, paths, snapshot))
+            history.append(DagColumnGenerationIteration(
+                iteration, paths, snapshot, rmp_reoptimization=outcome))
             return finish(DagColumnGenerationStatus.MASTER_FAILURE,
                           f'RMP round {iteration}: {snapshot.status.value}. {snapshot.message}',
                           iteration)
@@ -194,7 +214,8 @@ def solve_dag_column_generation(
             if not isinstance(pricing, DagPricingResult):
                 raise _NumericalFailure('Pricing returned an invalid result record.')
             if pricing.status != DagPricingStatus.OPTIMAL:
-                history.append(DagColumnGenerationIteration(iteration, paths, snapshot, pricing))
+                history.append(DagColumnGenerationIteration(
+                    iteration, paths, snapshot, pricing, rmp_reoptimization=outcome))
                 return finish(DagColumnGenerationStatus.PRICING_FAILURE,
                               f'Pricing round {iteration}: {pricing.status}. {pricing.message}',
                               iteration)
@@ -218,13 +239,15 @@ def solve_dag_column_generation(
             if rho < -tolerance and path in paths.values():
                 raise _NumericalFailure('Significantly negative pricing path is already existing.')
         except _NumericalFailure as exc:
-            history.append(DagColumnGenerationIteration(iteration, paths, snapshot, pricing))
+            history.append(DagColumnGenerationIteration(
+                iteration, paths, snapshot, pricing, rmp_reoptimization=outcome))
             return finish(DagColumnGenerationStatus.NUMERICAL_ISSUE, str(exc), iteration)
 
         accepted = path if rho < -tolerance and iteration < iteration_limit else None
         history.append(DagColumnGenerationIteration(
             iteration, paths, snapshot, pricing, upper, dual, rho, lower, gap, accepted,
-            objective_gap=objective_gap, roundoff_allowance=allowance))
+            objective_gap=objective_gap, roundoff_allowance=allowance,
+            rmp_reoptimization=outcome))
         if rho >= -tolerance:
             message = 'Full-DAG price and objective gap meet tolerance.'
             if objective_gap < 0:
