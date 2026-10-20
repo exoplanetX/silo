@@ -165,6 +165,9 @@ Every issued Codex task should include:
 
 If any of these fields are missing, Codex should infer the safest narrow interpretation from the task text and record the ambiguity in the execution report.
 
+For newly issued tasks, the goal mapping, exit criteria and bounded-work requirements
+in section 6.9 are mandatory before issuance; they must not be inferred during execution.
+
 ### 6.3 Scope Lock Rule
 
 Codex must stay within the task objective and the allowed files. The allowed change list is a boundary, not a suggestion.
@@ -260,6 +263,38 @@ This requirement applies prospectively; do not revise old immutable contracts or
 historical reports to retrofit it. Teaching material has one canonical body under
 `learning/`; current usage and API reference belong under `docs/`, while original
 design/research records remain under `notes/`.
+
+### 6.9 Fixed Goals, Phase Exit and Bounded Work
+
+用户于2026-10-20明确要求：前期按目标制定的分阶段任务，执行时必须坚持目标，
+必须有明确结束界限，禁止漫无目的推进。本节约束今后的阶段设计、任务签发与验收；
+既有不可变合同和历史报告保持原状。
+
+1. **原目标指挥执行。** 开始设计或执行前，回读原目标、阶段计划及当前覆盖表。
+   研究对象、核心问题和完成标准保持固定；实现便利、负面结果、已有投入及局部成果成熟
+   不构成替换或缩减目标的理由。实施顺序和具体机制可以接受审查，不能借此改写原题。
+2. **每个任务明确归属。** 新合同必须列明原阶段/研究里程碑、来源文件、所回答的唯一问题，
+   并注明属于原计划交付、必要修复或新增增强。独立维护事项注明不计作研究里程碑完成。
+   执行合同ID与原研究里程碑分别记录，禁止用连续开发序号代替阶段进度。
+3. **先定完成线。** 阶段计划必须列出有限的必交付项、验收依据、未覆盖范围和结束条件。
+   新合同必须写清可核验的成功标准，以及“达到哪些结果即交付停止”。达到既定标准后，
+   不得把可选优化追加为本阶段新的必做项；阶段收尾和下一阶段启动仍按既有批准边界办理。
+4. **先定执行上限。** 阶段计划须声明原子任务数量上限；有界研究或实验任务须声明适用的
+   实例数、查询/迭代数、重试次数或时间预算等具体上限，以及超限处置。
+   达到上限仍未达标时结束本轮执行，如实交付失败证据和剩余义务，阶段目标继续保持未完成。
+   禁止自动追加轮次、扩大实例族、降低标准或换题以维持推进。
+5. **新增任务先说明影响。** 插入修复或工程增强前，必须说明与原目标的关系、必要性、
+   对任务数量及结束界限的影响，并按既有权限取得对应范围的批准。
+   若将超过阶段任务上限，先提交有限的修订执行方案；原目标与完成标准保持固定。
+   普通“继续/下一步”不构成无限增加任务或改动目标的授权。
+6. **验收同时核对目标与结束线。** 报告分别列明本合同是否合格、原目标覆盖了什么、
+   尚缺什么、是否到达预定结束点；涉及研究主张时另核外部增量。
+   测试数、文件数、学习篇数及任务数不能替代这些判断。
+   具体机制失败允许本轮有界工作结束，不能据此宣称原阶段或研究主题已完成。
+
+沿用[全局复查](../docs/development_route_review_20261020.md)恢复的原七步映射。
+讨论对话负责设计和审查，开发对话每次只执行一项已批准合同，交付后停止。
+本规则要求前瞻性声明边界，不授权重编号历史任务、启动下一任务或转换ROADMAP阶段。
 
 ## 7. Current Entry, History Index and Baselines
 
