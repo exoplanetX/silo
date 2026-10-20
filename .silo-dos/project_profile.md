@@ -15,15 +15,15 @@
 | Phase 0–8 | 各自已批准的保守范围完成，具体边界见阶段记录 |
 | Phase 9 | open / parked；native implementation deferred and unapproved |
 | Phase 10 | not started |
-| 最近求解器核验基线 | f4cc36e00628da266d12ac93b25f652c8ae2f569；[CG重优化报告](../tasks/reports/20261020-03-01_cg-reoptimization_report.md)，开发4075项测试与Ruff通过；LP/RMP90b377f、恢复02aed7d、定价12bfa35及CG15b403b数值助手保持 |
+| 最近求解器核验基线 | f4cc36e00628da266d12ac93b25f652c8ae2f569；[CG重优化报告](../tasks/reports/20261020-03-01_cg-reoptimization_report.md)，开发及讨论对话独立复跑4075项测试与Ruff通过；LP/RMP90b377f、恢复02aed7d、定价12bfa35及CG15b403b数值助手保持 |
 | 学习系列基线 | L0001 v0.2.0按ad62e0f、L0002 v0.1.0按48c242d、L0003 v0.1.0按12bfa35、L0004 v0.2.0按15b403b、L0005 v0.1.0按02aed7d、L0006 v0.1.0按c460aa7、L0007 v0.1.0按90b377f、L0008 v0.1.0按f4cc36e核对；初建系列bdddf58，见[系列报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 最近管理记录 | [研究资产纳管与同步收尾](../tasks/reports/20261018-04-02_research-assets_report.md) |
-| 本轮授权范围 | 第1–8步已验收；[第9步CG显式接入重优化](../tasks/codex/20261020-03-01_cg-reoptimization.md)实现/验证/L0008已完成待讨论审查；默认cold与原数学规则保持，两治理变动原样保留，不push |
+| 本轮授权范围 | 第1–9步已验收；[第9步CG显式接入重优化](../tasks/codex/20261020-03-01_cg-reoptimization.md)实现/真实路径与失败历史证据/L0008通过讨论审查；后续任务尚未签发或授权，两治理变动原样保留，不push |
 | 执行归属 | silo-solver开发；silo-solver-1010 负责思路与结果审查，按下文职责划分 |
-| Git 同步 | 上次即时远端核对至f0c5f31；本轮从已授权160550b、cached 0/17继续，两个本地提交后实查main、cached 0/19；仅余AGENTS.md/根案例通告两项既有变动，哈希不变且未提交，未push，remote_sync_status=dirty_worktree |
+| Git 同步 | 上次即时远端核对至f0c5f31；第9步完成时main、cached 0/19，验收摘要另作本地提交，最终差异以Git实查为准；保留AGENTS.md/根案例通告两项既有变动，哈希不变且未提交，未push，remote_sync_status=dirty_worktree；本轮未查询即时远端 |
 
 这里列的是已记录的核验基线，不能据此声称在新的检出上重新运行过测试。
-第 1–8 步均已由讨论对话验收；远端上次即时核对已同步至第4步审查摘要f0c5f31。
+第 1–9 步均已由讨论对话验收；远端上次即时核对已同步至第4步审查摘要f0c5f31。
 第5步签发、实现、学习和验收摘要四个已知本地提交为8ee397e、15b403b、f0cc01a、
 b886458。用户获知该状态后批准下一步，继续授权覆盖这四个提交及本次第6步
 合同/摘要/INDEX签发提交。第6步可行性恢复已完成并通过本轮讨论审查；
@@ -50,7 +50,7 @@ b886458。用户获知该状态后批准下一步，继续授权覆盖这四个�
 | DAG初始可行性恢复 | 02aed7d；单位人工违背量、全域零成本定价和无人工原始行复核 | [恢复报告](../tasks/reports/20261019-06-01_dag-feasibility_report.md)、[L0005](../learning/lessons/L0005-cg-feasibility/README.md)；已通过讨论对话审查 |
 | LP无界终止核验 | c460aa7；完整原始点/方向逐项Fraction核验，Phase-I伪无界转数值矛盾 | [第7步报告](../tasks/reports/20261020-01-01_lp-unbounded-check_report.md)、[L0006](../learning/lessons/L0006-lp-unboundedness/README.md)；已通过讨论对话审查 |
 | RMP显式基复用 | 90b377f；全行非人工语义快照、原始点门控、Phase II与单次cold回退 | [第8步报告](../tasks/reports/20261020-02-01_rmp-reoptimization_report.md)、[L0007](../learning/lessons/L0007-rmp-reoptimization/README.md)；已通过讨论对话独立审查 |
-| CG显式消费重优化 | f4cc36e；严格bool开关、一次公开RMP调用、同轮最终MIN result与冻结诊断 | [第9步报告](../tasks/reports/20261020-03-01_cg-reoptimization_report.md)、[L0008](../learning/lessons/L0008-cg-reoptimization/README.md)；开发完成待审查 |
+| CG显式消费重优化 | f4cc36e；严格bool开关、一次公开RMP调用、同轮最终MIN result与冻结诊断 | [第9步报告](../tasks/reports/20261020-03-01_cg-reoptimization_report.md)、[L0008](../learning/lessons/L0008-cg-reoptimization/README.md)；已通过讨论对话独立审查 |
 | 开发伴学系列 | bdddf58，L0001 已核对 | [学习目录](../learning/CATALOG.md)、[报告](../tasks/reports/20261018-02-01_learning-series_report.md) |
 | 管理入口与任务追溯 | cd83009 | [整理报告](../tasks/reports/20261018-03-01_project-navigation_report.md) |
 | Pricing 研究资产 | 五篇笔记、五份原始探针、16 文件来源清单 | [资产入口](../scripts/research/pricing/README.md)、[纳管报告](../tasks/reports/20261018-04-02_research-assets_report.md) |
@@ -254,7 +254,7 @@ AST不变；7个代码/测试路径与90b377f逐字一致，19个实现/文档�
 对照及Fraction至多3正列顶点真值、原始MIN证据全部通过。该补查与225项/144合同族分开，
 不作一般模型或规模保证。实际临时脚本保留于被忽略的outputs/step8_two_resource_review.py。
 理论与证据服务仅只读复核，不执行实验、不改文件，其意见不重复计为运行证据；最终判断由讨论对话负责。
-第8步已验收；第9步CG接入已完成开发实现与验证，待讨论对话审查，本轮不推送。
+第8–9步均已验收；第9步CG接入及L0008通过本轮讨论对话独立审查，本轮不推送。
 每轮仍全矩阵重建与解基，无LU缓存，当前没有加速/工业性能主张。
 第9步代码f4cc36e：末尾严格bool reoptimize_rmp=False，True仅消费一次公开RMP结果，
 迭代末尾保存实际冻结outcome，四个成功/失败分支同轮接线；CG不加cold、不访问基缓存。
@@ -265,11 +265,26 @@ A/B三模式6次CG通过；A首个warm实际零步长，B为cold/cold/warm。恢
 接受warm与warm失败/cold成功分别交叉后续pricing/candidate/gap失败；双失败、发布位置、
 预算、输入拒绝、异常后owner隔离与只读历史通过。新增406项，targeted1287项、全量4075项及Ruff通过。
 L0008十节/六题/完整程序按真实f4cc36e基线核对；有限DAG链路保持原目标中的限定位，不声明创新/加速。
+本轮独立复跑check_quality：4075 passed in15.71s，Ruff及结构通过；正文3次经济CG/8轮
+与解答标量程序原样运行通过。原CG的11个辅助函数AST不变，4个代码/测试路径与f4cc36e
+逐字相同，15路径符合合同，旧合同未改；用户治理文件哈希保持。
+另作5原行/9条共享三弧路径的3×3二维资源网格补查：conv=1、两个均值区间，seed=(1,1)。
+区间[1/2,3/2]或[1/4,7/4]；成本2u-3v+uv/c0=7或(3u-2v) mod5-2/c0=-3；
+4弧序×3行序×非conv正反表示，共96图表示，各三模式288次CG、每模式336轮。
+True实测96cold/240warm/0回退、warm共240枢轴；逐轮独立原图DFS/Fraction当前列集及
+完整域顶点、MIN原始/对偶/rc/互补、全域price、P/D/L/g/eta、registry和真实Phase II通过。
+该补查不混入406项或864/180版本化运行，也不外推一般规模稳健性；实际临时脚本保留在
+被忽略的outputs/step9_cg_expanded_review.py。理论及证据服务只读复核未发现必须先修项，
+没有运行或改文件，其意见不重复计为实验。开发对话继续停在第9步，后续待另行批准。
 签发前临时桥接已跑288图/864次三模式CG，区间72图的True桥接120轮为72cold/48warm，
 方形216图的True桥接323轮为251cold/72warm，均零回退且最终解析目标一致。
 另60个大常数变体/180次CG及两机制例各三模式通过；仅证明既有接口支持域，
 当时没有正式开关或逐轮字段，桥接不计为新实现通过；上述新验证来自本轮正式入口与版本化测试。
-增量定价及工作量/时间比较另立合同；具体研究特色继续由真实OR问题提出需求，不把本步能力等同研究贡献。
+下一步建议一个有界冷热CG工作量/耗时对照任务：同Revised后端，固定列流隔离RMP复用开销，
+再比较端到端各自合法CG轨迹；记录构造/核验/求解/定价时间、cold/warm/回退、Phase和枢轴，
+先核数学结果再计时，允许测得无收益或变慢，不改内核/定价策略来追求加速。
+建议该常规实验脚本用GPT-6 Sol/medium，跨层异常疑点再用high复核；尚未签发或授权。
+随后按真实OR需求决定资源约束、增量定价或线性代数等下一能力，具体研究特色不由已有易测功能反推。
 候选方向舍入的识别率问题单独保留，不把本步数值诊断算作求得最优或完整无界识别。
 随后选择具体OR应用、资源约束或整数层及独立研究实验，每项另行原子合同。
 建议GPT-6 Sol/high用于跨层失败历史与等价性检查；推荐不代表实际切换，Phase门控保持。
