@@ -8,6 +8,7 @@
 |---|---|
 | 当前开发状态、已完成与下一步建议 | [项目当前摘要](../.silo-dos/project_profile.md) |
 | 原七步计划、实际九次交付及研究覆盖缺口 | [2026-10-20 开发路线全局复查](development_route_review_20261020.md) |
+| 原三阶段七任务的现状、剩余清单及目标运行终点 | [有界收尾计划](seven_step_completion_plan_20261020.md) |
 | 全部合同、修订与执行报告 | [任务索引](../tasks/INDEX.md) |
 | 目录职责、真实代码入口与版本追溯 | [开发目录说明](development_layout.md) |
 | Pricing 研究笔记、探针、固定输入与复现 | [研究资产入口](../scripts/research/pricing/README.md) |
