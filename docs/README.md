@@ -23,6 +23,7 @@
 | RMP显式增列后的基复用 | [重优化入口](rmp_reoptimization.md) |
 | 普通DAG全部s-t路径的最小约化成本 | [DAG定价接口](dag_pricing.md) |
 | 非负整数可加资源DAG冷定价与预算状态 | [资源定价接口](resource_dag_pricing.md) |
+| 资源可行路径凸组合的参考列生成 | [资源CG接口](resource_dag_column_generation.md) |
 | 普通DAG凸组合主问题自动列生成 | [DAG列生成接口](dag_column_generation.md) |
 | CG显式RMP基复用与逐轮路径证据 | [重优化与诊断](dag_column_generation.md#显式重优化与逐轮诊断) |
 | 普通DAG不可行seed的独立恢复 | [可行性恢复接口](dag_feasibility.md) |

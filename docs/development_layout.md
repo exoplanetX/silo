@@ -38,6 +38,7 @@
 | 显式RMP基复用 | [revised.py](../src/silo/lp/simplex/revised.py) 的 reoptimize、[basis_snapshot.py](../src/silo/lp/simplex/basis_snapshot.py) | 全行非人工基语义快照、原始点门控、Phase II与单次cold；RMP solve_reoptimized管理缓存 |
 | 普通DAG精确定价 | [dag_pricing.py](../src/silo/decomposition/dag_pricing.py) | 全s-t路径最小约化成本，独立于LP/RMP；不含资源约束或CG控制器 |
 | 整数资源DAG冷定价 | [resource_dag_pricing.py](../src/silo/decomposition/resource_dag_pricing.py) | 非负可加整数资源，完整(node,resources)状态、独立重构与状态/转移预算；目标沿浮点参考语义 |
+| 资源路径参考CG | [resource_dag_column_generation.py](../src/silo/decomposition/resource_dag_column_generation.py) | 同图资源合法seed、完整资源冷定价、单conv连续主问题、可选RMP复用与有界失败历史 |
 | DAG凸组合列生成 | [dag_column_generation.py](../src/silo/decomposition/dag_column_generation.py) | 合法seed、默认cold/显式可选RMP重优化及逐轮诊断、完整定价、退化增列与数值差距门控 |
 | DAG可行性恢复 | [dag_feasibility.py](../src/silo/decomposition/dag_feasibility.py) | 单位人工违背量、全域零成本定价与无人工原始行复核；调用者显式进入原目标CG |
 | LP 最优性核验 | [optimality.py](../src/silo/lp/optimality.py) | 原始输入坐标；有限精度与支持域见 API 文档 |
@@ -50,7 +51,8 @@ tableau 与 revised 是并存的两种后端，分别维护算法行为并做独
 cuts/decomposition/uncertainty 的 conservative/toy 完成状态不表示生产级算法已经实现。
 RMP已能求解当前显式列集合，普通DAG定价覆盖其图定义的完整路径域。
 带凸组合等式的普通DAG自动CG已形成参考循环；独立资源冷定价已覆盖非负整数可加资源。
-资源CG接入、时间窗/访问记忆及原有通用ColumnGenerationSolver入口仍待后续任务。
+资源路径CG已在单conv连续参考主问题接入；真实覆盖/分割应用、时间窗/访问记忆及
+原有通用ColumnGenerationSolver入口仍待后续任务。
 独立DAG恢复器允许合法非空seed不满足耦合行，核验后交还保留原目标的seed问题。
 
 ## 实际导入边界

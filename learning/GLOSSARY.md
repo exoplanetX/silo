@@ -19,6 +19,8 @@
 | 定价 | pricing | 检查未生成列的约化成本、寻找改善列或形成相应终止依据 |
 | 资源充分状态 | resource-sufficient state | L0009中(node,累计非负整数资源)决定全部合法后续；不自动涵盖访问记忆/时间窗 |
 | 冷资源定价 | cold resource-constrained pricing | L0009每次对偶查询重新构建资源状态标签，无跨对偶缓存 |
+| 资源可行列域 | resource-feasible column domain | L0010中全部满足路径内部整数容量的完整路径；主问题行另约束这些列的组合 |
+| 凸性乘数平移 | convexity-dual shift | L0010中每列conv系数及RHS均为1时，用min(0,rho)修正自由conv乘数形成数学下界 |
 | 状态/转移预算 | state / transition limit | L0009分别计已插入状态和实际出弧尝试；耗尽表示不完整搜索，候选为空 |
 | 回归案例 | regression case | 固定输入与预期行为，防止已知问题重新出现 |
 
