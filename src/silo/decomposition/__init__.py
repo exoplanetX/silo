@@ -37,6 +37,11 @@ from silo.decomposition.master import (
     MasterProblemContext,
     MasterProblemResult,
 )
+from silo.decomposition.resource_dag_column_generation import (
+    ResourceDagColumnGenerationIteration,
+    ResourceDagColumnGenerationResult,
+    solve_resource_dag_column_generation,
+)
 from silo.decomposition.resource_dag_pricing import (
     ResourceDagPricingProblem,
     ResourceDagPricingResult,
@@ -96,6 +101,9 @@ __all__ = [
     "RestrictedMasterProblem",
     "RestrictedMasterReoptimizationResult",
     "RestrictedMasterResult",
+    "ResourceDagColumnGenerationIteration",
+    "ResourceDagColumnGenerationResult",
+    "solve_resource_dag_column_generation",
     "ResourceDagPricingProblem",
     "ResourceDagPricingResult",
     "ResourceDagPricingStatus",
