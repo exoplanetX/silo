@@ -37,6 +37,12 @@ from silo.decomposition.master import (
     MasterProblemContext,
     MasterProblemResult,
 )
+from silo.decomposition.resource_dag_pricing import (
+    ResourceDagPricingProblem,
+    ResourceDagPricingResult,
+    ResourceDagPricingStatus,
+    price_resource_dag,
+)
 from silo.decomposition.restricted_master import (
     RestrictedMasterProblem,
     RestrictedMasterReoptimizationResult,
@@ -90,6 +96,10 @@ __all__ = [
     "RestrictedMasterProblem",
     "RestrictedMasterReoptimizationResult",
     "RestrictedMasterResult",
+    "ResourceDagPricingProblem",
+    "ResourceDagPricingResult",
+    "ResourceDagPricingStatus",
+    "price_resource_dag",
     "Subproblem",
     "SubproblemContext",
     "SubproblemResult",
