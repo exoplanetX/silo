@@ -37,7 +37,7 @@
 | 最小 RMP 适配层 | [restricted_master.py](../src/silo/decomposition/restricted_master.py) | MIN目标/对偶转换，完整行冷重建、显式加列与逐次最优核验 |
 | 显式RMP基复用 | [revised.py](../src/silo/lp/simplex/revised.py) 的 reoptimize、[basis_snapshot.py](../src/silo/lp/simplex/basis_snapshot.py) | 全行非人工基语义快照、原始点门控、Phase II与单次cold；RMP solve_reoptimized管理缓存 |
 | 普通DAG精确定价 | [dag_pricing.py](../src/silo/decomposition/dag_pricing.py) | 全s-t路径最小约化成本，独立于LP/RMP；不含资源约束或CG控制器 |
-| DAG凸组合列生成 | [dag_column_generation.py](../src/silo/decomposition/dag_column_generation.py) | 合法seed、冷RMP、完整定价、退化增列与数值差距门控 |
+| DAG凸组合列生成 | [dag_column_generation.py](../src/silo/decomposition/dag_column_generation.py) | 合法seed、默认cold/显式可选RMP重优化及逐轮诊断、完整定价、退化增列与数值差距门控 |
 | DAG可行性恢复 | [dag_feasibility.py](../src/silo/decomposition/dag_feasibility.py) | 单位人工违背量、全域零成本定价与无人工原始行复核；调用者显式进入原目标CG |
 | LP 最优性核验 | [optimality.py](../src/silo/lp/optimality.py) | 原始输入坐标；有限精度与支持域见 API 文档 |
 | LP 无界候选核验 | [unboundedness.py](../src/silo/lp/unboundedness.py) | 两后端终止处调用；完整原模型的点/方向逐项 Fraction 核验 |
@@ -69,6 +69,7 @@ separator/callback protocols 的依赖；cuts 保持独立于 mip，避免形成
 core 保持独立；外部求解器调用仅限 interfaces、examples 或比较测试。
 LP无界核验只读core模型与原始候选，使用标准库精确标量运算和既有支持域常量；不反向依赖求解器或上层模块。
 基快照助手依赖core、Basis、标准形与numpy，不导入Revised或RMP；RMP仅调用新公开LP入口。
+CG可选路径只消费公开RMP重优化结果；Revised公开类仅用于参数类型校验，不访问LP私有接口或RMP内部状态。
 RMP只通过LPSolver和既有最优性核验器消费LP；下层不反向导入decomposition。
 DAG定价模块本身只依赖标准库和utils常量；RMP人工桥接及完整路径枚举只在测试/教学中。
 新DAG控制器消费core模型、既有RMP/定价和LP后端接口，不访问RMP私有状态；完整列枚举仍只在测试。

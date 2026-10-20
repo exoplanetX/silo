@@ -2,7 +2,9 @@
 
 `RestrictedMasterProblem.solve_reoptimized(solver=None)` 对仅显式增列的MIN RMP提供
 可选重优化。默认使用原生Revised，兼容测试子类也可；其他后端明确抛TypeError。
-普通`solve()`始终cold，并清空此对象的可选缓存。现有CG、定价和可行性恢复器保持原入口。
+普通`solve()`始终cold，并清空此对象的可选缓存。DAG CG默认cold；显式
+`reoptimize_rmp=True`每轮一次消费本公开入口的最终result及诊断，CG不另加cold。
+见[CG用法](dag_column_generation.md#显式重优化与逐轮诊断)；定价和可行性恢复器保持原入口。
 
 ## 使用与结果
 

@@ -21,6 +21,7 @@
 | RMP显式增列后的基复用 | [重优化入口](rmp_reoptimization.md) |
 | 普通DAG全部s-t路径的最小约化成本 | [DAG定价接口](dag_pricing.md) |
 | 普通DAG凸组合主问题自动列生成 | [DAG列生成接口](dag_column_generation.md) |
+| CG显式RMP基复用与逐轮路径证据 | [重优化与诊断](dag_column_generation.md#显式重优化与逐轮诊断) |
 | 普通DAG不可行seed的独立恢复 | [可行性恢复接口](dag_feasibility.md) |
 | 两后端比较 | [compare](backend_compare.md) |
 | MIP 求解与示例 | [mip-solve](mip_solve_cli.md)、[示例](mip_examples.md) |

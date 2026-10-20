@@ -15,7 +15,8 @@
 ~~~text
 DagMasterRow(name, sense, rhs)
 DagColumnGenerationProblem(graph, rows, convexity_row, seed_paths, objective_constant=0)
-solve_dag_column_generation(problem, *, solver=None, tolerance=1e-9, iteration_limit=100)
+solve_dag_column_generation(problem, *, solver=None, tolerance=1e-9,
+                            iteration_limit=100, reoptimize_rmp=False)
 ~~~
 
 `sense`复用`ConstraintSense`，行名唯一且恰与图的`row_names`匹配；名称保留原拼写。
@@ -30,7 +31,7 @@ solve_dag_column_generation(problem, *, solver=None, tolerance=1e-9, iteration_l
 
 ## 轮次、列身份与停止
 
-一轮包含对当前列冷求解、用本轮经核验的最小化pi对完整DAG定价，再决定停止或加入一列。
+一轮包含求解当前RMP、用本轮最终经核验的最小化pi对完整DAG定价，再决定停止或加入一列。
 每次只加入一条显著负约化成本的新路径；目标不变也继续。列身份为完整弧ID元组，
 变量名内部按`path_0`、`path_1`编号，注册表保存其对应关系。相同成本/向量的不同路径
 仍是不同身份；不靠分隔符拼接去重。重新排列输入可能改变退化轨迹，最终可行性/目标需一致。
@@ -49,6 +50,32 @@ solve_dag_column_generation(problem, *, solver=None, tolerance=1e-9, iteration_l
 
 最后允许轮已满足容差时正常停止；limit不会覆盖成功条件。控制器使用独立枚举，
 不发布全局Solution或完整主问题SolverStatus.OPTIMAL。后端UNBOUNDED保留为RMP诊断。
+
+## 显式重优化与逐轮诊断
+
+`reoptimize_rmp`严格接收bool，0/1、字符串、None等均TypeError。默认False继续每轮
+公开`RMP.solve`，允许现有Revised、Tableau和兼容测试后端。True仅允许solver=None
+或原生Revised/兼容测试子类；不支持的后端在RMP构造、LP或定价之前拒绝。
+
+True每轮仅调用一次公开`RMP.solve_reoptimized`，消费其最终MIN result。旧基不合格
+或warm失败时，至多一次cold已由RMP内部完成；CG不追加cold或读取基缓存。每次CG
+新建一个RMP owner，所有显式增列在同一owner进行。
+
+`DagColumnGenerationIteration`末尾追加默认None的`rmp_reoptimization`，类型为现有
+冻结`RestrictedMasterReoptimizationResult`。False每轮为None；True每个已求解轮，
+包括失败与外层limit，均保留同轮实际outcome，且`master_result is outcome.result`。
+attempted/used_warm、cold次数、分开迭代、原因与快照资格全部沿用公开outcome。
+0枢轴可以是有效复用；目标未降也可以发生真实退化枢轴。普通冷/热路径的最优对偶、
+定价路径和轮数可不同，应按各自当前列集核验。用法与完整程序见
+[L0008](../learning/lessons/L0008-cg-reoptimization/README.md)，基资格见
+[RMP重优化](rmp_reoptimization.md)。
+
+RMP最终失败保留尝试registry/outcome，顶层有效轮保持上一成功轮；本轮不定价。
+`_master_objectives`通过、已登记有效RMP后才发生pricing/candidate/gap失败时，
+顶层有效RMP可属于当前轮，但本轮全部界为空。原始主目标核验先失败时保留较早有效轮。
+seed重构先失败则没有已求解轮/诊断。内部回退计入同一外层轮，最后允许轮不追加未解列。
+独立恢复器仍走原入口；显式将feasible_problem交给CG(True)时，经济首轮fresh cold，
+不共享辅助/原始验证基。定价、原始重构、有符号gap及32ULP规则均保持。
 
 ## 数值界与读取顺序
 
@@ -102,7 +129,7 @@ eta不含c0，A=0采用实际ulp(0)。32是固定工程局部尺度，不能理�
 
 ## 当前边界
 
-生产不枚举全部路径；完整列枚举只在测试。每次RMP冷求解，路径选择使用既有拓扑DP，
-控制器又独立重构候选与原始行目标。未实现warm start、增量定价、资源约束、整数路径选择、
+生产不枚举全部路径；完整列枚举只在测试。RMP默认cold，可显式选择保守基复用，路径选择使用既有拓扑DP，
+控制器又独立重构候选与原始行目标。未实现增量定价、资源约束、整数路径选择、
 一般CG插件或原有通用ColumnGenerationSolver入口。浮点、LP内核已有数值债和seed依赖继续保留。
 本功能提供可审查参考基线；没有规模、速度或论文创新主张。
