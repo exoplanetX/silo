@@ -6,7 +6,7 @@ from math import isfinite, lcm
 import numpy as np
 
 
-def primal_check(data, point, tolerance=1e-7, integer=False):
+def primal_check(data, point, tolerance=1e-7, integer=False, integrality_tolerance=None):
     x = np.asarray(point)
     if x.shape != data.c.shape or not np.isfinite(x).all():
         return False
@@ -23,17 +23,32 @@ def primal_check(data, point, tolerance=1e-7, integer=False):
                 > tolerance * (base[finite] + np.abs(bound[finite]))
             ):
                 return False
-    return not integer or np.all(np.abs(x[data.integer] - np.rint(x[data.integer])) <= tolerance)
+    integer_tol = tolerance if integrality_tolerance is None else integrality_tolerance
+    return not integer or np.all(np.abs(x[data.integer] - np.rint(x[data.integer])) <= integer_tol)
 
 
-def check_kkt(data, x, multipliers, tolerance=1e-7):
+def check_kkt(
+    data,
+    x,
+    multipliers,
+    tolerance=1e-7,
+    *,
+    primal_tolerance=None,
+    dual_tolerance=None,
+    complementarity_tolerance=None,
+    objective_tolerance=None,
+):
+    ptol = tolerance if primal_tolerance is None else primal_tolerance
+    dtol = tolerance if dual_tolerance is None else dual_tolerance
+    ctol = tolerance if complementarity_tolerance is None else complementarity_tolerance
+    otol = tolerance if objective_tolerance is None else objective_tolerance
     yl, yu, zl, zu = multipliers
-    report = {"valid": False, "primal_feasible": primal_check(data, x, tolerance)}
+    report = {"valid": False, "primal_feasible": primal_check(data, x, ptol)}
     if not report["primal_feasible"] or not all(np.isfinite(v).all() for v in multipliers):
         return report
     stationarity = data.sign * data.c + data.a.T @ (yu - yl) - zl + zu
     scale = 1 + np.abs(data.c) + np.abs(data.a).T @ (np.abs(yl) + np.abs(yu)) + abs(zl) + abs(zu)
-    valid = bool(np.all(np.abs(stationarity) <= tolerance * scale))
+    valid = bool(np.all(np.abs(stationarity) <= dtol * scale))
     activity = data.a @ x
     dual = data.sign * data.constant
     max_complementarity = 0.0
@@ -44,13 +59,13 @@ def check_kkt(data, x, multipliers, tolerance=1e-7):
         (x, data.upper, zu, -1),
     ):
         finite = np.isfinite(bound)
-        valid &= bool(np.all(multiplier >= -tolerance * (1 + np.abs(multiplier))))
-        valid &= bool(np.all(np.abs(multiplier[~finite]) <= tolerance))
+        valid &= bool(np.all(multiplier >= -dtol * (1 + np.abs(multiplier))))
+        valid &= bool(np.all(np.abs(multiplier[~finite]) <= dtol))
         product = multiplier[finite] * (value[finite] - bound[finite])
         valid &= bool(
             np.all(
                 np.abs(product)
-                <= tolerance
+                <= ctol
                 * (
                     1
                     + np.abs(multiplier[finite] * value[finite])
@@ -62,7 +77,7 @@ def check_kkt(data, x, multipliers, tolerance=1e-7):
         dual += sign * bound[finite] @ multiplier[finite]
     objective = data.sign * (data.constant + data.c @ x)
     valid &= isfinite(objective) and isfinite(dual)
-    valid &= abs(objective - dual) <= tolerance * (1 + abs(objective) + abs(dual))
+    valid &= abs(objective - dual) <= otol * (1 + abs(objective) + abs(dual))
     report.update(
         valid=bool(valid),
         stationarity_residual=float(np.max(abs(stationarity), initial=0)),

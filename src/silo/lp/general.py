@@ -42,7 +42,13 @@ def solve_lp_data(data, options, basis=None, deadline=inf):
                 norm.multipliers(native.dual, native.reduced)
             )
             report = check_kkt(
-                data, x, multipliers, max(options.primal_tolerance, options.dual_tolerance)
+                data,
+                x,
+                multipliers,
+                primal_tolerance=options.primal_tolerance,
+                dual_tolerance=options.dual_tolerance,
+                complementarity_tolerance=options.complementarity_tolerance,
+                objective_tolerance=options.objective_tolerance,
             )
             if not report["valid"]:
                 return SolveResult(
@@ -98,6 +104,7 @@ def solve_lp_data(data, options, basis=None, deadline=inf):
                 result.status, result.termination_reason = "numerical_failure", "ray_check_failed"
             else:
                 result.primal_values = dict(zip(data.names, map(float, x), strict=True))
+                result.objective_value = result.primal_bound = float(data.constant + data.c @ x)
                 result.dual_bound = -data.sign * inf
         elif native.point is not None:
             x = norm.point(native.point)

@@ -73,6 +73,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--relative-gap", type=float, default=0.0)
     parser.add_argument("--absolute-gap", type=float, default=0.0)
     parser.add_argument("--node-strategy", choices=["best_bound", "dfs"], default="best_bound")
+    parser.add_argument("--lp-method", choices=["auto", "primal", "dual"], default="auto")
     for option in ("presolve", "scaling", "cuts", "heuristics"):
         parser.add_argument(f"--no-{option}", action="store_true")
     return parser
@@ -148,6 +149,7 @@ def _optimize(args):
             relative_gap=args.relative_gap,
             absolute_gap=args.absolute_gap,
             node_strategy=args.node_strategy,
+            lp_method=args.lp_method,
             presolve=not args.no_presolve,
             scaling=not args.no_scaling,
             cuts=not args.no_cuts,

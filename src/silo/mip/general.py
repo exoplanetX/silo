@@ -93,7 +93,18 @@ def solve_milp(model, data, options, start):
         if not result.primal_values:
             return False
         x = np.array([result.primal_values[n] for n in data.names])
-        if not primal_check(data, x, options.primal_tolerance, integer=True):
+        # Integrality tolerance identifies a rounding candidate, never grants
+        # permission to publish a fractional integer or relax a row constraint.
+        if np.any(abs(x[integer] - np.rint(x[integer])) > options.integrality_tolerance):
+            return False
+        x[integer] = np.rint(x[integer])
+        if not primal_check(
+            data,
+            x,
+            options.primal_tolerance,
+            integer=True,
+            integrality_tolerance=options.integrality_tolerance,
+        ):
             return False
         value = float(data.sign * (data.constant + data.c @ x))
         if value < best:
@@ -156,6 +167,7 @@ def solve_milp(model, data, options, start):
             break
         if lp.status == "unbounded":
             stats["unbounded_relaxations"] += 1
+            accept(lp)
             point = np.array([lp.primal_values[n] for n in data.names])
             norm, native, _ = lp._lp
             witness = (
@@ -168,6 +180,9 @@ def solve_milp(model, data, options, start):
                 return SolveResult(
                     "unbounded",
                     "integer_improving_ray",
+                    objective_value=float(data.constant + data.c @ point),
+                    primal_values=dict(zip(data.names, map(float, point), strict=True)),
+                    primal_bound=float(data.constant + data.c @ point),
                     witness=witness,
                     dual_bound=-data.sign * inf,
                     nodes=nodes,
@@ -202,8 +217,31 @@ def solve_milp(model, data, options, start):
                 if abs(point[j] - round(point[j])) > options.integrality_tolerance
             ]
             if not fractional:
-                accept(lp)
-                continue
+                rounded = point.copy()
+                rounded[integer] = np.rint(rounded[integer])
+                if primal_check(
+                    data,
+                    rounded,
+                    options.primal_tolerance,
+                    integer=True,
+                    integrality_tolerance=options.integrality_tolerance,
+                ):
+                    accept(lp)
+                    continue
+                # A rejected near-integral candidate cannot close a node. Use
+                # a genuine floor/ceil split if both sides strictly reduce its
+                # integer interval; otherwise retain it as a numerical failure.
+                fractional = [
+                    j
+                    for j in integer
+                    if point[j] != round(point[j])
+                    and floor(point[j]) < node.upper[j]
+                    and ceil(point[j]) > node.lower[j]
+                ]
+                if not fractional:
+                    pending.append(node)
+                    failed, last_reason = "numerical_failure", "integer_candidate_check_failed"
+                    break
             if options.heuristics and (node.depth == 0 or nodes % 16 == 0):
                 for rounded in (np.rint(point[integer]), np.ceil(point[integer])):
                     fixed = np.minimum(
@@ -264,7 +302,7 @@ def solve_milp(model, data, options, start):
         iterations=total_iterations,
         diagnostics=stats,
     )
-    result.dual_bound = data.sign * bound if isfinite(bound) else -data.sign * inf
+    result.dual_bound = data.sign * bound
     if incumbent is not None:
         result.objective_value = result.primal_bound = data.sign * best
         result.primal_values = dict(zip(data.names, map(float, incumbent), strict=True))

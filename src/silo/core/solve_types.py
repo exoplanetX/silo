@@ -21,6 +21,8 @@ class SolveOptions:
     dual_tolerance: float = 1e-7
     integrality_tolerance: float = 1e-7
     pivot_tolerance: float = 1e-10
+    complementarity_tolerance: float = 1e-7
+    objective_tolerance: float = 1e-7
     max_dense_cells: int = 2000000
     cut_round_limit: int = 2
     cuts_per_round: int = 3
@@ -49,6 +51,8 @@ class SolveOptions:
             "dual_tolerance",
             "integrality_tolerance",
             "pivot_tolerance",
+            "complementarity_tolerance",
+            "objective_tolerance",
         ):
             value = getattr(self, name)
             if not isfinite(value) or value <= 0:

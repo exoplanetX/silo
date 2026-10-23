@@ -88,12 +88,12 @@ def _standard(norm):
             sign = 1 if sense == "<=" else -1
             for previous in rows:
                 previous.append(0.0)
-            keys.append(("slack", norm.origins[i]))
+            keys.append(("slack", norm.row_keys[i]))
             row.append(float(sign))
         if sense != "<=":
             for previous in rows:
                 previous.append(0.0)
-            keys.append(("artificial", norm.origins[i]))
+            keys.append(("artificial", norm.row_keys[i]))
             row.append(1.0)
             arts.append(len(keys) - 1)
         basis.append(len(keys) - 1)
@@ -107,32 +107,38 @@ def _standard(norm):
 
 def _snapshot(a, rows, keys, basis):
     return BasisSnapshot(
-        1, tuple(rows), tuple(keys), tuple(map(tuple, a)), tuple(keys[i] for i in basis)
+        2, tuple(rows), tuple(keys), tuple(map(tuple, a)), tuple(keys[i] for i in basis)
     )
 
 
 def _map_basis(snapshot, a, rows, keys):
     if not isinstance(snapshot, BasisSnapshot):
         raise ValueError("Expected an immutable BasisSnapshot.")
-    if snapshot.version != 1 or len(snapshot.basic_keys) != len(snapshot.row_keys):
+    if snapshot.version != 2 or len(snapshot.basic_keys) != len(snapshot.row_keys):
         raise ValueError("Snapshot version/shape mismatch.")
-    if tuple(rows[: len(snapshot.row_keys)]) != snapshot.row_keys:
+    row_positions = {key: i for i, key in enumerate(rows)}
+    if len(row_positions) != len(rows) or any(k not in row_positions for k in snapshot.row_keys):
         raise ValueError("Row identity is not an append-only extension.")
+    row_indices = [row_positions[k] for k in snapshot.row_keys]
     positions = {key: i for i, key in enumerate(keys)}
     if len(positions) != len(keys) or any(k not in positions for k in snapshot.column_keys):
         raise ValueError("Column identities changed.")
     indices = [positions[k] for k in snapshot.column_keys]
     old = np.asarray(snapshot.matrix)
     if old.shape != (len(snapshot.row_keys), len(indices)) or not np.array_equal(
-        a[: len(snapshot.row_keys), indices], old
+        a[np.ix_(row_indices, indices)], old
     ):
         raise ValueError("Existing coefficients/scaling changed.")
-    basis = [positions[k] for k in snapshot.basic_keys]
-    for r in rows[len(snapshot.row_keys) :]:
+    basis = [-1] * len(rows)
+    for i, key in zip(row_indices, snapshot.basic_keys, strict=True):
+        basis[i] = positions[key]
+    for i, r in enumerate(rows):
+        if basis[i] != -1:
+            continue
         key = ("slack", r)
         if key not in positions:
             raise ValueError("Appended row has no structural slack.")
-        basis.append(positions[key])
+        basis[i] = positions[key]
     if len(set(basis)) != len(basis):
         raise ValueError("Duplicate basic column identities.")
     return basis
@@ -150,12 +156,41 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
         warm_starts=0,
         fallback_reason="",
         method="revised",
+        requested_method=options.lp_method,
     )
     a, b, c, basis, arts, keys, flips = _standard(norm)
     m, k = len(b), len(norm.costs)
-    row_map, row_keys = list(range(m)), list(norm.origins)
+    row_map, row_keys = list(range(m)), list(norm.row_keys)
     iterations = 0
     factor, last_basis = None, None
+
+    # When propagation has removed every original row, the surviving problem is
+    # a product of intervals. Solve it analytically and still verify original KKT.
+    if m and all(origin[0] == "bound" for origin in norm.origins):
+        counters.update(method="separable_presolve", cold_starts=1)
+        if perf_counter() >= deadline or options.lp_iteration_limit == 0:
+            return KernelResult(
+                "limit",
+                "time_limit" if perf_counter() >= deadline else "lp_iteration_limit",
+                diagnostics=counters,
+            )
+        upper, source = np.full(k, np.inf), np.full(k, -1, dtype=int)
+        for i, row in enumerate(norm.matrix):
+            j = int(np.flatnonzero(row)[0])
+            upper[j], source[j] = norm.rhs[i] / row[j], i
+        point, dual = np.zeros(k), np.zeros(m)
+        for j in np.flatnonzero(norm.costs > 0):
+            if not np.isfinite(upper[j]):
+                ray = np.zeros(k)
+                ray[j] = 1.0
+                return KernelResult("unbounded", "improving_ray", point, ray, diagnostics=counters)
+            point[j] = upper[j]
+            i = source[j]
+            dual[i] = norm.costs[j] / norm.matrix[i, j]
+        reduced = norm.costs - norm.matrix.T @ dual
+        return KernelResult(
+            "optimal", "separable_bounds", point, dual=dual, reduced=reduced, diagnostics=counters
+        )
 
     def get_factor():
         nonlocal factor, last_basis
@@ -165,12 +200,22 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
         return factor
 
     def state(cost):
-        f = get_factor()
-        xb = f.solve(b)
-        lam = f.solve(cost[basis], transpose=True)
+        xb = basis_solve(b)
+        lam = basis_solve(cost[basis], transpose=True)
         reduced = cost - a.T @ lam
         reduced[basis] = 0.0
         return xb, lam, reduced
+
+    def basis_solve(rhs, transpose=False):
+        nonlocal factor, last_basis
+        try:
+            return get_factor().solve(rhs, transpose)
+        except np.linalg.LinAlgError:
+            # Rebuild the factor once from the actual basis; the counter denotes
+            # a real refactor attempt, never merely a returned failure status.
+            factor, last_basis = None, None
+            counters["refactorizations"] += 1
+            return get_factor().solve(rhs, transpose)
 
     def finish(status, reason, xb=None, lam=None, reduced=None, ray=None, proof=False):
         point = None
@@ -220,7 +265,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
                 entering = next((j for j in nonbasic if rc[j] > dtol[j]), None)
                 if entering is None:
                     return "optimal", "optimal", xb, lam, rc, None
-                direction = get_factor().solve(a[:, entering])
+                direction = basis_solve(a[:, entering])
                 eligible = [i for i, v in enumerate(direction) if v > options.pivot_tolerance]
                 if not eligible:
                     ray = np.zeros(len(cost))
@@ -244,7 +289,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
                 leaving = min(eligible, key=lambda i: basis[i])
                 unit = np.zeros(len(b))
                 unit[leaving] = 1.0
-                witness = get_factor().solve(unit, transpose=True)
+                witness = basis_solve(unit, transpose=True)
                 tableau = a.T @ witness
                 candidates = [j for j in nonbasic if tableau[j] < -options.pivot_tolerance]
                 if not candidates:
@@ -289,8 +334,16 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
                 )
                 if not feasible and not dual_feasible:
                     raise ValueError("Warm basis is neither primal nor dual feasible.")
+                mode = (
+                    "dual"
+                    if dual_feasible and (not feasible or options.lp_method == "dual")
+                    else "primal"
+                )
+                if options.lp_method == "primal" and not feasible:
+                    raise ValueError("Requested primal mode needs a primal-feasible warm basis.")
                 counters["warm_starts"] = 1
-                out = run(c, "primal" if feasible else "dual")
+                counters["warm_mode"] = mode
+                out = run(c, mode)
                 return finish(*out[:2], *out[2:5], ray=out[5], proof=out[0] == "infeasible")
             except (ValueError, KeyError, IndexError, np.linalg.LinAlgError) as exc:
                 counters["fallback_reason"] = str(exc)
@@ -313,7 +366,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
                 position = basis.index(art)
                 unit = np.zeros(len(b))
                 unit[position] = 1
-                tableau = a.T @ get_factor().solve(unit, transpose=True)
+                tableau = a.T @ basis_solve(unit, transpose=True)
                 pivot = next(
                     (
                         j
@@ -343,5 +396,4 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
         out = run(c)
         return finish(*out[:2], *out[2:5], ray=out[5], proof=out[0] == "infeasible")
     except (np.linalg.LinAlgError, FloatingPointError, OverflowError) as exc:
-        counters["refactorizations"] += 1
         return finish("numerical_failure", str(exc))

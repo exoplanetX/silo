@@ -7,13 +7,14 @@ SILO-PROTOTYPE-20261023 is explicitly authorized under the
 The execution chat implements M1→M2→M3→M4→M5 continuously; the discussion chat owns
 the sole goal and overall review. The [total report](../tasks/reports/20261023-02-01_teaching-prototype_report.md)
 is the execution checkpoint. Initialization: authority registered before source edits;
-KKT/transform and fixed-input freeze committed 2ca6098. M1 implementation and 5745-test
-regression pass; supplemental oracle evidence and independent code review remain open.
-M2 numerical/warm validation and M3–M5 acceptance remain pending.
+KKT/transform and fixed-input freeze committed 2ca6098. M1/M2 local module checkpoints PASS:
+general input/restore, original witnesses,96 LPs,4 genuine warm paths,QR and separate tolerances.
+Full quality5882 passes; supplemental raw evidence264+24+64 statically verifies.
+M3 next; M4/M5 pending. Scale and64 diagnostic runtime calls remain mandatory in M5.
 Branch codex/teaching-research-prototype, issuance 1b7deb9; current code via total report.
 Known governance changes are retained byte-for-byte and excluded from commits;
-local-commit, no push, remote_sync_status=dirty_worktree. Verification accounted: M1 75s,
-reserve 2s, total 77s/14400s (rounded up); no scale solver runs.
+local-commit, no push, remote_sync_status=dirty_worktree. Verification accounted: M1 96s,
+M2 30s,reserve8s,total134s/14400s (rounded up); no scale solver runs.
 Native Phase 9 remains parked; the original research A/B accepted, C HOLD, D/E not started.
 This program's new general LP/MILP and packaging scope does not complete that research.
 

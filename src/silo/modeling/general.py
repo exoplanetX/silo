@@ -92,6 +92,13 @@ class Normalization:
     lower: np.ndarray
     upper: np.ndarray
 
+    @property
+    def row_keys(self):
+        return tuple(
+            (kind, self.data.row_names[i] if kind == "row" else self.data.names[i], side)
+            for kind, i, side in self.origins
+        )
+
     def point(self, z):
         return self.offset + self.transform @ (self.col_scale * z)
 
