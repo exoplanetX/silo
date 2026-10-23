@@ -14,7 +14,9 @@ change_rhs/change_row_bounds/change_bounds、append_row/append_column验证后�
 公共model属性返回副本。也可直接`solve(new_model, options, basis=previous.basis)`。
 快照version2包含行/列语义键、系数及基本列身份。新增行可插在补界行之前；按身份核验旧
 矩阵子块，新增slack扩基。模型/缩放改变旧系数、删行/列或坏基均有明确cold理由。
-可行warm进入primal；仅dual可行进入dual；auto选择有效方式，显式primal不接受原始不可行基。
+auto优先使用dual可行基，否则使用primal可行基；新增改善列通常进入primal。
+显式primal不接受原始不可行基。RHS在原始/对偶都可行时dual可以零枢轴终止，诊断据实给0。
+change_rhs对显式区间行拒绝并提示change_row_bounds；后者双None明确移除两侧。
 
 缩放是正对角R/C：A_s=RAC,b_s=Rb,c_s=Cc，z=Cz_s，lambda=Rlambda_s，rc=rc_s/C。
 MIP分支和整数核验始终在原始格。输入字典保存稀疏结构不表示内部稀疏求解。

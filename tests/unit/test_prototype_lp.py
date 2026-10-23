@@ -184,3 +184,18 @@ def test_both_row_and_column_scaling_actually_change_coordinates():
     assert on.objective_value == pytest.approx(off.objective_value, rel=1e-7)
     assert on.primal_values["x"] == pytest.approx(1e8)
     assert on.optimality["valid"]
+
+
+def test_session_row_edit_preserves_explicit_interval_semantics():
+    m = model_from_dict(
+        R["model"](
+            [R["variable"]("x", 0, 5)], [R["row"]("r", {"x": 1}, lower=1, upper=3)], {"x": -1}
+        )
+    )
+    session = LPSession(m)
+    with pytest.raises(ValueError, match="change_row_bounds"):
+        session.change_rhs("r", 4)
+    assert session.model.constraints[0].row_bounds == (1, 3)
+    session.change_row_bounds("r", None, None)
+    assert session.model.constraints[0].row_bounds == (-float("inf"), float("inf"))
+    assert session.solve().primal_values["x"] == pytest.approx(5)

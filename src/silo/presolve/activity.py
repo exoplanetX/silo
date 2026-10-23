@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from fractions import Fraction
 from math import ceil, floor, isfinite
+from time import perf_counter
 
 import numpy as np
 
@@ -26,6 +27,7 @@ class ActivityResult:
     passes: int = 0
     conflict: bool = False
     integer_roundings: int = 0
+    timed_out: bool = False
 
     def recover_multipliers(self, multipliers):
         yl, yu, zl, zu = [x.copy() for x in multipliers]
@@ -39,7 +41,9 @@ class ActivityResult:
         return yl, yu, zl, zu
 
 
-def propagate(data, lower=None, upper=None, enabled=True, integral=False, max_passes=8):
+def propagate(
+    data, lower=None, upper=None, enabled=True, integral=False, max_passes=8, deadline=float("inf")
+):
     lo = data.lower.copy() if lower is None else lower.copy()
     hi = data.upper.copy() if upper is None else upper.copy()
     result = ActivityResult(lo, hi, [], np.zeros(len(data.row_names), dtype=bool))
@@ -48,6 +52,9 @@ def propagate(data, lower=None, upper=None, enabled=True, integral=False, max_pa
     for pass_id in range(max_passes):
         changed = False
         for i, row in enumerate(data.a):
+            if perf_counter() >= deadline:
+                result.timed_out = True
+                return result
             indices = np.flatnonzero(row)
             for side, bound, sign in (
                 ("upper", data.row_upper[i], 1),
@@ -57,6 +64,9 @@ def propagate(data, lower=None, upper=None, enabled=True, integral=False, max_pa
                     continue
                 coeff = sign * row
                 for j in indices:
+                    if perf_counter() >= deadline:
+                        result.timed_out = True
+                        return result
                     minimum, others, finite = Fraction(0), [], True
                     for k in indices:
                         if k == j:
@@ -105,8 +115,14 @@ def propagate(data, lower=None, upper=None, enabled=True, integral=False, max_pa
         if not changed:
             break
     for i, row in enumerate(data.a):
+        if perf_counter() >= deadline:
+            result.timed_out = True
+            return result
         minimum, maximum = Fraction(0), Fraction(0)
         for j in np.flatnonzero(row):
+            if perf_counter() >= deadline:
+                result.timed_out = True
+                return result
             small, large = (lo[j], hi[j]) if row[j] > 0 else (hi[j], lo[j])
             minimum += (
                 Fraction(float(row[j])) * Fraction(float(small))

@@ -26,7 +26,9 @@ class SolveOptions:
     max_dense_cells: int = 2000000
     cut_round_limit: int = 2
     cuts_per_round: int = 3
+    cut_depth_limit: int = 2
     integer_ray_proof_limit: int = 1000000
+    proof_operation_limit: int = 2000000
 
     def __post_init__(self):
         for name in ("time_limit", "relative_gap", "absolute_gap"):
@@ -41,7 +43,9 @@ class SolveOptions:
             "max_dense_cells",
             "cut_round_limit",
             "cuts_per_round",
+            "cut_depth_limit",
             "integer_ray_proof_limit",
+            "proof_operation_limit",
         ):
             value = getattr(self, name)
             if type(value) is not int or value < 0:
@@ -95,6 +99,15 @@ class SolveResult:
         return self.objective_value is not None
 
     def to_dict(self):
+        def bound_kind(value):
+            if value is None:
+                return "missing"
+            if value == -inf:
+                return "negative_infinity"
+            if value == inf:
+                return "positive_infinity"
+            return "finite" if isfinite(value) else "invalid"
+
         def clean(value):
             if isinstance(value, dict):
                 return {k: clean(v) for k, v in value.items()}
@@ -111,6 +124,8 @@ class SolveResult:
                 "has_primal_solution": self.has_primal_solution,
                 "dual_bound_is_infinite": self.dual_bound is not None
                 and not isfinite(self.dual_bound),
+                "dual_bound_kind": bound_kind(self.dual_bound),
+                "primal_bound_kind": bound_kind(self.primal_bound),
                 **data,
             }
         )

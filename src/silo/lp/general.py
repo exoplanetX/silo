@@ -1,19 +1,30 @@
 """Common original-model LP pipeline for users, RMPs and MIP relaxations."""
 
 from math import inf, isfinite
+from time import perf_counter
 
 import numpy as np
 
 from silo.core.solve_types import SolveResult
 from silo.lp.kernel import solve_canonical
-from silo.lp.verification import check_kkt, exact_farkas, exact_ray, primal_check
+from silo.lp.verification import (
+    check_kkt,
+    exact_farkas,
+    exact_ray,
+    primal_check,
+    witness_float_point,
+)
 from silo.modeling.general import normalize
 from silo.presolve.activity import propagate
 
 
 def solve_lp_data(data, options, basis=None, deadline=inf):
     """One shared LP pipeline for direct calls, RMPs and MIP relaxations."""
-    activity = propagate(data, enabled=options.presolve)
+    if perf_counter() >= deadline:
+        return SolveResult("limit", "time_limit")
+    activity = propagate(data, enabled=options.presolve, deadline=deadline)
+    if activity.timed_out:
+        return SolveResult("limit", "time_limit")
     if activity.conflict:
         activity = propagate(data, enabled=False)
     try:
@@ -93,6 +104,17 @@ def solve_lp_data(data, options, basis=None, deadline=inf):
             )
             result.witness = exact_farkas(data, multipliers)
             if result.witness is None:
+                from silo.lp.tableau_view import exact_basis_farkas
+
+                result.witness = exact_basis_farkas(
+                    norm,
+                    native,
+                    activity,
+                    operation_limit=options.proof_operation_limit,
+                    deadline=deadline,
+                )
+                result.diagnostics["exact_basis_farkas"] = result.witness is not None
+            if result.witness is None:
                 result.status, result.termination_reason = (
                     "numerical_failure",
                     "farkas_check_failed",
@@ -103,8 +125,12 @@ def solve_lp_data(data, options, basis=None, deadline=inf):
             if result.witness is None:
                 result.status, result.termination_reason = "numerical_failure", "ray_check_failed"
             else:
-                result.primal_values = dict(zip(data.names, map(float, x), strict=True))
-                result.objective_value = result.primal_bound = float(data.constant + data.c @ x)
+                anchor = witness_float_point(data, result.witness)
+                if anchor is not None and isfinite(float(data.constant + data.c @ anchor)):
+                    result.primal_values = dict(zip(data.names, map(float, anchor), strict=True))
+                    result.objective_value = result.primal_bound = float(
+                        data.constant + data.c @ anchor
+                    )
                 result.dual_bound = -data.sign * inf
         elif native.point is not None:
             x = norm.point(native.point)

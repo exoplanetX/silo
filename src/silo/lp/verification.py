@@ -91,11 +91,11 @@ def check_kkt(
 def _fraction(value):
     # Match the historical original-model checker: floats mean their exact
     # binary values, and coefficients are converted BEFORE arithmetic.
-    return Fraction(float(value))
+    return value if isinstance(value, Fraction) else Fraction(float(value))
 
 
 def _candidate(value):
-    return _fraction(value).limit_denominator(100_000_000)
+    return value if isinstance(value, Fraction) else _fraction(value).limit_denominator(100_000_000)
 
 
 def exact_ray(data, point, ray, integer=False, proof_limit=1000000):
@@ -134,6 +134,20 @@ def exact_ray(data, point, ray, integer=False, proof_limit=1000000):
         "ray": dict(zip(data.names, map(str, h), strict=True)),
         "improvement": str(improvement),
     }
+
+
+def witness_float_point(data, witness):
+    """Publish only a float point identical to the verified rational anchor."""
+    exact = [Fraction(witness["point"][name]) for name in data.names]
+    try:
+        values = np.array([float(value) for value in exact])
+    except OverflowError:
+        return None
+    if not np.isfinite(values).all() or any(
+        Fraction(float(v)) != q for v, q in zip(values, exact, strict=True)
+    ):
+        return None
+    return values
 
 
 def exact_farkas(data, multipliers):

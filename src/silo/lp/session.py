@@ -46,10 +46,17 @@ class LPSession:
         return result
 
     def change_rhs(self, name, rhs):
+        row = next((r for r in self._model.constraints if r.name == name), None)
+        if row is not None and (row.lower_bound is not None or row.upper_bound is not None):
+            raise ValueError("Explicit row intervals require change_row_bounds.")
         self._replace_row(name, rhs=rhs, lower_bound=None, upper_bound=None)
 
     def change_row_bounds(self, name, lower, upper):
-        self._replace_row(name, lower_bound=lower, upper_bound=upper)
+        self._replace_row(
+            name,
+            lower_bound=-float("inf") if lower is None else lower,
+            upper_bound=float("inf") if upper is None else upper,
+        )
 
     def _replace_row(self, name, **changes):
         candidate = self.model

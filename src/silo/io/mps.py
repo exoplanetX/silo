@@ -97,9 +97,7 @@ def model_to_mps(model: Model) -> str:
                 entries.append((row.name, coefficient))
         if not entries:
             entries.append((objective_name, 0.0))
-        lines.extend(
-            f" {variable.name} {row_name} {_number(value)}" for row_name, value in entries
-        )
+        lines.extend(f" {variable.name} {row_name} {_number(value)}" for row_name, value in entries)
     if integer_section:
         marker = _fresh_name(f"__mark_{marker_count}__", reserved_names)
         lines.append(f" {marker} 'MARKER' 'INTEND'")
@@ -211,9 +209,7 @@ class _MPSParser:
         if self.sense_seen or len(tokens) != 1 or tokens[0].upper() not in {"MIN", "MAX"}:
             self.fail("OBJSENSE requires exactly one MIN or MAX")
         self.sense = (
-            OptimizationSense.MINIMIZE
-            if tokens[0].upper() == "MIN"
-            else OptimizationSense.MAXIMIZE
+            OptimizationSense.MINIMIZE if tokens[0].upper() == "MIN" else OptimizationSense.MAXIMIZE
         )
         self.sense_seen = True
 
@@ -307,7 +303,9 @@ class _MPSParser:
         sides = (
             {"lower", "upper"}
             if kind in {"FX", "FR"}
-            else {"lower"} if kind in {"LO", "LI", "MI"} else {"upper"}
+            else {"lower"}
+            if kind in {"LO", "LI", "MI"}
+            else {"upper"}
         )
         if column.bound_sides & sides:
             self.fail(f"duplicate bound side for variable: {name}")
@@ -318,11 +316,7 @@ class _MPSParser:
             column.lower = value
         if kind in {"UP", "UI", "FX"}:
             column.upper = value
-            if (
-                value < 0.0
-                and "lower" not in column.bound_sides
-                and not column.binary_record
-            ):
+            if value < 0.0 and "lower" not in column.bound_sides and not column.binary_record:
                 column.lower = -inf
         if kind in {"FR", "MI"}:
             column.lower = -inf
@@ -343,32 +337,38 @@ class _MPSParser:
         model = Model(name=self.name)
         for name, column in self.columns.items():
             _valid_bounds(column.lower, column.upper, name)
-            model.add_variable(
-                Variable(name, Bounds(column.lower, column.upper), column.var_type)
-            )
+            model.add_variable(Variable(name, Bounds(column.lower, column.upper), column.var_type))
         objective_coefficients = self.row_coefficients(self.objective_name)
         model.set_objective(
             Objective(
                 objective_coefficients,
                 self.sense,
-                -float(self.rhs.get(self.objective_name, Decimal(0))),
+                -_decimal_number(
+                    self.rhs.get(self.objective_name, Decimal(0)), "objective constant"
+                ),
             )
         )
         for name, kind in self.rows.items():
             if name == self.objective_name:
                 continue
             rhs_decimal = self.rhs.get(name, Decimal(0))
-            rhs = float(rhs_decimal)
+            rhs = _decimal_number(rhs_decimal, "RHS")
             lower, upper = _row_bounds(kind, rhs_decimal, self.ranges.get(name))
             _valid_bounds(lower, upper, name)
             sense = {
-                "N": ConstraintSense.LE, "L": ConstraintSense.LE,
-                "G": ConstraintSense.GE, "E": ConstraintSense.EQ,
+                "N": ConstraintSense.LE,
+                "L": ConstraintSense.LE,
+                "G": ConstraintSense.GE,
+                "E": ConstraintSense.EQ,
             }[kind]
             model.add_constraint(
                 Constraint(
-                    name, self.row_coefficients(name), sense, rhs,
-                    lower_bound=lower, upper_bound=upper,
+                    name,
+                    self.row_coefficients(name),
+                    sense,
+                    rhs,
+                    lower_bound=lower,
+                    upper_bound=upper,
                 )
             )
         model.validate()
@@ -391,7 +391,7 @@ class _MPSParser:
     def value(self, token: str) -> float:
         decimal = self.decimal_value(token)
         try:
-            value = _finite(float(decimal), "MPS value")
+            value = _decimal_number(decimal, "MPS value")
         except ValueError:
             self.fail(f"invalid finite numeric value: {token}")
         if value == 0.0 and decimal != 0:
@@ -414,19 +414,19 @@ class _MPSParser:
 
 
 def _row_bounds(kind: str, rhs: Decimal, width: Decimal | None) -> tuple[float, float]:
-    rhs_float = _finite(float(rhs), "RHS value")
+    rhs_float = _decimal_number(rhs, "RHS value")
     if kind == "N":
         return -inf, inf
     if width is None:
-        return {
-            "L": (-inf, rhs_float), "G": (rhs_float, inf), "E": (rhs_float, rhs_float)
-        }[kind]
+        return {"L": (-inf, rhs_float), "G": (rhs_float, inf), "E": (rhs_float, rhs_float)}[kind]
     if kind == "L":
         other = _decimal_add(rhs, width.copy_abs().copy_negate())
-        return _finite(float(other), "ranged lower bound"), rhs_float
+        return _decimal_number(other, "ranged lower bound", rhs.as_tuple().exponent == 0), rhs_float
     if kind == "G":
-        return rhs_float, _finite(float(_decimal_add(rhs, width.copy_abs())), "ranged upper bound")
-    other = _finite(float(_decimal_add(rhs, width)), "ranged bound")
+        return rhs_float, _decimal_number(
+            _decimal_add(rhs, width.copy_abs()), "ranged upper bound", rhs.as_tuple().exponent == 0
+        )
+    other = _decimal_number(_decimal_add(rhs, width), "ranged bound", rhs.as_tuple().exponent == 0)
     return (rhs_float, other) if width >= 0 else (other, rhs_float)
 
 
@@ -441,8 +441,11 @@ def _row_encoding(row: Constraint) -> tuple[str, float, str | None]:
         return "G", lower, None
     if lower == -inf:
         return "L", upper, None
-    width = _decimal_add(Decimal(repr(float(upper))), Decimal(repr(float(lower))).copy_negate())
-    return "L", upper, str(width)
+    width = _decimal_add(Decimal(str(upper)), Decimal(str(lower)).copy_negate())
+    text = format(width, "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return "L", upper, text
 
 
 def _decimal_add(left: Decimal, right: Decimal) -> Decimal:
@@ -489,13 +492,21 @@ def _bound_records(variable: Variable) -> list[str]:
 def _finite(value: float, label: str) -> float:
     if isinstance(value, bool):
         raise ValueError(f"Invalid {label}: expected finite number")
+    original = value
     try:
         value = float(value)
     except (TypeError, ValueError, OverflowError) as exc:
         raise ValueError(f"Invalid {label}: expected finite number") from exc
     if not isfinite(value):
         raise ValueError(f"Invalid {label}: expected finite number")
-    return value
+    return original if isinstance(original, int) and int(value) != original else value
+
+
+def _decimal_number(value, label, preserve_integer=True):
+    number = _finite(float(value), label)
+    if preserve_integer and value.as_tuple().exponent == 0 and Decimal.from_float(number) != value:
+        return int(value)
+    return number
 
 
 def _valid_bounds(lower: float, upper: float, name: str) -> None:

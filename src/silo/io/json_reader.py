@@ -181,6 +181,10 @@ def _float(value: Any, label: str) -> float:
         raise ValueError(f"Invalid {label}: expected finite number") from exc
     if not isfinite(result):
         raise ValueError(f"Invalid {label}: expected finite number")
+    if isinstance(value, int) and int(result) != value:
+        # Preserve the user's integer until the native input-conversion gate;
+        # silently rounding it here would change bounds, row sides and domains.
+        return value
     return result
 
 

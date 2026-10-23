@@ -44,6 +44,14 @@ def linear_data(model: Model, max_cells: int = 2_000_000) -> LinearData:
             raise ValueError(
                 "Legacy row RHS must be finite; use explicit sides for missing bounds."
             )
+    for value in [
+        *[b for v in model.variables for b in (v.bounds.lower, v.bounds.upper)],
+        *[b for r in model.constraints for b in r.row_bounds],
+    ]:
+        if isinstance(value, int) and int(float(value)) != value:
+            raise FloatingPointError(
+                "Integer bound/row side is not exactly representable in float64."
+            )
     n, m = len(model.variables), len(model.constraints)
     if (m + n) * (3 * n + 2 * m + 1) > max_cells:
         raise MemoryError("Dense reference workspace exceeds max_dense_cells.")

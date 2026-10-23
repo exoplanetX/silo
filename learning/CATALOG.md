@@ -20,6 +20,7 @@
 | [L0010：资源可行列域与凸组合列生成](lessons/L0010-resource-dag-cg/README.md) | 2026-10-20 | `decomposition.resource-dag-column-generation` | checked | [资源参考CG](../tasks/codex/20261020-05-01_resource-dag-cg.md) |
 | [L0011：一般模型、可逆变换与原始空间核验](lessons/L0011-general-model/README.md) | 2026-10-24 | `modeling.general-lp` | draft | [教学研究原型M1](../tasks/codex/20261023-02-01_teaching-prototype.md) |
 | [L0012：基分解、缩放与原始对偶重优化](lessons/L0012-reoptimizable-lp/README.md) | 2026-10-24 | `lp.reoptimization-numerics` | draft | [教学研究原型M2](../tasks/codex/20261023-02-01_teaching-prototype.md) |
+| [L0013：一般整数搜索、全局界与可核验GMI](lessons/L0013-general-milp/README.md) | 2026-10-24 | `mip.branch-and-cut` | draft | [教学研究原型M3](../tasks/codex/20261023-02-01_teaching-prototype.md) |
 
 L0001 的教学编排在 [系列整理任务](../tasks/codex/20261018-02-01_learning-series.md)
 中完成；算法实现和代码基线来自上表的 LP 开发任务。总目录同时记录两种来源。

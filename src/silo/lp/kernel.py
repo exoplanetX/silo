@@ -152,6 +152,8 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
         refactorizations=0,
         primal_pivots=0,
         dual_pivots=0,
+        artificial_cleanup_pivots=0,
+        dependent_rows_removed=0,
         cold_starts=0,
         warm_starts=0,
         fallback_reason="",
@@ -336,7 +338,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
                     raise ValueError("Warm basis is neither primal nor dual feasible.")
                 mode = (
                     "dual"
-                    if dual_feasible and (not feasible or options.lp_method == "dual")
+                    if dual_feasible and options.lp_method != "primal"
                     else "primal"
                 )
                 if options.lp_method == "primal" and not feasible:
@@ -361,6 +363,11 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
             if phase[basis] @ xb < -options.primal_tolerance:
                 return finish("infeasible", "phase_one_farkas", xb, lam, rc, proof=True)
             for art in sorted(arts):
+                if perf_counter() >= deadline or iterations >= options.lp_iteration_limit:
+                    return finish(
+                        "limit",
+                        "time_limit" if perf_counter() >= deadline else "lp_iteration_limit",
+                    )
                 if art not in basis:
                     continue
                 position = basis.index(art)
@@ -379,6 +386,8 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
                 )
                 if pivot is not None:
                     basis[position] = pivot
+                    iterations += 1
+                    counters["artificial_cleanup_pivots"] += 1
                 else:
                     physical = int(np.flatnonzero(a[:, art])[0])
                     a = np.delete(a, physical, axis=0)
@@ -386,6 +395,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf")):
                     row_map.pop(physical)
                     row_keys.pop(physical)
                     basis.pop(position)
+                    counters["dependent_rows_removed"] += 1
                 factor, last_basis = None, None
             keep = [j for j in range(len(c)) if j not in arts]
             lookup = {j: i for i, j in enumerate(keep)}

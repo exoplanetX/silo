@@ -1,13 +1,15 @@
 """General-domain deterministic branch-and-bound through the common LP pipeline."""
 
 from dataclasses import dataclass, replace
+from fractions import Fraction
 from math import ceil, floor, inf, isfinite
 from time import perf_counter
 
 import numpy as np
 
-from silo.lp.verification import exact_ray, primal_check
+from silo.lp.verification import exact_ray, primal_check, witness_float_point
 from silo.modeling.general import integer_bounds
+from silo.presolve.activity import propagate
 
 
 @dataclass
@@ -20,6 +22,18 @@ class SearchNode:
     basis: object = None
     parent_branch: tuple | None = None
     cuts: tuple = ()
+    parent: int | None = None
+
+
+@dataclass(frozen=True)
+class NodeCut:
+    name: str
+    coefficients: tuple[float, ...]
+    lower: float
+    upper: float
+    origin_node: int
+    exact_key: tuple
+    proof: dict
 
 
 def solve_milp(model, data, options, start):
@@ -32,6 +46,10 @@ def solve_milp(model, data, options, start):
         lp_calls=0,
         heuristic_calls=0,
         heuristic_incumbents=0,
+        heuristic_skips_integral=0,
+        heuristics_enabled=options.heuristics,
+        cuts_enabled=options.cuts,
+        node_selections=0,
         branches=0,
         pseudocost_updates=0,
         warm_starts=0,
@@ -40,6 +58,11 @@ def solve_milp(model, data, options, start):
         cuts_generated=0,
         cuts_added=0,
         cut_rounds=0,
+        gmi_attempts=0,
+        cut_duplicates=0,
+        bound_propagations=0,
+        integer_roundings=0,
+        cut_events=[],
         node_strategy=options.node_strategy,
         frontier_includes_processing=True,
         unbounded_relaxations=0,
@@ -127,6 +150,126 @@ def solve_milp(model, data, options, start):
             and gap / max(1.0, abs(best), abs(bound)) <= options.relative_gap
         )
 
+    def cut_loop(node, lp):
+        from silo.cuts.gmi import derive_gmi
+        from silo.lp.tableau_view import exact_tableau_rows
+        from silo.utils.rational import ProofBudget
+
+        if not options.cuts or node.depth > options.cut_depth_limit:
+            return lp
+        for _ in range(options.cut_round_limit):
+            if lp.status != "optimal" or perf_counter() >= deadline:
+                break
+            stats["gmi_attempts"] += 1
+            budget = ProofBudget(options.proof_operation_limit, deadline)
+            norm, native, _ = lp._lp
+            views = exact_tableau_rows(
+                norm,
+                native,
+                data.integer,
+                options.cuts_per_round,
+                operation_limit=options.proof_operation_limit,
+                deadline=deadline,
+                budget=budget,
+            )
+            point = np.array([lp.primal_values[n] for n in data.names])
+            selected, existing = [], {c.exact_key for c in node.cuts}
+            for view in views:
+                exact = derive_gmi(view, len(data.names), budget=budget)
+                if exact is None:
+                    continue
+                stats["cuts_generated"] += 1
+                proof = exact.proof(budget=budget)
+                if proof is None:
+                    continue
+                if not any(exact.coefficients) and exact.lower > 0:
+                    stats["cut_events"].append(
+                        {"node": node.number, "contradiction": True, "proof": proof}
+                    )
+                    return SolveResult(
+                        "infeasible",
+                        "gmi_integer_contradiction",
+                        witness={"kind": "gmi", "proof": proof},
+                    )
+                pivot = next((abs(v) for v in exact.coefficients if v), None)
+                if pivot is None:
+                    continue
+                try:
+                    key = tuple(budget.guard(v / pivot) for v in exact.coefficients) + (
+                        budget.guard(exact.lower / pivot),
+                    )
+                except ValueError:
+                    break
+                if key in existing:
+                    stats["cut_duplicates"] += 1
+                    continue
+                candidate = exact.to_candidate(
+                    data.names,
+                    node.lower,
+                    node.upper,
+                    node.number,
+                    stats["cuts_added"] + len(selected),
+                    budget=budget,
+                )
+                if candidate is None:
+                    continue
+                float_proof = exact.float_proof(
+                    candidate, data.names, node.lower, node.upper, budget=budget
+                )
+                if float_proof is None:
+                    continue
+                vector = np.array([dict(candidate.coefficients).get(n, 0) for n in data.names])
+                violation = candidate.rhs - vector @ point
+                if violation <= options.primal_tolerance * (
+                    1 + abs(candidate.rhs) + abs(vector) @ abs(point)
+                ):
+                    continue
+                name = candidate.metadata.cut_id
+                while name in data.row_names or any(c.name == name for c in node.cuts):
+                    name += "_"
+                selected.append(
+                    NodeCut(
+                        name,
+                        tuple(vector),
+                        candidate.rhs,
+                        inf,
+                        node.number,
+                        key,
+                        {
+                            **proof,
+                            "float_conversion": float_proof,
+                        },
+                    )
+                )
+                existing.add(key)
+            if not selected:
+                break
+            previous = lp.objective_value
+            node.bound = max(node.bound, data.sign * lp.optimality["dual_objective"])
+            node.basis = lp.basis
+            node.cuts = (*node.cuts, *selected)
+            stats["cuts_added"] += len(selected)
+            stats["cut_rounds"] += 1
+            lp = relaxation(node)
+            stats["cut_events"].append(
+                {
+                    "node": node.number,
+                    "depth": node.depth,
+                    "added": [c.name for c in selected],
+                    "origin_nodes": [c.origin_node for c in node.cuts],
+                    "scope": "node_local",
+                    "before": previous,
+                    "after": lp.objective_value,
+                    "status": lp.status,
+                    "proofs": [c.proof for c in selected],
+                }
+            )
+        if perf_counter() >= deadline:
+            if lp.status == "optimal":
+                node.bound = max(node.bound, data.sign * lp.optimality["dual_objective"])
+            return replace(lp, status="limit", termination_reason="time_limit")
+        return lp
+
     while pending:
         if nodes >= options.node_limit:
             last_reason = "node_limit"
@@ -143,18 +286,34 @@ def solve_milp(model, data, options, start):
             else min(range(len(pending)), key=lambda i: (pending[i].bound, pending[i].number))
         )
         node = pending.pop(index)
+        stats["node_selections"] += 1
         if node.bound >= best - options.primal_tolerance and incumbent is not None:
             continue
         nodes += 1
+        tightened = propagate(
+            data, node.lower, node.upper, enabled=options.presolve, integral=True, deadline=deadline
+        )
+        if tightened.timed_out:
+            pending.append(node)
+            last_reason = "time_limit"
+            break
+        stats["bound_propagations"] += len(tightened.history)
+        stats["integer_roundings"] += tightened.integer_roundings
+        if tightened.conflict or np.any(tightened.lower > tightened.upper):
+            continue
+        node.lower, node.upper = tightened.lower, tightened.upper
         lp = relaxation(node)
+        lp = cut_loop(node, lp)
         stats["node_log"].append(
             {
                 "node": node.number,
+                "parent": node.parent,
                 "depth": node.depth,
                 "status": lp.status,
                 "bound": lp.objective_value,
                 "inherited_bound": node.bound,
                 "cuts": len(node.cuts),
+                "local_cut_origins": [c.origin_node for c in node.cuts],
             }
         )
         if lp.status == "infeasible":
@@ -166,29 +325,42 @@ def solve_milp(model, data, options, start):
             failed = lp.status if lp.status != "limit" else None
             break
         if lp.status == "unbounded":
+            if isfinite(node.bound):
+                unresolved.append(node)
+                stats["unbounded_state"] = "conflicting_unbounded_relaxation"
+                failed, last_reason = (
+                    "numerical_failure",
+                    "unbounded_child_conflicts_with_finite_bound",
+                )
+                break
             stats["unbounded_relaxations"] += 1
             accept(lp)
-            point = np.array([lp.primal_values[n] for n in data.names])
-            norm, native, _ = lp._lp
+            exact_point = [Fraction(lp.witness["point"][n]) for n in data.names]
+            exact_direction = [Fraction(lp.witness["ray"][n]) for n in data.names]
+            point = np.array(list(map(float, exact_point)))
             witness = (
-                exact_ray(data, point, norm.ray(native.ray), True, options.integer_ray_proof_limit)
+                exact_ray(data, exact_point, exact_direction, True, options.integer_ray_proof_limit)
                 if options.integer_ray_proof_limit
                 else None
             )
             if witness is not None:
                 stats["unbounded_state"] = "proven_mip_unbounded"
-                return SolveResult(
+                result = SolveResult(
                     "unbounded",
                     "integer_improving_ray",
-                    objective_value=float(data.constant + data.c @ point),
-                    primal_values=dict(zip(data.names, map(float, point), strict=True)),
-                    primal_bound=float(data.constant + data.c @ point),
                     witness=witness,
                     dual_bound=-data.sign * inf,
                     nodes=nodes,
                     iterations=total_iterations,
                     diagnostics=stats,
                 )
+                anchor = witness_float_point(data, witness)
+                if anchor is not None and isfinite(float(data.constant + data.c @ anchor)):
+                    result.objective_value = result.primal_bound = float(
+                        data.constant + data.c @ anchor
+                    )
+                    result.primal_values = dict(zip(data.names, map(float, anchor), strict=True))
+                return result
             fractional = [
                 j
                 for j in integer
@@ -203,7 +375,7 @@ def solve_milp(model, data, options, start):
             node.bound = -inf
         else:
             point = np.array([lp.primal_values[n] for n in data.names])
-            node.bound = data.sign * lp.optimality["dual_objective"]
+            node.bound = max(node.bound, data.sign * lp.optimality["dual_objective"])
             if node.parent_branch is not None and isfinite(node.parent_branch[2]):
                 j, direction, old_bound, distance = node.parent_branch
                 gain = max(0.0, node.bound - old_bound) / max(distance, 1e-8)
@@ -226,6 +398,7 @@ def solve_milp(model, data, options, start):
                     integer=True,
                     integrality_tolerance=options.integrality_tolerance,
                 ):
+                    stats["heuristic_skips_integral"] += bool(options.heuristics)
                     accept(lp)
                     continue
                 # A rejected near-integral candidate cannot close a node. Use
@@ -286,11 +459,15 @@ def solve_milp(model, data, options, start):
                         lp.basis,
                         (branch, direction, node.bound, distance),
                         node.cuts,
+                        node.number,
                     )
                 )
                 next_number += 1
         stats["branches"] += 1
     bound = global_bound()
+    stats.update(
+        open_nodes=len(pending), unresolved_nodes=len(unresolved), global_bound_normalized=bound
+    )
     exhausted = not pending and not unresolved and failed is None
     status = (
         ("optimal" if incumbent is not None else "infeasible") if exhausted else (failed or "limit")
