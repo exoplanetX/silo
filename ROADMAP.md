@@ -2,7 +2,7 @@
 
 ## Authorized Program: SILO-PROTOTYPE-20261023
 
-Status: M1–M5 local acceptance PASS; discussion-chat overall review pending. The
+Status: M1–M5 local acceptance PASS; coordinator final technical gate GO. The
 [five-module plan](tasks/phases/phase_10_teaching_research_prototype.md) is implemented
 under [one contract](tasks/codex/20261023-02-01_teaching-prototype.md), with checkpoints
 in its [total report](tasks/reports/20261023-02-01_teaching-prototype_report.md).

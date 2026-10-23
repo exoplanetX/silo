@@ -1,7 +1,7 @@
 {
   "reviewed_on": "2026-10-24",
   "baseline": "d4c852f7112c6abfc2d799c42c924a6aa4cef188",
-  "assessment_note": "依据原型总报告与实际证据：M1-M5本地PASS，6147测试、冻结288项、64诊断、192对照及四安装通过；整体终审及远端CI单列状态。原研究身份保持。",
+  "assessment_note": "M1-M5本地原型完成，主协调最终技术门控GO；6147测试、冻结288项、64诊断、192对照及四安装通过。远端CI pending，未push，原研究身份保持。",
   "boundaries": [
     "长期目标：同一 SILO 内核承载教学、学习与运筹优化研究。",
     "研究主线：固定资源约束路径在对偶变化下的精确状态维护、恢复与完整成本。",
@@ -210,7 +210,7 @@
       "id": "M5",
       "title": "验证与安装",
       "milestone": "M5",
-      "status": "本地PASS/待整体终审",
+      "status": "本地PASS/整体GO",
       "tone": "good",
       "description": "冻结288项/64诊断/192对照及两集成、四隔离安装通过；远端CI pending。",
       "exit": "仅按本原型总合同的有限范围验收。",
@@ -477,10 +477,10 @@
     }
   ],
   "source_hashes": {
-    ".silo-dos/project_profile.md": "6ce92e4f7287630f93ae2adebd5f1b4095579d7b95c012b5cec0d9f5a0957bff",
+    ".silo-dos/project_profile.md": "392a1c238bbab682b51d539b2bd11dbb5d1b55568bc0fccbd6354e767848c16f",
     "CHANGELOG.md": "6216840ffe24c46bb2a8266a39096b350cfb7ed95d148682af4c17eda08d55f6",
     "CITATION.cff": "6fc5cf6e96c887d637c46afe328b0b754bfab72aef6fb6c1eff4d39734633935",
-    "ROADMAP.md": "836fc3960374c5394b755b17056e61e033708592c94d398be52da313d7c5abf9",
+    "ROADMAP.md": "64a0f78fa6fffb0b85f316aa700bcc353af96a91db1014491c73ac3f70b40ac1",
     "docs/bounded_goal_outcome_20261020.md": "b9bf3748ba20b710ec1fe6c8bfefa10d90a819e72fa41a983e8f58cb1b1b5dfb",
     "docs/branch_and_cut.md": "e07e810230dc58d8587f560644cc1c676e7ce193cb470ffc4a36438e8121ae6e",
     "docs/correctness_baseline.md": "ce1a76d61b549c929416e8afe091218797d11ef224369f97b2f4a7bd8851dd24",
@@ -516,6 +516,6 @@
     "src/silo/mip/branch_and_bound.py": "84ae639e5ccc6238a3ce991eb50ca370f83ce91a008a5a6a0015949682cc3a7d",
     "src/silo/mip/general.py": "146c9b6f3b5b8856bfe9c8196c9226cc114912ade958bf8b06065eb889bab6d0",
     "tasks/README.md": "7a1c700e27e611adc2e7a782d7930c2f2c910c00f091bc017ec95f7247597f0e",
-    "tasks/reports/20261023-02-01_teaching-prototype_report.md": "2df4417c2bf4a69f71f40934112d011e5512a50bca846b2e70f954b59ef7258f"
+    "tasks/reports/20261023-02-01_teaching-prototype_report.md": "a6dac237c1532210648fcbb6a00242015634cc3dd4891a2b3b8b671884de3883"
   }
 }

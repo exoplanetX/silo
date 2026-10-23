@@ -6,7 +6,7 @@
 ## 当前终态
 
 状态：执行完成，M1–M5本地验收全部PASS；最终完整质量 **6147 passed**。
-交付0.2.0a1本地候选，等待讨论对话整体终审；远端CI未运行，未push/公开发布。
+交付0.2.0a1本地候选，讨论对话整体技术门控GO；远端CI未运行，未push/公开发布。
 
 | 检查点 | 当前状态 | 实际证据 |
 |---|---|---|
@@ -224,7 +224,7 @@ reserve最终22秒。四篇伴学checked、完整verified_code及日期已登记
 - sdist：`dist/prototype/m5-install-20261024-01/silo_solver-0.2.0a1.tar.gz`，
   SHA256=`ba237ec5fcc4e9cae5beb94e8768bd9e16da5810332cc882f82d0c5d5a23e4f8`。
 - 本地验收8项receipt：`outputs/prototype/final_acceptance.json`，
-  SHA256=`e0c6408815f6530f6465b87781bcfe8d30ed9b5e1fdc93a7b3f1bf1c2ff0a643`。
+  SHA256=`e6a28a609d7222b2d6f4cdf51a40c5bc18e272820a6ea44f26397859e9eca89d`。
   receipt逐项绑定core/strict/diagnostic/external/集成与机制/安装/质量/ledger原始文件SHA。
 
 安装原始失败summary保持failed；final-summary合并成功3项及同sdist重试第4项。
@@ -260,6 +260,11 @@ min x+y、2x+y>=3、x整数（松弛1.5到2）的真实割轨迹，明确两个�
 任意外部割、原生C/C++及跨平台实际资格保留各自边界；当前交付没有扩展这些承诺。
 后续工作由用户及讨论对话单独决定，本执行不自动进入第六模块或原研究C。
 
+主协调最终核验：讨论对话`01a1254a-b349-77d0-8c66-d4b711cd511f`整合一次固定清单
+独立红队，返回CONDITIONAL_GO；条件仅为最终状态登记和定向提交，八项实质义务均满足。
+主协调技术门控明确GO，已同步receipt的`coordinator_final_review=GO`。
+本次只改文档/报告/状态；不新增运行，不重复6147项或模型。reserve22/总764保持一次计账。
+
 ## Git / Remote Sync Proof
 
 - 签发前：main，HEAD=`13e748f`，cached origin/main...HEAD=`0/33`；未查询即时远端。
@@ -271,9 +276,13 @@ min x+y、2x+y>=3、x整数（松弛1.5到2）的真实割轨迹，明确两个�
 - 本报告所在提交以 `git log -1 --format=%H -- tasks/reports/20261023-02-01_teaching-prototype_report.md` 查询，避免自引用。
 
 - 最终分支`codex/teaching-research-prototype`；最终状态提交由上面的report路径Git查询定位。
+- 实现/验收提交为`f78b412398fe70e2fe7f645b16aeebabe4967a4a`；包装源码提交为
+  `d4c852f7112c6abfc2d799c42c924a6aa4cef188`；两工件SHA见M5，保持不变。
 - 本轮关键提交：991c767授权、2ca6098冻结、b44e7c3通路、e9ba601 LP、8a07e4b M3、
   35bb032 M4、cc11a92验证准备、d4c852f包装源码；末次仅验收/文档归档。
 - 收尾提交前d4c852f的cached origin/main...HEAD=`0/42`；没有即时远端查询。
+- 最终GO登记前f78b412的cached origin/main...HEAD=`0/43`；GO状态提交后实值见
+  `outputs/prototype/final_git_status.json`，避免本报告提交的自引用。
 - `git diff d4c852f -- src/silo pyproject.toml CITATION.cff`为空；工件native算法和版本身份一致。
 - 收尾后只保留两项原有用户治理变动；合同与frozen文件未改。最终完整6147质量通过，
   索引/结构/diff及定向Ruff在归档提交前复核。没有push、tag或发行物上传。
