@@ -38,7 +38,7 @@ The native solver path does not call external solvers.
 ## Current Limitations
 
 - Dense reference arithmetic and a conservative memory gate; this is a small-model prototype.
-- Frozen validation sizes reach 200 LP variables/400 rows and 30 integer variables;
+- Frozen validation sizes are capped at 200 LP variables/400 rows and 30 integer variables;
   actual solved sizes and timings must be read from the benchmark report.
 - Finite pricing pools only for the general CG reference; arbitrary external cut expressions,
   full branch-and-price/Benders, QP/conic/nonlinear models and parallel search remain outside this candidate.

@@ -1,5 +1,9 @@
 # LP Solver
 
+This page describes the legacy tableau/revised standard-form class APIs and
+`silo solve`. For general min/max models, bounds and the unified `silo.solve()` /
+`silo optimize` entry, use [the general solver guide](general_solver.md).
+
 SILO currently includes an educational dense tableau simplex solver for small continuous LPs. It is a readable reference implementation and a solver-building laboratory, not a performance-oriented replacement for industrial LP solvers.
 
 ## Accepted Mathematical Class

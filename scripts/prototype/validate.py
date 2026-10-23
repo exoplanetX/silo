@@ -15,9 +15,11 @@ import sys
 from collections import Counter
 from dataclasses import replace
 from fractions import Fraction as F
+from math import isfinite
 from pathlib import Path
 from time import perf_counter
 from types import SimpleNamespace
+from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
@@ -25,7 +27,8 @@ for thread_variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THRE
     os.environ[thread_variable] = "1"
 
 import evidence as ev  # noqa: E402
-from validate_results import TOL, close, primal, validate  # noqa: E402
+import run_ledger  # noqa: E402
+from validate_results import TOL, check_gaps, close, primal, validate  # noqa: E402
 
 from silo import SolveOptions, solve  # noqa: E402
 from silo.io import model_from_dict  # noqa: E402
@@ -33,8 +36,22 @@ from silo.io import model_from_dict  # noqa: E402
 
 def write_json(path, value):
     path.write_text(
-        json.dumps(ev.json_ready(value), indent=2, allow_nan=False) + "\n", encoding="utf-8"
+        json.dumps(json_safe(value), indent=2, allow_nan=False) + "\n", encoding="utf-8"
     )
+
+
+def json_safe(value):
+    if isinstance(value, float) and not isfinite(value):
+        return (
+            "nan" if value != value else "negative_infinity" if value < 0 else "positive_infinity"
+        )
+    if isinstance(value, F):
+        return str(value)
+    if isinstance(value, dict):
+        return {key: json_safe(item) for key, item in value.items()}
+    if isinstance(value, list | tuple):
+        return [json_safe(item) for item in value]
+    return value
 
 
 def environment():
@@ -68,6 +85,8 @@ class Runner:
         self.folder, self.ledger, self.evidence = folder, ledger, evidence
         self.records, self.native_calls = [], 0
         self.entries = {entry["id"]: entry for entry in ev.load_manifest()["cases"]}
+        self.run_uuid = str(uuid4())
+        self.environment = environment()
 
     def native(self, payload, options, basis=None):
         self.native_calls += 1
@@ -84,7 +103,7 @@ class Runner:
         record.update(wall_seconds=perf_counter() - start, native_calls=self.native_calls - before)
         self.records.append(record)
         with (self.folder / "records.jsonl").open("a", encoding="utf-8") as stream:
-            stream.write(json.dumps(ev.json_ready(record), allow_nan=False) + "\n")
+            stream.write(json.dumps(json_safe(record), allow_nan=False) + "\n")
         print(json.dumps({key: record[key] for key in ("id", "pass", "wall_seconds")}), flush=True)
 
     def case(self, entry):
@@ -180,6 +199,7 @@ class Runner:
                 output = self.native(payload, data["options"], basis).to_dict()
             assert output["status"] == reference["expected_status"], output["termination_reason"]
             if identifier in ("B07", "B08", "B09", "B10", "B11"):
+                check_gaps(output)
                 assert (
                     output["termination_reason"]
                     == reference["assertions"]["expected_termination_reason"]
@@ -276,26 +296,36 @@ class Runner:
             "result_file": f"{identifier}_output.json",
         }
 
-    def diagnostic(self, record, cold):
+    def diagnostic(self, record, cold, recover=False):
         entry = self.entries[record["case_id"]]
         base = ev.diagnostic_payload(ev.raw_payload(entry), record["prepare_model"])
         payload = ev.diagnostic_payload(base, record["actions"])
         assert ev.digest(payload) == record["model_sha256"]
         basis = None
-        if record["actions"][-1]["basis"] == "shared_cold":
+        if not recover and record["actions"][-1]["basis"] == "shared_cold":
             basis = cold[record["case_id"]].basis
             if record["variant"] == "invalid_basis_fallback":
                 basis = (999,)
-        self.ledger["diagnostic_calls"] += 1
-        assert self.ledger["diagnostic_calls"] <= 64
-        write_json(ROOT / "outputs/prototype/run_ledger.json", self.ledger)
-        result = self.native(payload, record["options"], basis)
-        if record["variant"] == "cold":
-            cold[record["case_id"]] = result
-        output = result.to_dict()
+        path = self.folder / f"{record['id']}_output.json"
+        if recover:
+            output = json.loads(path.read_text(encoding="utf-8"))
+        else:
+            run_ledger.append(
+                self.ledger,
+                "diagnostic_call",
+                self.environment,
+                self.folder,
+                self.run_uuid,
+                record["id"],
+            )
+            run_ledger.save(ROOT / "outputs/prototype/run_ledger.json", self.ledger)
+            result = self.native(payload, record["options"], basis)
+            if record["variant"] == "cold":
+                cold[record["case_id"]] = result
+            output = result.to_dict()
         write_json(self.folder / f"{record['id']}_output.json", output)
         check = validate(payload, output, record["reference_proof"])
-        stats = result.diagnostics
+        stats = output["diagnostics"]
         if record["case_id"].startswith("LP"):
             warm = record["expected"]["reuse_attempt_required"]
             if warm:
@@ -319,6 +349,7 @@ class Runner:
             "options": record["options"],
             "check": check,
             "actual_diagnostics": stats,
+            "recovered_output": recover,
         }
 
     def integration(self):
@@ -349,11 +380,14 @@ class Runner:
         truth = ev.small_truth(payload, "milp_small")
         off = self.native(payload, {"presolve": False, "cuts": False, "heuristics": False})
         on = self.native(payload, {"presolve": False, "cuts": True, "heuristics": False})
+        write_json(self.folder / "M3_mixed_off.json", off.to_dict())
+        write_json(self.folder / "M3_mixed_on.json", on.to_dict())
         validate(payload, off.to_dict(), truth)
         validate(payload, on.to_dict(), truth)
         assert on.diagnostics["cuts_added"] > 0
         event = on.diagnostics["cut_events"][0]
-        assert event["before"] == 1.5 and abs(event["after"] - 2) < 1e-7
+        close(event["before"], F(3, 2), "Recorded mixed LP bound")
+        close(event["after"], F(2), "Recorded strengthened bound")
         proof = event["proofs"][0]
         a, b = list(map(F, proof["original_coefficients"])), F(proof["original_lower"])
         assert a[0] * F(3, 2) < b
@@ -407,13 +441,44 @@ class Runner:
             assert comparison["optimal_comparison_passed"]
         return comparison
 
+    def recheck_saved(self, source, identifier, reference, boundary=None):
+        path = source / f"{identifier}_output.json"
+        output = json.loads(path.read_text(encoding="utf-8"))
+        if boundary is None:
+            payload = ev.raw_payload(self.entries[identifier])
+            check = validate(payload, output, reference["truth"])
+        else:
+            assert output["status"] == reference["expected_status"]
+            if output["status"] in ("limit", "optimal"):
+                check_gaps(output)
+            if output["status"] in ("optimal", "infeasible", "unbounded"):
+                proof = reference["proof"]
+                check = validate(
+                    ev.modified_boundary_payload(boundary),
+                    output,
+                    proof if "status" in proof else {"status": "infeasible"},
+                )
+            else:
+                check = {"expected_status_checked": True}
+        return {
+            "source_result": str(path),
+            "source_result_sha256": ev.sha256(path.read_bytes()),
+            "check": check,
+            "new_native_calls": 0,
+        }
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--group", choices=("core", "diagnostics", "integrations", "external"))
+    parser.add_argument(
+        "--group",
+        choices=("core", "diagnostics", "integrations", "mechanisms", "external", "recheck"),
+    )
     parser.add_argument("--output", type=Path)
     parser.add_argument("--solve-one", type=Path)
     parser.add_argument("--response", type=Path)
+    parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--source", type=Path)
     args = parser.parse_args()
     if args.solve_one:
         request = json.loads(args.solve_one.read_text(encoding="utf-8"))
@@ -427,18 +492,17 @@ def main():
     folder = args.output.resolve()
     if not folder.is_relative_to((ROOT / "outputs").resolve()):
         parser.error("Generated evidence must stay under ignored outputs/")
-    folder.mkdir(parents=True, exist_ok=False)
+    if args.resume and args.group != "diagnostics":
+        parser.error("Resume is restricted to saved diagnostics; no scale rerun is implicit.")
+    folder.mkdir(parents=True, exist_ok=args.resume)
     started = perf_counter()
     ledger_path = ROOT / "outputs/prototype/run_ledger.json"
     ledger_path.parent.mkdir(parents=True, exist_ok=True)
-    ledger = (
-        json.loads(ledger_path.read_text())
-        if ledger_path.exists()
-        else {"scale_runs": 0, "diagnostic_calls": 0}
-    )
+    ledger = run_ledger.load(ledger_path)
     evidence = ev.build_evidence()
-    write_json(folder / "raw_evidence.json", evidence)
-    write_json(folder / "environment.json", environment())
+    suffix = "_resume" if args.resume else ""
+    write_json(folder / f"raw_evidence{suffix}.json", evidence)
+    write_json(folder / f"environment{suffix}.json", environment())
     runner = Runner(folder, ledger, evidence)
     if args.group == "core":
         for entry in evidence["cases"]:
@@ -448,20 +512,53 @@ def main():
             ev.load_manifest()["boundaries"], evidence["boundaries"], strict=True
         ):
             runner.record(boundary["id"], lambda b=boundary, r=reference: runner.boundary(b, r))
-        ledger["scale_runs"] += 1
-        assert ledger["scale_runs"] <= 3, "Scale run cap exhausted"
-        write_json(ledger_path, ledger)
+        run_ledger.append(
+            ledger, "scale_run", runner.environment, folder, runner.run_uuid, "full72"
+        )
+        run_ledger.save(ledger_path, ledger)
         for entry in evidence["cases"]:
             if entry["suite"].endswith("scale"):
                 runner.record(entry["id"], lambda e=entry: runner.case(e))
     elif args.group == "diagnostics":
-        assert ledger["diagnostic_calls"] == 0, "Diagnostic calls already issued; inspect ledger"
+        if not args.resume:
+            assert ledger["diagnostic_calls"] == 0, (
+                "Diagnostic calls already issued; inspect ledger"
+            )
+        else:
+            # Recovery consumes saved outputs, never a second solve. LP snapshots
+            # are intentionally not reconstructed; resuming after a lost LP basis
+            # is refused. The known serialization stop occurred after the32 LPs.
+            assert ledger["diagnostic_calls"] >= 32
+            saved = [
+                record
+                for record in evidence["diagnostics"]
+                if (folder / f"{record['id']}_output.json").exists()
+            ]
+            assert len(saved) == ledger["diagnostic_calls"], "Issued/saved call mismatch"
         cold = {}
         for record in evidence["diagnostics"]:
-            runner.record(record["id"], lambda r=record: runner.diagnostic(r, cold))
+            recover = args.resume and (folder / f"{record['id']}_output.json").exists()
+            runner.record(
+                record["id"], lambda r=record, old=recover: runner.diagnostic(r, cold, old)
+            )
     elif args.group == "integrations":
         runner.record("two_integrations", runner.integration)
         runner.record("recorded_M2_M3_mechanisms", runner.recorded_mechanisms)
+    elif args.group == "mechanisms":
+        runner.record("recorded_M2_M3_mechanisms", runner.recorded_mechanisms)
+    elif args.group == "recheck":
+        if args.source is None:
+            parser.error("--source is required for saved-output rechecks")
+        source = args.source.resolve()
+        for entry in evidence["cases"]:
+            runner.record(entry["id"], lambda e=entry: runner.recheck_saved(source, e["id"], e))
+        for boundary, reference in zip(
+            ev.load_manifest()["boundaries"], evidence["boundaries"], strict=True
+        ):
+            runner.record(
+                boundary["id"],
+                lambda b=boundary, r=reference: runner.recheck_saved(source, b["id"], r, b),
+            )
     else:
         for entry in evidence["cases"]:
             if entry["suite"].endswith("small"):
@@ -472,6 +569,9 @@ def main():
         "records": len(runner.records),
         "failed": [r for r in runner.records if not r["pass"]],
         "native_calls": runner.native_calls,
+        "recovered_native_calls": ledger["diagnostic_calls"] - runner.native_calls
+        if args.resume
+        else 0,
         "ledger": ledger,
         "verification_wall_seconds": perf_counter() - started,
         "passed_by_suite": dict(

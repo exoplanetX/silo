@@ -13,12 +13,18 @@ M3 local module/independent algorithm gate PASS; general frontier/unbounded stat
 exact GMI/local cuts and resource guards validated. Full quality6058 passes;
 supplemental raw evidence264+24+64 statically verifies. M4 public research interfaces,
 finite-pool CG/Phase I and frozen integrations PASS, full quality6137 passes.
-M5 verification/install in progress. Scale and64 diagnostics remain mandatory.
+M5 local acceptance PASS: frozen192 small+24 boundary+72 scale all PASS; strengthened
+saved-output recheck288 PASS with0 new solves; exactly64 diagnostics PASS;192 optional
+HiGHS comparisons PASS; both public integrations and recorded mechanism replay PASS.
+Windows3.11/3.13 wheel/sdist all four isolated installs PASS (one NumPy network retry
+retained). Final full quality6147 PASS, source/learning/artifact identities sealed in
+outputs/prototype/final_acceptance.json; overall discussion-chat review pending.
+Remote Windows/Linux CI remains pending. Local candidate0.2.0a1, no publication.
 Branch codex/teaching-research-prototype, issuance 1b7deb9; current code via total report.
 Known governance changes are retained byte-for-byte and excluded from commits;
 local-commit, no push, remote_sync_status=dirty_worktree. Verification accounted: M1 96s,
-M2 30s,M3 76s,M4 60s,M5 preparation10s,reserve18s,total290s/14400s (rounded up);
-no scale solver runs.
+M2 30s,M3 76s,M4 60s,M5 480s (350s install stream incl network failure),reserve22s;
+total764s/14400s (conservative rounded account). Scale runs1/3, diagnostic calls64/64.
 Native Phase 9 remains parked; the original research A/B accepted, C HOLD, D/E not started.
 This program's new general LP/MILP and packaging scope does not complete that research.
 

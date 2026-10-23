@@ -5,8 +5,8 @@
 
 ## 当前终态
 
-状态：执行中。M1–M4本地模块PASS，最近完整质量6137项通过。
-继续M5规模/完整诊断及发行安装门槛；整体原型未完成。
+状态：执行完成，M1–M5本地验收全部PASS；最终完整质量 **6147 passed**。
+交付0.2.0a1本地候选，等待讨论对话整体终审；远端CI未运行，未push/公开发布。
 
 | 检查点 | 当前状态 | 实际证据 |
 |---|---|---|
@@ -15,7 +15,7 @@
 | M2 可重优化 LP 与数值基础 | PASS at local module checkpoint | 96小LP、四类真实warm、QR/数值回归；规模仍M5 |
 | M3 MILP 搜索控制与 GMI branch-and-cut | PASS (local module) | 96小MILP及证明边界通过；完整质量6058通过；独立算法门控PASS |
 | M4 公开研究接口与两个集成例 | PASS (local module) | 公开策略15项/CG57项；独立复核及完整质量6137通过 |
-| M5 综合验证与本地安装交付 | in progress | 准备完成；完整矩阵/安装尚未执行 |
+| M5 综合验证与本地安装交付 | PASS (local acceptance) | 288项、64诊断、192对照、两集成及四安装通过；最终完整质量6147通过 |
 | 远端跨平台实测 | pending / outside local completion | 未 push、未运行远端 CI |
 
 原研究身份：A/B 已验收；C 签发前 HOLD；D/E 未启动。本合同不计为原研究第5–7步完成。
@@ -180,11 +180,85 @@ M4全部检查向上记60秒/600秒；M5准备向上记10秒；reserve18秒。
 
 ### M5
 
-尚未运行完整矩阵、规模或64诊断；安装/CI/HiGHS适配器准备已完成。
+本地验收PASS，矩阵/安装/完整质量及最终证据均已登记。
+首轮core **288/288 PASS**：96LP+96MILP+24边界+48规模LP+24规模MILP，命令30.996秒，
+验证主体30.720秒；原生公共调用292（24边界中增量/对照所需额外调用均计数）。
+规模硬墙钟分别20/60秒，所有例终态及原始核验通过，最大墙钟LP1.354秒/MILP2.620秒。
+LP最大196变量/256行，MILP最大48总变量/30行；14个LP同时达到100–200变量/100–400行。
+首轮代码cc11a929；Windows11/Intel20逻辑CPU/Python3.13.9/NumPy2.3.5，线程环境1。
+源文件、runner/checker、frozen身份见每组environment.json，非外部solver替代验证。
+
+首32个LP诊断通过，第33个MI结果已保存后JSON无限值记录失败；完整保留第一轮目录和
+消耗33。修复仅使用已保存的前33份结果，实际再求31次，恰 **64/64 PASS**；恢复命令
+3.783秒。账本升级身份/UUID/hash链追加历史，旧scale1及旧33消费明确legacy_import；
+不伪填原来未记录的UUID/时间。历史和计数互核，当前scale1/3、diagnostic64/64。
+独立复核要求加强primal flag、finite bound、非负gap及两公式一致；新增拒绝篡改回归，
+重读全部288份原始输出 **288/288 PASS**（6.169秒命令，0新求解），不重复规模。
+
+补充SciPy/HiGHS比较 **192/192 PASS**（4.078秒命令），始终一条外部算法证据；
+真实外部状态/版本/选择和native原始输出分别保存，原生代码无外部调用。
+两冻结研究例通过，完整四列CG2.5/MIP策略-8.5、输入哈希相同；研究例初次记录器∞JSON
+失败已保留。后续独立机制replay记录器把float1.5作精确等号而失败，修正为冻结通用容差，
+未改模型/推导/真值；最终回放PASS（3.184秒），真实mixed割1.5→2与正dual pivot分别保留。
+
+发行版本统一0.2.0a1，无发布日期。基于d4c852f归档源码构建wheel/sdist并在树外普通安装，
+Windows Python3.11.15/NumPy2.4.6及3.13.9/NumPy2.5.4四组合均PASS；各3API+4CLI+
+两包内研究例，无SciPy，-I/site-packages/direct_url工件hash核验。
+第一次py313-sdist安装因NumPy下载SSL/超时后WinError32失败，216.419秒及失败环境/日志
+保留；只在第五个新环境用同一sdist重试24.044秒后成功。构建+安装累计347.145秒。
+工件路径/hash及逐项日志由installation文档登记；远端CI四组合未触发，仍pending。
+
+最终完整质量 **6147 passed /23.06秒**，命令24.514秒；Ruff与结构通过。
+17项新增验收器/ledger篡改拒绝回归通过；协调另做12+5+1项（命令合1.936秒），
+reserve向上增加3秒累计21秒；最终独立工件/source一致性核验0.221秒再向上计1秒，
+reserve最终22秒。四篇伴学checked、完整verified_code及日期已登记。
+所有失败、恢复、重核验、对照、静态检查、安装及末轮质量向上计M5 **480秒/8400秒**；
+安装流含实际347.145秒/静态汇总等向上350秒，其余M5检查保守向上130秒。
+最终总账：M1 96+M2 30+M3 76+M4 60+M5 480+reserve22=**764秒/14400秒**。
+编辑墙钟未充作验证计算；无额外token预算。规模只1轮/最多3轮，固定诊断恰64次。
+
+发行物：
+
+- wheel：`dist/prototype/m5-install-20261024-01/silo_solver-0.2.0a1-py3-none-any.whl`，
+  SHA256=`f6d63c7f10e11356cbac05fa7e454978272a2572e0d9d34a2061af3cfae4609b`。
+- sdist：`dist/prototype/m5-install-20261024-01/silo_solver-0.2.0a1.tar.gz`，
+  SHA256=`ba237ec5fcc4e9cae5beb94e8768bd9e16da5810332cc882f82d0c5d5a23e4f8`。
+- 本地验收8项receipt：`outputs/prototype/final_acceptance.json`，
+  SHA256=`e0c6408815f6530f6465b87781bcfe8d30ed9b5e1fdc93a7b3f1bf1c2ff0a643`。
+  receipt逐项绑定core/strict/diagnostic/external/集成与机制/安装/质量/ledger原始文件SHA。
+
+安装原始失败summary保持failed；final-summary合并成功3项及同sdist重试第4项。
+`integrations_v2/summary.json`保持all_pass=false，其two_integrations记录PASS，机制记录
+失败由后续`mechanisms/summary.json`的单独PASS闭合；没有重写旧summary。
+本地CPU/版本、性能与复现详见[固定核验结果](../../docs/prototype_validation_20261024.md)，
+完整工件/环境/23条命令日志见[安装说明](../../docs/installation.md)。
+
+原始输入、预期答案、全局容差和合同保持冻结；最终候选src与d4c852f相同，后续是
+验收器/计账/伴学与报告文档更新，README说明规模上限与实际观测分别阅读。
+
+边界验证设计的明确注释：
 冻结B13本身的small_milp4根LP为整数，不能据其报告产生GMI割。
 验收须分别保留该冻结模型的答案和混合可行域，以及M3已预先登记的手算混合模型
 min x+y、2x+y>=3、x整数（松弛1.5到2）的真实割轨迹，明确两个证据来源。
 输入/哈希/真值保持冻结；B15可实际进入dual路径但该输入需要0 pivot，正pivot由M2独立例证明。
+
+## 最终固定验收清单
+
+| 必交付 | 本地结论 | 核验依据 |
+|---|---|---|
+| 一般LP/MILP输入与原始回解 | PASS | 原始空间、三入口及M1/完整矩阵 |
+| primal/dual simplex、实际缩放和重优化 | PASS | QR/四warm实际计数、32LP诊断及M2正dual pivot |
+| MILP界/gap/限额/启发式/整数射线 | PASS | 96枚举例、控制边界、前沿回归及独立复核 |
+| 真正local GMI分支割 | PASS | 精确推导复核、1.5→2实际轨迹、切片/祖先/预算回归 |
+| 公开研究接口与两固定集成 | PASS | 正式集成记录2.5/-8.5、受控策略及4环境包内调用 |
+| 192小模型+24边界+72规模+固定诊断 | PASS | 288/288及64/64，严格重核288/288无新求解 |
+| wheel/sdist、本地双版本、CI配置与说明 | PASS | 同工件四安装通过；远端CI单列pending |
+| 四模块伴学、总报告及原研究身份 | PASS | L0011–14 checked/真实commit；旧C/D/E保持独立 |
+
+实测范围为冻结的稠密小模型集合：LP最多196变量/256行；MILP最多24整数变量、
+48总变量/30行，其中12例为20–30整数变量。一般数值稳定性、工业竞争力、无限列完整CG、
+任意外部割、原生C/C++及跨平台实际资格保留各自边界；当前交付没有扩展这些承诺。
+后续工作由用户及讨论对话单独决定，本执行不自动进入第六模块或原研究C。
 
 ## Git / Remote Sync Proof
 
@@ -196,4 +270,10 @@ min x+y、2x+y>=3、x整数（松弛1.5到2）的真实割轨迹，明确两个�
 - remote_sync_status=`dirty_worktree`；同时存在已知 local ahead，不能宣称 synchronized_with_origin。
 - 本报告所在提交以 `git log -1 --format=%H -- tasks/reports/20261023-02-01_teaching-prototype_report.md` 查询，避免自引用。
 
-最终由执行者填写当前 branch、HEAD、cached diff、实际提交及保留工作副本状态。
+- 最终分支`codex/teaching-research-prototype`；最终状态提交由上面的report路径Git查询定位。
+- 本轮关键提交：991c767授权、2ca6098冻结、b44e7c3通路、e9ba601 LP、8a07e4b M3、
+  35bb032 M4、cc11a92验证准备、d4c852f包装源码；末次仅验收/文档归档。
+- 收尾提交前d4c852f的cached origin/main...HEAD=`0/42`；没有即时远端查询。
+- `git diff d4c852f -- src/silo pyproject.toml CITATION.cff`为空；工件native算法和版本身份一致。
+- 收尾后只保留两项原有用户治理变动；合同与frozen文件未改。最终完整6147质量通过，
+  索引/结构/diff及定向Ruff在归档提交前复核。没有push、tag或发行物上传。

@@ -17,6 +17,26 @@ def close(actual, reference, message):
     assert abs(q(actual) - reference) <= TOL * (1 + abs(reference)), message
 
 
+def check_gaps(output):
+    """Check flags and gap algebra without trusting a reported optimality flag."""
+    if output["status"] == "optimal":
+        assert output["has_primal_solution"] is True, "Optimal output lacks a primal flag"
+    if not output["has_primal_solution"]:
+        assert output["absolute_gap"] is output["relative_gap"] is None, "Gap without incumbent"
+        return
+    close(output["primal_bound"], q(output["objective_value"]), "Primal flag/bound mismatch")
+    if output["dual_bound"] is None or not isfinite(float(output["dual_bound"])):
+        assert output["status"] != "optimal", "Infinite optimal bound"
+        assert output["absolute_gap"] is output["relative_gap"] is None, "Gap without finite bound"
+        return
+    p, d = q(output["primal_bound"]), q(output["dual_bound"])
+    gap = abs(p - d)
+    for key, expected in (("absolute_gap", gap), ("relative_gap", gap / max(F(1), abs(p), abs(d)))):
+        value = output[key]
+        assert value is not None and isfinite(float(value)) and value >= 0, f"Invalid {key}"
+        close(value, expected, f"Inconsistent {key}")
+
+
 def primal(payload, values):
     names, sides = raw_sides(payload)
     assert set(values) == set(names), "Incomplete published point"
@@ -103,6 +123,7 @@ def validate(payload, output, truth):
     integer = any(v["type"] != "continuous" for v in payload["variables"])
     record = {"status": expected, "independent_raw_check": True}
     if expected == "optimal":
+        check_gaps(output)
         point, residual = primal(payload, output["primal_values"])
         close(output["objective_value"], truth["objective"], "Independent objective")
         close(output["objective_value"], objective(payload, point), "Published original objective")

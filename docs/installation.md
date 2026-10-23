@@ -1,7 +1,7 @@
 # 安装与发行物验证
 
-本页的 M5 检查脚本和 CI 配置已准备。实际构建、安装、对照测试与平台资格以总任务报告的
-运行记录为准；配置文件存在不构成对应平台已经通过的证据。
+本地0.2.0a1的wheel/sdist已经通过Windows Python3.11/3.13四个独立安装组合。
+实际命令、工件身份与失败重试见下文；远端CI四组合仍待运行。
 
 ## 运行环境
 
@@ -91,6 +91,51 @@ M5 统一执行时先使用 `python -m build` 产生 wheel 和 sdist，并记录
 
 脚本自身不构建或安装软件。输出 JSON 中只有实际执行成功才记为 `passed`；
 失败返回非零退出码。发行物通过只能证明该次解释器、平台和工件组合。
+
+## 本地实际安装证据（2026-10-24）
+
+版本 `0.2.0a1` 已在 Windows 的四个独立源码树外环境中通过普通安装检查。
+四个成功环境均关闭系统 site-packages，采用 `python -I`，运行时仅包含 NumPy、SILO
+和环境自带的 pip/setuptools，未安装或导入 SciPy。每个环境实际执行 3 项一般模型 API、
+4 项 LP/MILP JSON/MPS CLI 和两个包内研究例；目标分别为 LP `18/-18`、MILP `-1.75`、
+覆盖 CG `2.5` 与 MIP 策略例 `-8.5`。所有包导入均来自对应环境的 site-packages，
+安装记录 `direct_url.json` 中的 archive SHA-256 均与被检查工件一致。
+
+| Python | NumPy | 工件 | 结果 | 检查进程墙钟秒 |
+|---|---|---|---|---|
+| 3.11.15 | 2.4.6 | wheel | passed | 2.230 |
+| 3.11.15 | 2.4.6 | sdist | passed | 2.260 |
+| 3.13.9 | 2.5.4 | wheel | passed | 2.010 |
+| 3.13.9 | 2.5.4 | sdist | passed（第二次全新环境安装） | 2.100 |
+
+构建使用已提交源的 `git archive` 副本。打包、README 和完整公开源码身份为
+`d4c852f7112c6abfc2d799c42c924a6aa4cef188`，原生算法提交锚点为
+`cc11a929189ea7cf6e8edde952640edc0f7f0090`。两者的源码差异仅是
+`research_example.py` 的轨迹无穷值 JSON 序列化；算法和版本元数据差异检查通过。
+归档源中 `src/**/*.py` 的路径与原始字节组合 SHA-256 为
+`6d1c166b603fad6c1d459921ce9f420974f8f86a347a85e9a57e482ad76c846b`，
+README SHA-256 为 `c0293ff894169c1b84fee46a12e1e117021a73d7bcee809595eba271bbbdaf8e`。
+
+两份工件保存在 `dist/prototype/m5-install-20261024-01/`，其 SHA-256 为：
+
+- `silo_solver-0.2.0a1-py3-none-any.whl`：
+  `f6d63c7f10e11356cbac05fa7e454978272a2572e0d9d34a2061af3cfae4609b`。
+- `silo_solver-0.2.0a1.tar.gz`：
+  `ba237ec5fcc4e9cae5beb94e8768bd9e16da5810332cc882f82d0c5d5a23e4f8`。
+
+Python 3.13 的第一次 sdist 安装在 NumPy 下载阶段遇到超时、TLS EOF 和部分下载文件
+占用错误，耗时 216.418840 秒，尚未运行检查脚本。该失败环境、工件和完整日志均保留。
+随后以同一份 sdist 在第五个全新环境关闭下载断点续传重试，24.044241 秒内完成安装和
+检查；求解器、检查脚本和工件均未修改。构建、下载、环境创建、全部安装尝试及检查累计
+347.144665 秒，其中两份工件的实际构建为 16.159296 秒。
+
+完整命令、各步退出码、耗时、Python/NumPy 版本、工件与报告哈希及四份检查报告见
+[安装汇总](../outputs/prototype/install/m5-install-20261024-01/final-summary.json)、
+[首轮命令记录](../outputs/prototype/install/m5-install-20261024-01/commands.json) 和
+[重试命令记录](../outputs/prototype/install/m5-install-20261024-01/py313-sdist-retry-01/commands.json)。
+原始失败日志为
+[py313-sdist-02-install.log](../outputs/prototype/install/m5-install-20261024-01/py313-sdist-02-install.log)。
+这些工件与本地日志位于忽略目录，未作为二进制提交。
 
 ## CI 状态
 

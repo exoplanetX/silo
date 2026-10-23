@@ -10,6 +10,8 @@ Module transitions and necessary internal corrections proceed under that contrac
 The known two governance-file changes and registered local-ahead history are explicitly
 accepted, preserved and excluded from staging; no repeated sync approval is needed.
 No native, publication, original research C/D/E, or sixth module is authorized.
+Execution delivered M1–M5 local PASS on 2026-10-24; the coordinator's overall review
+remains the final gate. This exception creates no automatic next task.
 This registration may be maintained within the same total contract; older separate-task
 maintenance and one-task stopping text continues to govern unrelated work.
 

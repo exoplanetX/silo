@@ -1,13 +1,13 @@
 {
-  "reviewed_on": "2026-10-23",
-  "baseline": "cc5aeebd97b40561f02ba689cc0b065e9c94c415",
-  "assessment_note": "2026-10-23 按仓库现有记录整理的初始评价，供开发讨论；不构成新的算法验收、测试运行、性能结论或阶段审批。状态以原始来源为准。",
+  "reviewed_on": "2026-10-24",
+  "baseline": "d4c852f7112c6abfc2d799c42c924a6aa4cef188",
+  "assessment_note": "依据原型总报告与实际证据：M1-M5本地PASS，6147测试、冻结288项、64诊断、192对照及四安装通过；整体终审及远端CI单列状态。原研究身份保持。",
   "boundaries": [
     "长期目标：同一 SILO 内核承载教学、学习与运筹优化研究。",
     "研究主线：固定资源约束路径在对偶变化下的精确状态维护、恢复与完整成本。",
-    "本轮 A–E 最多五项；C 为 HOLD 即停止，D/E 保持未启动。",
+    "原研究A/B已验收；C HOLD，D/E未启动；工程原型按独立总合同M1-M5评价。",
     "数学成立、原目标覆盖与外部贡献分别判断。",
-    "Phase 9 保持 open / parked；native 延期，Phase 10 未启动。"
+    "Phase 9 open/parked；SILO-PROTOTYPE-20261023为已批准独立工程总目标。"
   ],
   "budgets": [
     {
@@ -149,6 +149,76 @@
         "docs/bounded_goal_outcome_20261020.md",
         "docs/seven_step_completion_plan_20261020.md"
       ]
+    },
+    {
+      "id": "M1",
+      "title": "一般模型与统一求解链",
+      "milestone": "M1",
+      "status": "已核验",
+      "tone": "good",
+      "description": "通用min/max、变量/行界、JSON/MPS及原始回解。",
+      "exit": "仅按本原型总合同的有限范围验收。",
+      "sources": [
+        "tasks/reports/20261023-02-01_teaching-prototype_report.md",
+        ".silo-dos/project_profile.md",
+        "docs/prototype_validation_20261024.md"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "LP数值与重优化",
+      "milestone": "M2",
+      "status": "已核验",
+      "tone": "good",
+      "description": "实际缩放、QR复用、primal/dual及4类warm。",
+      "exit": "仅按本原型总合同的有限范围验收。",
+      "sources": [
+        "tasks/reports/20261023-02-01_teaching-prototype_report.md",
+        ".silo-dos/project_profile.md",
+        "docs/prototype_validation_20261024.md"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "一般MILP与GMI",
+      "milestone": "M3",
+      "status": "已核验",
+      "tone": "good",
+      "description": "保守全局界/停止、整数射线、已证明local GMI。",
+      "exit": "仅按本原型总合同的有限范围验收。",
+      "sources": [
+        "tasks/reports/20261023-02-01_teaching-prototype_report.md",
+        ".silo-dos/project_profile.md",
+        "docs/prototype_validation_20261024.md"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "公开研究接口",
+      "milestone": "M4",
+      "status": "已核验",
+      "tone": "good",
+      "description": "受控策略、Phase I及完整有限池CG，两固定例。",
+      "exit": "仅按本原型总合同的有限范围验收。",
+      "sources": [
+        "tasks/reports/20261023-02-01_teaching-prototype_report.md",
+        ".silo-dos/project_profile.md",
+        "docs/prototype_validation_20261024.md"
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "验证与安装",
+      "milestone": "M5",
+      "status": "本地PASS/待整体终审",
+      "tone": "good",
+      "description": "冻结288项/64诊断/192对照及两集成、四隔离安装通过；远端CI pending。",
+      "exit": "仅按本原型总合同的有限范围验收。",
+      "sources": [
+        "tasks/reports/20261023-02-01_teaching-prototype_report.md",
+        ".silo-dos/project_profile.md",
+        "docs/prototype_validation_20261024.md"
+      ]
     }
   ],
   "dimensions": [
@@ -190,8 +260,8 @@
       "status": "范围明确",
       "tone": "good",
       "question": "哪些输入、资源和主问题语义受到实际支持？",
-      "conclusion": "具备 LP、基础 MIP、有限 DAG 及整数资源参考能力。",
-      "gap": "时间窗、完整访问记忆、一般真实多路径主问题未由 A/B 覆盖。",
+      "conclusion": "通用LP/MILP、可重优化LP、local GMI与有限池一般CG已建立。",
+      "gap": "更大数值域、工业性能及原真实应用研究保持各自未决状态。",
       "criterion": "每项能力列出输入域、算法实现、失败边界与可运行例子。",
       "sources": [
         ".silo-dos/project_profile.md",
@@ -203,15 +273,15 @@
       "id": "performance",
       "name": "性能与可扩展性",
       "short": "性能",
-      "status": "未评价",
-      "tone": "muted",
+      "status": "固定规模已测",
+      "tone": "partial",
       "question": "在何种规模、时间与内存预算内完成？",
-      "conclusion": "尚无充分规模基准和竞争力结论。",
-      "gap": "缺冻结实例、环境、强基线、完整计费与重复测量。",
+      "conclusion": "48 LP+24 MILP规模例在20/60秒内全部核验通过。",
+      "gap": "固定构造例不能代表工业实例或一般竞争力。",
       "criterion": "同域、同硬件、同预算比较，保留失败和超时；报告端到端成本。",
       "sources": [
-        ".silo-dos/project_profile.md",
-        "docs/seven_step_completion_plan_20261020.md"
+        "tasks/reports/20261023-02-01_teaching-prototype_report.md",
+        "docs/prototype_validation_20261024.md"
       ]
     },
     {
@@ -265,17 +335,17 @@
       "id": "release",
       "name": "可复现与发行能力",
       "short": "发行",
-      "status": "发行待验证",
+      "status": "本地安装核验",
       "tone": "partial",
       "question": "其他人能否从交付物独立安装、运行并复核？",
-      "conclusion": "已有 Python 包、CLI、许可证和学习基线；正式发行尚未验证。",
-      "gap": "干净安装、平台矩阵、构建产物与标签一致性需要实际检查。",
+      "conclusion": "0.2.0a1 wheel/sdist与Windows双版本按实际日志核验。",
+      "gap": "远端Windows/Linux CI未运行，无公开发布。",
       "criterion": "确定版本的发行物在声明环境独立安装，代表例子与 CLI 通过。",
       "sources": [
+        "tasks/reports/20261023-02-01_teaching-prototype_report.md",
+        "docs/installation.md",
         "pyproject.toml",
-        "CITATION.cff",
-        "CHANGELOG.md",
-        "docs/development_restart.md"
+        "CITATION.cff"
       ]
     }
   ],
@@ -283,28 +353,30 @@
     {
       "id": "lp",
       "name": "LP / 单纯形",
-      "scope": "小型、声明支持域的连续 LP；tableau 与 revised 后端。",
+      "scope": "一般min/max连续线性模型、稠密QR primal/dual、一般重优化。",
       "maturity": 1,
       "level": "经核验的参考实现",
-      "limit": "更广变量域与一般数值可靠性需按文档逐项核查。",
+      "limit": "固定数值/规模范围；旧tableau/revised API保持原标准形域。",
       "sources": [
-        "docs/lp_solver.md",
-        "docs/correctness_baseline.md",
-        "src/silo/lp/simplex/revised.py",
-        "src/silo/lp/simplex/tableau.py"
+        "docs/general_solver.md",
+        "docs/numeric_engine.md",
+        "src/silo/lp/general.py",
+        "src/silo/lp/kernel.py",
+        "tasks/reports/20261023-02-01_teaching-prototype_report.md"
       ]
     },
     {
       "id": "mip",
-      "name": "基础 MIP / 分支定界",
-      "scope": "最小 branch-and-bound；限定整数模型及终止约定。",
+      "name": "一般MILP / branch-and-cut",
+      "scope": "整数/二元/连续混合、全局界/gap/限额、启发式及local GMI。",
       "maturity": 1,
       "level": "经核验的参考实现",
-      "limit": "不据此声明完整 branch-and-cut、工业性能或一般应用可靠性。",
+      "limit": "原型固定范围；无工业性能承诺，未知无界松弛保留未解决状态。",
       "sources": [
-        "docs/mip_solve_cli.md",
-        "docs/correctness_baseline.md",
-        "src/silo/mip/branch_and_bound.py"
+        "docs/general_solver.md",
+        "docs/branch_and_cut.md",
+        "src/silo/mip/general.py",
+        "tasks/reports/20261023-02-01_teaching-prototype_report.md"
       ]
     },
     {
@@ -373,12 +445,12 @@
     {
       "id": "clean",
       "name": "独立安装与平台矩阵",
-      "status": "待验证",
-      "tone": "partial",
-      "detail": "开发环境通过与干净环境安装分别核验；平台承诺需要实际证据。",
+      "status": "本地双版本通过",
+      "tone": "good",
+      "detail": "Windows3.11/3.13各wheel/sdist四个独立安装通过；远端Windows/Linux CI待运行。",
       "sources": [
-        "docs/development_restart.md",
-        "pyproject.toml"
+        "docs/installation.md",
+        "tasks/reports/20261023-02-01_teaching-prototype_report.md"
       ]
     },
     {
@@ -405,34 +477,45 @@
     }
   ],
   "source_hashes": {
-    ".silo-dos/project_profile.md": "798b6504defe16114d79bc83545b97816272ff26561d6d7616327d985a371dbd",
-    "ROADMAP.md": "272f338491d04b691b8706b79d7d307bb95b2b66264fec4a15248c807629978f",
+    ".silo-dos/project_profile.md": "6ce92e4f7287630f93ae2adebd5f1b4095579d7b95c012b5cec0d9f5a0957bff",
+    "CHANGELOG.md": "6216840ffe24c46bb2a8266a39096b350cfb7ed95d148682af4c17eda08d55f6",
+    "CITATION.cff": "6fc5cf6e96c887d637c46afe328b0b754bfab72aef6fb6c1eff4d39734633935",
+    "ROADMAP.md": "836fc3960374c5394b755b17056e61e033708592c94d398be52da313d7c5abf9",
     "docs/bounded_goal_outcome_20261020.md": "b9bf3748ba20b710ec1fe6c8bfefa10d90a819e72fa41a983e8f58cb1b1b5dfb",
-    "docs/seven_step_completion_plan_20261020.md": "335284f5f91d7dadb97793c89c65a6d4c1c1b522d2af78c573d1646333120e58",
-    "learning/CATALOG.md": "25dbd5b3525fd9f70e45258f20cdd0bc5729f8e47d391841ede2ee4be7cdafd0",
-    "learning/WRITING_GUIDE.md": "c698e5bafbc49daf4cb9dfa6aaba8a0b520a06052fe4db303dbd33acde329290",
-    "docs/resource_dag_pricing.md": "5a5647106ebabaf505e048dcec73ef05729ff863692fd603e03ecdb88714125e",
-    "docs/resource_dag_column_generation.md": "b67066f3df84538fcfb5f5d3c6d0d3e6ba20699e089c84e1d2493d891390921f",
+    "docs/branch_and_cut.md": "e07e810230dc58d8587f560644cc1c676e7ce193cb470ffc4a36438e8121ae6e",
     "docs/correctness_baseline.md": "ce1a76d61b549c929416e8afe091218797d11ef224369f97b2f4a7bd8851dd24",
+    "docs/dag_column_generation.md": "e6c7a27c104684829b3d96a5077c4c23d1af958c90914b1e357b70966ca5dedd",
+    "docs/dag_pricing.md": "438a46989b58717154af228c2988f6aef30ff4a9ab83a6bc65a3de0276a73bca",
+    "docs/development_layout.md": "f9942498b3de8c0aa0e6c4f78f2b4aa0444fea6415a97e700c7458bf6752780e",
+    "docs/development_restart.md": "609b7bd6eb920638c7d4c645d112d07145a88a90459039d4fef388b404d42e17",
+    "docs/general_solver.md": "914129def756917b335f3cc95ed33ee06d971f648dfcf169332b03e5832a6138",
+    "docs/installation.md": "97bc55efba04cbebda31881a1c8fbf62b76da87076bf4d4c66d1f91e3c58e455",
+    "docs/lp_solver.md": "3db48c5b1c677cf5b16e0607e9eb2c1de05c1712cc695e909208f8255b7d6718",
     "docs/lp_unboundedness.md": "4a012219a55962dd9917a239b367814feb61f215da439a3e6dca67bd0a28b135",
-    "docs/development_layout.md": "8a3315e996ca1cec479fd0e6b16cc36fa7e169d10c63c9c81a9f166af955ce2b",
+    "docs/mip_solve_cli.md": "634f42a23a9492afd488df255a514a0661d3b28ecb7fd2d001f87edd39480f4e",
+    "docs/numeric_engine.md": "b137651ea92d40b873d6292b17ad019f3bb2e4b01cd60bced31a1db6df896870",
+    "docs/prototype_validation_20261024.md": "25750c6117ed481706756b8efa52356732935c5eb1ba2cd174c5d6e57f62d3e7",
+    "docs/research_api.md": "25a470d3428c9af3e5e73df8e49164ed52ca8088a4cabcd1aac3fb84de20f51e",
+    "docs/resource_dag_column_generation.md": "b67066f3df84538fcfb5f5d3c6d0d3e6ba20699e089c84e1d2493d891390921f",
+    "docs/resource_dag_pricing.md": "5a5647106ebabaf505e048dcec73ef05729ff863692fd603e03ecdb88714125e",
+    "docs/seven_step_completion_plan_20261020.md": "335284f5f91d7dadb97793c89c65a6d4c1c1b522d2af78c573d1646333120e58",
+    "learning/CATALOG.md": "13f7d82a685dafc952c6e130dd115ee3765579c4c9b434bc2ba3d4324e18a17f",
+    "learning/WRITING_GUIDE.md": "c698e5bafbc49daf4cb9dfa6aaba8a0b520a06052fe4db303dbd33acde329290",
     "notes/26_incremental_pricing_research_start.md": "67cc5e68c3e05ca39630112d4b8a9db48b4ba9df47e3e9cd05718c99c750c30f",
     "notes/30_pricing_locality_conditions_and_nearest_neighbors.md": "a5437854d459b180ef9f9f8c3eefcc0206c1d3f263d68145862e68ad1befa43d",
-    "tasks/README.md": "46c7ad521a7460100d8c56e18b6fb9f774811a3f3158e120d14cb3c5985c2d1b",
-    "pyproject.toml": "04548c0b3544848fdc711c32024e5d664fe886dfa3ea116e2323f11d0eb4276e",
-    "CITATION.cff": "dcd0ecd2e50b348b80fef65a2d9330ec793b8c16893380e5d4757fd4bd5066ae",
-    "CHANGELOG.md": "cf72f224bcbfba93479f0b1be858f9da9b54276b2fae242f7671ba7a88be6dae",
-    "docs/development_restart.md": "609b7bd6eb920638c7d4c645d112d07145a88a90459039d4fef388b404d42e17",
-    "docs/lp_solver.md": "42286c049df7e2bdb14c1bff02d12e6019f65e949f8dff5e5985170f1c1989ef",
-    "src/silo/lp/simplex/revised.py": "b5757f6caaf55339b234ea11f201e8596d1b1bfc6e195bcfe8c42a85fdcf8578",
-    "src/silo/lp/simplex/tableau.py": "7fc34f73a20b8c6cb74f7d7f8b60f10de0ab096a1b5f9771e452bfb2f979aff9",
-    "docs/mip_solve_cli.md": "634f42a23a9492afd488df255a514a0661d3b28ecb7fd2d001f87edd39480f4e",
-    "src/silo/mip/branch_and_bound.py": "d627cf98a5d8eaa198a0cffa4bc8b795d4c230fc0bbac480f2a64109e89365f0",
-    "docs/dag_pricing.md": "438a46989b58717154af228c2988f6aef30ff4a9ab83a6bc65a3de0276a73bca",
-    "src/silo/decomposition/dag_pricing.py": "3a6b52650fa35cb8cc6b3accd19317d6c532d1a6f88ef84d633246b66ed29b8a",
-    "src/silo/decomposition/resource_dag_pricing.py": "b2e31d04ea2716f67ab094d6ffaa74225697e2e54e13295b704cf55b6ac3c91c",
-    "docs/dag_column_generation.md": "e6c7a27c104684829b3d96a5077c4c23d1af958c90914b1e357b70966ca5dedd",
+    "pyproject.toml": "9e43722e1215116c5d637e7e2324709e32091063b79de1dd77447df143af089c",
     "src/silo/decomposition/dag_column_generation.py": "a35ad11e1051ee3bca0d356b6141d5819578c985e2f7366399d6d9602d154df6",
-    "src/silo/decomposition/resource_dag_column_generation.py": "7452abb0803688fd884bcad7a52c21c0e8aa996a51c58fbb7c0eebc64711fa22"
+    "src/silo/decomposition/dag_pricing.py": "3a6b52650fa35cb8cc6b3accd19317d6c532d1a6f88ef84d633246b66ed29b8a",
+    "src/silo/decomposition/general_master.py": "c8c0c0fecf1a3bc39b7f273c9e4da8c1e7f147ff8c2886e071cbfb476f2081e8",
+    "src/silo/decomposition/resource_dag_column_generation.py": "7452abb0803688fd884bcad7a52c21c0e8aa996a51c58fbb7c0eebc64711fa22",
+    "src/silo/decomposition/resource_dag_pricing.py": "b2e31d04ea2716f67ab094d6ffaa74225697e2e54e13295b704cf55b6ac3c91c",
+    "src/silo/lp/general.py": "c52331ec873d9ccadb24724dbd6ae848cc3263629c3823f76ffba7df0706fa50",
+    "src/silo/lp/kernel.py": "7d29d7e024d5d2c9ce741e19ff159cfb7c675e532f8fc2f53735149bcae1d7c7",
+    "src/silo/lp/simplex/revised.py": "b5757f6caaf55339b234ea11f201e8596d1b1bfc6e195bcfe8c42a85fdcf8578",
+    "src/silo/lp/simplex/tableau.py": "699cbeab279db4f95d06f213fa13a96aa39bdc8bd68d4fa9d1d2dfaa3acb633b",
+    "src/silo/mip/branch_and_bound.py": "84ae639e5ccc6238a3ce991eb50ca370f83ce91a008a5a6a0015949682cc3a7d",
+    "src/silo/mip/general.py": "146c9b6f3b5b8856bfe9c8196c9226cc114912ade958bf8b06065eb889bab6d0",
+    "tasks/README.md": "7a1c700e27e611adc2e7a782d7930c2f2c910c00f091bc017ec95f7247597f0e",
+    "tasks/reports/20261023-02-01_teaching-prototype_report.md": "2df4417c2bf4a69f71f40934112d011e5512a50bca846b2e70f954b59ef7258f"
   }
 }

@@ -8,6 +8,8 @@ The user directly approved SILO-PROTOTYPE-20261023's five-module implementation.
 LP/MILP, the listed API/CLI/schema and packaging/CI changes, and program-specific
 rule registration. Continue at module PASS without issuing another task or asking
 again. The total report governs recovery; the coordinator owns final acceptance.
+The execution checkpoint now delivers all five local modules; further activity
+is limited to the coordinator's in-scope final review, with no sixth module.
 The following native corridor and ordinary-task gates remain valid outside this
 program. Native implementation stays deferred; original research C/D/E stays unchanged.
 

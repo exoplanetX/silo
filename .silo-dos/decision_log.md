@@ -13,6 +13,10 @@
   Known governance bytes and local-ahead history are accepted, not silently cleaned.
 - Native remains parked; old A/B accepted, C HOLD and D/E unstarted. No claim that
   the engineering prototype answers the original pricing research question.
+- 2026-10-24: execution delivered M1–M5 local PASS, version0.2.0a1; frozen288 cases,
+  exactly64 diagnostics,192 optional comparisons, two integrations, four isolated
+  installations and final6147 tests. Verification conservatively764/14400s.
+  No push/publication; coordinator's overall review remains pending.
 
 Current project status and next-step recommendations are maintained in
 [project_profile.md](project_profile.md). This log preserves durable decisions;
