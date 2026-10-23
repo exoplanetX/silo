@@ -6,6 +6,7 @@
 
 | 要查什么 | 文档 |
 |---|---|
+| 教学研究通用 LP/MILP 原型的五模块整体目标与验收 | [2026-10-23 原型整体计划](../tasks/phases/phase_10_teaching_research_prototype.md) |
 | 在 Codex 内浏览开发状态、评价、目标与伴学 | [本地开发工作台](development_workbench.md) |
 | 当前开发状态、已完成与下一步建议 | [项目当前摘要](../.silo-dos/project_profile.md) |
 | 原七步计划、实际九次交付及研究覆盖缺口 | [2026-10-20 开发路线全局复查](development_route_review_20261020.md) |
