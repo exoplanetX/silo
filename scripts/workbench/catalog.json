@@ -1,0 +1,438 @@
+{
+  "reviewed_on": "2026-10-23",
+  "baseline": "cc5aeebd97b40561f02ba689cc0b065e9c94c415",
+  "assessment_note": "2026-10-23 按仓库现有记录整理的初始评价，供开发讨论；不构成新的算法验收、测试运行、性能结论或阶段审批。状态以原始来源为准。",
+  "boundaries": [
+    "长期目标：同一 SILO 内核承载教学、学习与运筹优化研究。",
+    "研究主线：固定资源约束路径在对偶变化下的精确状态维护、恢复与完整成本。",
+    "本轮 A–E 最多五项；C 为 HOLD 即停止，D/E 保持未启动。",
+    "数学成立、原目标覆盖与外部贡献分别判断。",
+    "Phase 9 保持 open / parked；native 延期，Phase 10 未启动。"
+  ],
+  "budgets": [
+    {
+      "name": "A / B / D",
+      "limit": "每项初次交付＋至多一次同目标修正复核",
+      "state": "A / B 已验收；D 未启动",
+      "source": "docs/seven_step_completion_plan_20261020.md"
+    },
+    {
+      "name": "C 应用裁决",
+      "limit": "至多 3 实例 / 100 轮 / 单次 180 秒 / 累计 30 分钟",
+      "state": "签发前 HOLD；核心运行 0",
+      "source": "docs/bounded_goal_outcome_20261020.md"
+    },
+    {
+      "name": "C 状态预算",
+      "limit": "50 万状态 / 300 万边；任一核心超限即 HOLD",
+      "state": "尚未运行",
+      "source": "docs/seven_step_completion_plan_20261020.md"
+    },
+    {
+      "name": "E 完整评价",
+      "limit": "至多 3 方法 / 54 闭环 / 300 对偶点 / 累计 4 小时",
+      "state": "条件门槛未达到，尚未启动",
+      "source": "docs/seven_step_completion_plan_20261020.md"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "原 1",
+      "title": "Phase I 正确性修复",
+      "status": "已验收",
+      "detail": "保留既有纠错与核验依据。"
+    },
+    {
+      "id": "原 2",
+      "title": "最小受限主问题",
+      "status": "已验收",
+      "detail": "最小 RMP 及明确接口已建立。"
+    },
+    {
+      "id": "原 3",
+      "title": "资源可行 DAG 精确定价",
+      "status": "限定范围已验收",
+      "detail": "A 覆盖非负整数可加资源；一般资源状态尚未覆盖。"
+    },
+    {
+      "id": "原 4",
+      "title": "完整列生成循环",
+      "status": "限定范围已验收",
+      "detail": "B 覆盖单凸性连续资源路径参考主问题。"
+    },
+    {
+      "id": "原 5",
+      "title": "真实应用适用性与成本",
+      "status": "HOLD",
+      "detail": "缺完整应用精确定价、真实 root-CG 轨迹及强基线。"
+    },
+    {
+      "id": "原 6",
+      "title": "一个增量定价机制",
+      "status": "未启动",
+      "detail": "等待 C 支持与具体机制合同。"
+    },
+    {
+      "id": "原 7",
+      "title": "完整计算价值",
+      "status": "未启动",
+      "detail": "等待 D 正确性验收；完整评价允许无净收益。"
+    }
+  ],
+  "units": [
+    {
+      "id": "A",
+      "title": "资源冷定价",
+      "milestone": "原 3",
+      "status": "已验收",
+      "tone": "good",
+      "description": "有限 DAG、非负整数可加资源；独立完整路径核验。",
+      "exit": "在声明子类通过验收即结束；不扩展到时间窗与访问记忆。",
+      "sources": [
+        ".silo-dos/project_profile.md",
+        "docs/bounded_goal_outcome_20261020.md",
+        "docs/resource_dag_pricing.md"
+      ]
+    },
+    {
+      "id": "B",
+      "title": "资源参考 CG",
+      "milestone": "原 4",
+      "status": "已验收",
+      "tone": "good",
+      "description": "同一资源列域与单凸性连续 RMP 的参考闭环。",
+      "exit": "参考闭环验收后结束；不替代真实覆盖或分割应用。",
+      "sources": [
+        ".silo-dos/project_profile.md",
+        "docs/bounded_goal_outcome_20261020.md",
+        "docs/resource_dag_column_generation.md"
+      ]
+    },
+    {
+      "id": "C",
+      "title": "真实应用裁决",
+      "milestone": "原 5",
+      "status": "HOLD",
+      "tone": "hold",
+      "description": "精确定价、完整状态、真实轨迹及强基线的联合证据尚未就绪。",
+      "exit": "签发前 HOLD 已达到本轮停止点；应用假设仍保持开放。",
+      "sources": [
+        ".silo-dos/project_profile.md",
+        "docs/bounded_goal_outcome_20261020.md",
+        "docs/seven_step_completion_plan_20261020.md"
+      ]
+    },
+    {
+      "id": "D",
+      "title": "增量定价机制",
+      "milestone": "原 6",
+      "status": "未启动",
+      "tone": "muted",
+      "description": "仅在 C 支持、机制与证明义务固定后实施一个机制。",
+      "exit": "本轮不自动签发或执行。",
+      "sources": [
+        ".silo-dos/project_profile.md",
+        "docs/bounded_goal_outcome_20261020.md",
+        "docs/seven_step_completion_plan_20261020.md"
+      ]
+    },
+    {
+      "id": "E",
+      "title": "完整成本评价",
+      "milestone": "原 7",
+      "status": "未启动",
+      "tone": "muted",
+      "description": "核算全部维护与回退成本，比较真实闭环的端到端效果。",
+      "exit": "条件满足后一次完整评价即可结束；允许无净收益。",
+      "sources": [
+        ".silo-dos/project_profile.md",
+        "docs/bounded_goal_outcome_20261020.md",
+        "docs/seven_step_completion_plan_20261020.md"
+      ]
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "correctness",
+      "name": "数学正确性",
+      "short": "正确性",
+      "status": "有限范围有依据",
+      "tone": "good",
+      "question": "实现、对偶、终止状态与数学规格是否一致？",
+      "conclusion": "已有独立小实例真值与 A/B 的限定参考域核验。",
+      "gap": "有限样本不替代一般证明；更广输入域须独立核验。",
+      "criterion": "约定明确；原始可行性、目标重构、界与终止依据得到独立检查。",
+      "sources": [
+        "docs/correctness_baseline.md",
+        "docs/bounded_goal_outcome_20261020.md"
+      ]
+    },
+    {
+      "id": "numerics",
+      "name": "数值稳健性",
+      "short": "数值",
+      "status": "局部证据",
+      "tone": "partial",
+      "question": "退化、缩放、容差与异常退出是否可靠？",
+      "conclusion": "已有保守处理和局部回归；一般应用范围尚未建立。",
+      "gap": "需要冻结病态、尺度、退化问题族及异常退出评价。",
+      "criterion": "在明确数值域、容差和失败语义下，经独立残差与状态核验。",
+      "sources": [
+        "docs/correctness_baseline.md",
+        "docs/lp_unboundedness.md",
+        "ROADMAP.md"
+      ]
+    },
+    {
+      "id": "coverage",
+      "name": "算法与模型覆盖",
+      "short": "覆盖",
+      "status": "范围明确",
+      "tone": "good",
+      "question": "哪些输入、资源和主问题语义受到实际支持？",
+      "conclusion": "具备 LP、基础 MIP、有限 DAG 及整数资源参考能力。",
+      "gap": "时间窗、完整访问记忆、一般真实多路径主问题未由 A/B 覆盖。",
+      "criterion": "每项能力列出输入域、算法实现、失败边界与可运行例子。",
+      "sources": [
+        ".silo-dos/project_profile.md",
+        "docs/bounded_goal_outcome_20261020.md",
+        "docs/development_layout.md"
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "性能与可扩展性",
+      "short": "性能",
+      "status": "未评价",
+      "tone": "muted",
+      "question": "在何种规模、时间与内存预算内完成？",
+      "conclusion": "尚无充分规模基准和竞争力结论。",
+      "gap": "缺冻结实例、环境、强基线、完整计费与重复测量。",
+      "criterion": "同域、同硬件、同预算比较，保留失败和超时；报告端到端成本。",
+      "sources": [
+        ".silo-dos/project_profile.md",
+        "docs/seven_step_completion_plan_20261020.md"
+      ]
+    },
+    {
+      "id": "application",
+      "name": "应用有效性",
+      "short": "应用",
+      "status": "HOLD",
+      "tone": "hold",
+      "question": "是否正确解决了完整目标应用？",
+      "conclusion": "C 签发前就绪性 HOLD；真实应用核心运行数为 0。",
+      "gap": "完整应用精确定价、真实 root-CG 轨迹与同域强/动态对照未就绪。",
+      "criterion": "真实模型、完整状态、输入身份、数值合同与端到端输出同时成立。",
+      "sources": [
+        ".silo-dos/project_profile.md",
+        "docs/bounded_goal_outcome_20261020.md"
+      ]
+    },
+    {
+      "id": "contribution",
+      "name": "科学贡献",
+      "short": "贡献",
+      "status": "尚待确立",
+      "tone": "partial",
+      "question": "相对最强近邻新增了什么机制、理论或计算价值？",
+      "conclusion": "原问题和部分结构证据已积累；增量机制及净收益尚未确立。",
+      "gap": "仍须补应用联合证据、机制差异与完整成本评价。",
+      "criterion": "数学成立、原题覆盖和最近邻增量分别有证据。",
+      "sources": [
+        ".silo-dos/project_profile.md",
+        "notes/26_incremental_pricing_research_start.md",
+        "notes/30_pricing_locality_conditions_and_nearest_neighbors.md"
+      ]
+    },
+    {
+      "id": "engineering",
+      "name": "软件工程质量",
+      "short": "工程",
+      "status": "已有组织基础",
+      "tone": "good",
+      "question": "模块、接口、回归与维护是否可靠且可追溯？",
+      "conclusion": "已有目录边界、任务合同、回归与来源链。",
+      "gap": "公共接口长期稳定承诺与更广维护证据尚待建立。",
+      "criterion": "依赖方向清楚、确定性回归、行为文档和变更追溯一致。",
+      "sources": [
+        "docs/development_layout.md",
+        "tasks/README.md",
+        ".silo-dos/project_profile.md"
+      ]
+    },
+    {
+      "id": "release",
+      "name": "可复现与发行能力",
+      "short": "发行",
+      "status": "发行待验证",
+      "tone": "partial",
+      "question": "其他人能否从交付物独立安装、运行并复核？",
+      "conclusion": "已有 Python 包、CLI、许可证和学习基线；正式发行尚未验证。",
+      "gap": "干净安装、平台矩阵、构建产物与标签一致性需要实际检查。",
+      "criterion": "确定版本的发行物在声明环境独立安装，代表例子与 CLI 通过。",
+      "sources": [
+        "pyproject.toml",
+        "CITATION.cff",
+        "CHANGELOG.md",
+        "docs/development_restart.md"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "lp",
+      "name": "LP / 单纯形",
+      "scope": "小型、声明支持域的连续 LP；tableau 与 revised 后端。",
+      "maturity": 1,
+      "level": "经核验的参考实现",
+      "limit": "更广变量域与一般数值可靠性需按文档逐项核查。",
+      "sources": [
+        "docs/lp_solver.md",
+        "docs/correctness_baseline.md",
+        "src/silo/lp/simplex/revised.py",
+        "src/silo/lp/simplex/tableau.py"
+      ]
+    },
+    {
+      "id": "mip",
+      "name": "基础 MIP / 分支定界",
+      "scope": "最小 branch-and-bound；限定整数模型及终止约定。",
+      "maturity": 1,
+      "level": "经核验的参考实现",
+      "limit": "不据此声明完整 branch-and-cut、工业性能或一般应用可靠性。",
+      "sources": [
+        "docs/mip_solve_cli.md",
+        "docs/correctness_baseline.md",
+        "src/silo/mip/branch_and_bound.py"
+      ]
+    },
+    {
+      "id": "dag",
+      "name": "DAG 精确定价",
+      "scope": "有限 DAG 全部 s-t 路径的最小约化成本。",
+      "maturity": 1,
+      "level": "经核验的参考实现",
+      "limit": "额外资源与访问记忆须使用对应模型。",
+      "sources": [
+        "docs/dag_pricing.md",
+        "src/silo/decomposition/dag_pricing.py"
+      ]
+    },
+    {
+      "id": "resource",
+      "name": "整数资源冷定价",
+      "scope": "有限 DAG、非负整数可加资源、固定资源维数。",
+      "maturity": 1,
+      "level": "经核验的参考实现",
+      "limit": "A 的子域不覆盖等待相关时间转移和 elementarity。",
+      "sources": [
+        "docs/resource_dag_pricing.md",
+        "docs/bounded_goal_outcome_20261020.md",
+        "src/silo/decomposition/resource_dag_pricing.py"
+      ]
+    },
+    {
+      "id": "cg",
+      "name": "普通 DAG 列生成",
+      "scope": "单凸性连续路径组合；可选显式 RMP 基复用。",
+      "maturity": 1,
+      "level": "经核验的参考实现",
+      "limit": "RMP 基复用与跨对偶的增量定价分别评价。",
+      "sources": [
+        "docs/dag_column_generation.md",
+        "src/silo/decomposition/dag_column_generation.py"
+      ]
+    },
+    {
+      "id": "resource-cg",
+      "name": "资源路径参考 CG",
+      "scope": "资源可行路径列域、连续 lambda≥0、全局 Σlambda=1。",
+      "maturity": 1,
+      "level": "经核验的参考实现",
+      "limit": "B 参考主问题不替代多路径覆盖/分割应用。",
+      "sources": [
+        "docs/resource_dag_column_generation.md",
+        "docs/bounded_goal_outcome_20261020.md",
+        "src/silo/decomposition/resource_dag_column_generation.py"
+      ]
+    }
+  ],
+  "delivery": [
+    {
+      "id": "package",
+      "name": "Python 包与 CLI",
+      "status": "已有开发入口",
+      "tone": "good",
+      "detail": "pyproject 已声明 silo 命令入口，代码版本 0.1.0。当前页面未运行 CLI 或构建验证。",
+      "sources": [
+        "pyproject.toml",
+        "CHANGELOG.md"
+      ]
+    },
+    {
+      "id": "clean",
+      "name": "独立安装与平台矩阵",
+      "status": "待验证",
+      "tone": "partial",
+      "detail": "开发环境通过与干净环境安装分别核验；平台承诺需要实际证据。",
+      "sources": [
+        "docs/development_restart.md",
+        "pyproject.toml"
+      ]
+    },
+    {
+      "id": "teaching",
+      "name": "教学快照",
+      "status": "按篇追溯",
+      "tone": "good",
+      "detail": "每篇保留稳定 lesson_id、讲解版本、verified_code 与实际核验日期。",
+      "sources": [
+        "learning/CATALOG.md",
+        "learning/WRITING_GUIDE.md"
+      ]
+    },
+    {
+      "id": "research",
+      "name": "研究与应用交付",
+      "status": "分别冻结",
+      "tone": "partial",
+      "detail": "研究结果固定代码、数据和环境；应用层沿共享内核扩展，按自身证据评价。",
+      "sources": [
+        "docs/development_layout.md",
+        "docs/seven_step_completion_plan_20261020.md"
+      ]
+    }
+  ],
+  "source_hashes": {
+    ".silo-dos/project_profile.md": "798b6504defe16114d79bc83545b97816272ff26561d6d7616327d985a371dbd",
+    "ROADMAP.md": "272f338491d04b691b8706b79d7d307bb95b2b66264fec4a15248c807629978f",
+    "docs/bounded_goal_outcome_20261020.md": "b9bf3748ba20b710ec1fe6c8bfefa10d90a819e72fa41a983e8f58cb1b1b5dfb",
+    "docs/seven_step_completion_plan_20261020.md": "335284f5f91d7dadb97793c89c65a6d4c1c1b522d2af78c573d1646333120e58",
+    "learning/CATALOG.md": "25dbd5b3525fd9f70e45258f20cdd0bc5729f8e47d391841ede2ee4be7cdafd0",
+    "learning/WRITING_GUIDE.md": "c698e5bafbc49daf4cb9dfa6aaba8a0b520a06052fe4db303dbd33acde329290",
+    "docs/resource_dag_pricing.md": "5a5647106ebabaf505e048dcec73ef05729ff863692fd603e03ecdb88714125e",
+    "docs/resource_dag_column_generation.md": "b67066f3df84538fcfb5f5d3c6d0d3e6ba20699e089c84e1d2493d891390921f",
+    "docs/correctness_baseline.md": "ce1a76d61b549c929416e8afe091218797d11ef224369f97b2f4a7bd8851dd24",
+    "docs/lp_unboundedness.md": "4a012219a55962dd9917a239b367814feb61f215da439a3e6dca67bd0a28b135",
+    "docs/development_layout.md": "8a3315e996ca1cec479fd0e6b16cc36fa7e169d10c63c9c81a9f166af955ce2b",
+    "notes/26_incremental_pricing_research_start.md": "67cc5e68c3e05ca39630112d4b8a9db48b4ba9df47e3e9cd05718c99c750c30f",
+    "notes/30_pricing_locality_conditions_and_nearest_neighbors.md": "a5437854d459b180ef9f9f8c3eefcc0206c1d3f263d68145862e68ad1befa43d",
+    "tasks/README.md": "46c7ad521a7460100d8c56e18b6fb9f774811a3f3158e120d14cb3c5985c2d1b",
+    "pyproject.toml": "04548c0b3544848fdc711c32024e5d664fe886dfa3ea116e2323f11d0eb4276e",
+    "CITATION.cff": "dcd0ecd2e50b348b80fef65a2d9330ec793b8c16893380e5d4757fd4bd5066ae",
+    "CHANGELOG.md": "cf72f224bcbfba93479f0b1be858f9da9b54276b2fae242f7671ba7a88be6dae",
+    "docs/development_restart.md": "609b7bd6eb920638c7d4c645d112d07145a88a90459039d4fef388b404d42e17",
+    "docs/lp_solver.md": "42286c049df7e2bdb14c1bff02d12e6019f65e949f8dff5e5985170f1c1989ef",
+    "src/silo/lp/simplex/revised.py": "b5757f6caaf55339b234ea11f201e8596d1b1bfc6e195bcfe8c42a85fdcf8578",
+    "src/silo/lp/simplex/tableau.py": "7fc34f73a20b8c6cb74f7d7f8b60f10de0ab096a1b5f9771e452bfb2f979aff9",
+    "docs/mip_solve_cli.md": "634f42a23a9492afd488df255a514a0661d3b28ecb7fd2d001f87edd39480f4e",
+    "src/silo/mip/branch_and_bound.py": "d627cf98a5d8eaa198a0cffa4bc8b795d4c230fc0bbac480f2a64109e89365f0",
+    "docs/dag_pricing.md": "438a46989b58717154af228c2988f6aef30ff4a9ab83a6bc65a3de0276a73bca",
+    "src/silo/decomposition/dag_pricing.py": "3a6b52650fa35cb8cc6b3accd19317d6c532d1a6f88ef84d633246b66ed29b8a",
+    "src/silo/decomposition/resource_dag_pricing.py": "b2e31d04ea2716f67ab094d6ffaa74225697e2e54e13295b704cf55b6ac3c91c",
+    "docs/dag_column_generation.md": "e6c7a27c104684829b3d96a5077c4c23d1af958c90914b1e357b70966ca5dedd",
+    "src/silo/decomposition/dag_column_generation.py": "a35ad11e1051ee3bca0d356b6141d5819578c985e2f7366399d6d9602d154df6",
+    "src/silo/decomposition/resource_dag_column_generation.py": "7452abb0803688fd884bcad7a52c21c0e8aa996a51c58fbb7c0eebc64711fa22"
+  }
+}

@@ -6,6 +6,7 @@
 
 | 要查什么 | 文档 |
 |---|---|
+| 在 Codex 内浏览开发状态、评价、目标与伴学 | [本地开发工作台](development_workbench.md) |
 | 当前开发状态、已完成与下一步建议 | [项目当前摘要](../.silo-dos/project_profile.md) |
 | 原七步计划、实际九次交付及研究覆盖缺口 | [2026-10-20 开发路线全局复查](development_route_review_20261020.md) |
 | 原三阶段七任务的现状、剩余清单及目标运行终点 | [有界收尾计划](seven_step_completion_plan_20261020.md) |

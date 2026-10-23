@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>SILO · 开发工作台</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip">跳到内容</a>
+  <aside class="sidebar" aria-label="工作台导航">
+    <a class="brand" href="#overview"><span class="brand-mark">S</span><span>SILO<span class="brand-caption">DEVELOPMENT WORKSPACE</span></span></a>
+    <div class="nav-label">项目工作台 <span>01 — 06</span></div>
+    <nav>
+      <a href="#overview" data-page="overview"><span class="nav-index">01</span>开发总览</a>
+      <a href="#goals" data-page="goals"><span class="nav-index">02</span>目标与阶段</a>
+      <a href="#evaluation" data-page="evaluation"><span class="nav-index">03</span>求解器评价<span class="nav-dot"></span></a>
+      <a href="#evidence" data-page="evidence"><span class="nav-index">04</span>任务与证据</a>
+      <a href="#learning" data-page="learning"><span class="nav-index">05</span>开发伴学</a>
+      <a href="#delivery" data-page="delivery"><span class="nav-index">06</span>版本与交付</a>
+    </nav>
+    <div class="sidebar-note"><span class="tiny-label">ONE KERNEL, THREE PURPOSES</span><p>教学 · 研究 · 应用</p><div class="sidebar-rule"></div><span id="sidebar-version">SILO 0.1.0</span><small>目标有边界，结论有依据。</small></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <div class="breadcrumb">SILO <span>/</span> <span id="breadcrumb">开发总览</span></div>
+      <div class="top-actions"><span class="local-label"><i></i>本地只读</span><button id="refresh" class="button small" type="button">刷新数据 <span aria-hidden="true">↻</span></button></div>
+    </header>
+    <main id="main" tabindex="-1">
+      <div id="loading" class="empty">正在读取仓库状态…</div>
+      <div id="app"></div>
+    </main>
+    <footer><span>由仓库资料呈现 · SILO Workbench</span><span id="updated">正在同步本地资料</span></footer>
+  </div>
+  <dialog id="reader" aria-labelledby="reader-title">
+    <div class="dialog-bar"><div><span class="eyebrow">SOURCE READER</span><h2 id="reader-title">来源资料</h2></div><button class="icon-button" data-close="reader" aria-label="关闭资料">×</button></div>
+    <div class="reader-tools"><button id="reader-mode" class="button small">查看原文</button><button id="reader-context" class="button small primary">围绕此资料提问</button><span id="reader-meta"></span></div>
+    <article id="reader-body" class="prose"></article>
+  </dialog>
+  <dialog id="context" aria-labelledby="context-title">
+    <div class="dialog-bar"><div><span class="eyebrow">ASK WITH CONTEXT</span><h2 id="context-title">带着依据，与 Codex 讨论</h2></div><button class="icon-button" data-close="context" aria-label="关闭上下文包">×</button></div>
+    <p class="dialog-description">复制后粘贴到旁边的 Codex 对话。上下文包含当前对象、依据、版本和讨论边界。</p>
+    <label class="field-label" for="question">你想讨论什么？</label>
+    <input id="question" class="input" placeholder="例如：解释当前阻塞，以及还缺哪些证据">
+    <label class="field-label" for="context-text">讨论上下文</label>
+    <textarea id="context-text" spellcheck="false"></textarea>
+    <div class="dialog-bottom"><span>生成上下文不会启动任务或改变项目状态。</span><button id="copy-context" class="button primary">复制上下文包</button></div>
+  </dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
