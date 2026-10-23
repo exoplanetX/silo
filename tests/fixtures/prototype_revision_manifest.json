@@ -1,0 +1,1752 @@
+{
+  "program": "SILO-PROTOTYPE-REVISION-20261024",
+  "schema": 1,
+  "seed": 20261024,
+  "source_audit_commit": "4ca4bab47f2eecb8b60d5e34e767b4dc239fd969",
+  "audit_model_json_sha256": "4df0fbec29dc7afd7df66872d395bd5c52e7f31155c6c28e642050483383ddad",
+  "targeted_cases": [
+    {
+      "id": "F1-00",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 0.006,
+            "y": 0.01
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": false,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 0.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-01",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 0.006,
+            "y": 0.01
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 0.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-02",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 0.006,
+            "y": 0.01
+          },
+          "constant": 100
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": false,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 100.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-03",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 0.006,
+            "y": 0.01
+          },
+          "constant": 100
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 100.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-04",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 6e-08,
+            "y": 1e-07
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": false,
+        "primal_tolerance": 1e-07,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 1e-07,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-05",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 6e-08,
+            "y": 1e-07
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 1e-07,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 1e-07,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-06",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 6e-08,
+            "y": 1e-07
+          },
+          "constant": 100
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": false,
+        "primal_tolerance": 1e-07,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 100.0000001,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-07",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 6e-08,
+            "y": 1e-07
+          },
+          "constant": 100
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 1e-07,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 100.0000001,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-08",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": -0.006,
+            "y": -0.01
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": false,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": -0.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-09",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": -0.006,
+            "y": -0.01
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": -0.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-10",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": -0.006,
+            "y": -0.01
+          },
+          "constant": 100
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": false,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 99.99,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-11",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": -0.006,
+            "y": -0.01
+          },
+          "constant": 100
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 99.99,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-12",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": -6e-08,
+            "y": -1e-07
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": false,
+        "primal_tolerance": 1e-07,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": -1e-07,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-13",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": -6e-08,
+            "y": -1e-07
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 1e-07,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": -1e-07,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-14",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": -6e-08,
+            "y": -1e-07
+          },
+          "constant": 100
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": false,
+        "primal_tolerance": 1e-07,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 99.9999999,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-15",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": -6e-08,
+            "y": -1e-07
+          },
+          "constant": 100
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 1e-07,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 99.9999999,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-strict-0",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 0.006,
+            "y": 0.01
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 1e-12,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": 0.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-strict-1",
+      "kind": "mip",
+      "payload": {
+        "name": "prune",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": -0.006,
+            "y": -0.01
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 1e-12,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12
+      },
+      "expected_status": "optimal",
+      "expected_objective": -0.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F2-00",
+      "kind": "cg",
+      "model": {
+        "name": "cg_cap",
+        "rows": [
+          {
+            "name": "cap",
+            "coefficients": {},
+            "sense": "<=",
+            "rhs": 1000000000000.0
+          }
+        ],
+        "initial": [],
+        "pool": [
+          {
+            "name": "x",
+            "cost": -1e-08,
+            "coefficients": {
+              "cap": 1
+            }
+          }
+        ],
+        "expected_status": "optimal",
+        "expected_objective": -10000
+      },
+      "options": {
+        "presolve": false,
+        "scaling": false
+      }
+    },
+    {
+      "id": "F2-01",
+      "kind": "cg",
+      "model": {
+        "name": "cg_cap",
+        "rows": [
+          {
+            "name": "cap",
+            "coefficients": {},
+            "sense": "<=",
+            "rhs": 1000000000000.0
+          }
+        ],
+        "initial": [],
+        "pool": [
+          {
+            "name": "x",
+            "cost": -1e-08,
+            "coefficients": {
+              "cap": 1
+            }
+          }
+        ],
+        "expected_status": "optimal",
+        "expected_objective": -10000
+      },
+      "options": {
+        "presolve": false,
+        "scaling": true
+      }
+    },
+    {
+      "id": "F2-02",
+      "kind": "cg",
+      "model": {
+        "name": "cg_cap",
+        "rows": [
+          {
+            "name": "cap",
+            "coefficients": {},
+            "sense": "<=",
+            "rhs": 1000000000000.0
+          }
+        ],
+        "initial": [],
+        "pool": [
+          {
+            "name": "x",
+            "cost": -1e-08,
+            "coefficients": {
+              "cap": 1
+            }
+          }
+        ],
+        "expected_status": "optimal",
+        "expected_objective": -10000
+      },
+      "options": {
+        "presolve": true,
+        "scaling": false
+      }
+    },
+    {
+      "id": "F2-03",
+      "kind": "cg",
+      "model": {
+        "name": "cg_cap",
+        "rows": [
+          {
+            "name": "cap",
+            "coefficients": {},
+            "sense": "<=",
+            "rhs": 1000000000000.0
+          }
+        ],
+        "initial": [],
+        "pool": [
+          {
+            "name": "x",
+            "cost": -1e-08,
+            "coefficients": {
+              "cap": 1
+            }
+          }
+        ],
+        "expected_status": "optimal",
+        "expected_objective": -10000
+      },
+      "options": {
+        "presolve": true,
+        "scaling": true
+      }
+    },
+    {
+      "id": "F2-04",
+      "kind": "cg",
+      "model": {
+        "name": "cg_ray",
+        "rows": [
+          {
+            "name": "r1",
+            "coefficients": {
+              "a": 1,
+              "b": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          },
+          {
+            "name": "r2",
+            "coefficients": {
+              "a": 1,
+              "b": 2
+            },
+            "sense": "=",
+            "rhs": 2
+          }
+        ],
+        "initial": [
+          "a",
+          "b"
+        ],
+        "pool": [
+          {
+            "name": "a",
+            "cost": 0,
+            "coefficients": {
+              "r1": 1,
+              "r2": 1
+            }
+          },
+          {
+            "name": "b",
+            "cost": -10000000,
+            "coefficients": {
+              "r1": 1,
+              "r2": 2
+            }
+          },
+          {
+            "name": "c",
+            "cost": -1,
+            "coefficients": {
+              "r1": -1,
+              "r2": -1
+            }
+          }
+        ],
+        "expected_status": "unbounded_or_conservative",
+        "exact_ray": {
+          "a": 1,
+          "b": 0,
+          "c": 1
+        },
+        "exact_anchor": {
+          "a": 0,
+          "b": 1,
+          "c": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "scaling": false
+      }
+    },
+    {
+      "id": "F2-05",
+      "kind": "cg",
+      "model": {
+        "name": "cg_ray",
+        "rows": [
+          {
+            "name": "r1",
+            "coefficients": {
+              "a": 1,
+              "b": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          },
+          {
+            "name": "r2",
+            "coefficients": {
+              "a": 1,
+              "b": 2
+            },
+            "sense": "=",
+            "rhs": 2
+          }
+        ],
+        "initial": [
+          "a",
+          "b"
+        ],
+        "pool": [
+          {
+            "name": "a",
+            "cost": 0,
+            "coefficients": {
+              "r1": 1,
+              "r2": 1
+            }
+          },
+          {
+            "name": "b",
+            "cost": -10000000,
+            "coefficients": {
+              "r1": 1,
+              "r2": 2
+            }
+          },
+          {
+            "name": "c",
+            "cost": -1,
+            "coefficients": {
+              "r1": -1,
+              "r2": -1
+            }
+          }
+        ],
+        "expected_status": "unbounded_or_conservative",
+        "exact_ray": {
+          "a": 1,
+          "b": 0,
+          "c": 1
+        },
+        "exact_anchor": {
+          "a": 0,
+          "b": 1,
+          "c": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "scaling": true
+      }
+    },
+    {
+      "id": "F2-06",
+      "kind": "cg",
+      "model": {
+        "name": "cg_ray",
+        "rows": [
+          {
+            "name": "r1",
+            "coefficients": {
+              "a": 1,
+              "b": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          },
+          {
+            "name": "r2",
+            "coefficients": {
+              "a": 1,
+              "b": 2
+            },
+            "sense": "=",
+            "rhs": 2
+          }
+        ],
+        "initial": [
+          "a",
+          "b"
+        ],
+        "pool": [
+          {
+            "name": "a",
+            "cost": 0,
+            "coefficients": {
+              "r1": 1,
+              "r2": 1
+            }
+          },
+          {
+            "name": "b",
+            "cost": -10000000,
+            "coefficients": {
+              "r1": 1,
+              "r2": 2
+            }
+          },
+          {
+            "name": "c",
+            "cost": -1,
+            "coefficients": {
+              "r1": -1,
+              "r2": -1
+            }
+          }
+        ],
+        "expected_status": "unbounded_or_conservative",
+        "exact_ray": {
+          "a": 1,
+          "b": 0,
+          "c": 1
+        },
+        "exact_anchor": {
+          "a": 0,
+          "b": 1,
+          "c": 0
+        }
+      },
+      "options": {
+        "presolve": true,
+        "scaling": false
+      }
+    },
+    {
+      "id": "F2-07",
+      "kind": "cg",
+      "model": {
+        "name": "cg_ray",
+        "rows": [
+          {
+            "name": "r1",
+            "coefficients": {
+              "a": 1,
+              "b": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          },
+          {
+            "name": "r2",
+            "coefficients": {
+              "a": 1,
+              "b": 2
+            },
+            "sense": "=",
+            "rhs": 2
+          }
+        ],
+        "initial": [
+          "a",
+          "b"
+        ],
+        "pool": [
+          {
+            "name": "a",
+            "cost": 0,
+            "coefficients": {
+              "r1": 1,
+              "r2": 1
+            }
+          },
+          {
+            "name": "b",
+            "cost": -10000000,
+            "coefficients": {
+              "r1": 1,
+              "r2": 2
+            }
+          },
+          {
+            "name": "c",
+            "cost": -1,
+            "coefficients": {
+              "r1": -1,
+              "r2": -1
+            }
+          }
+        ],
+        "expected_status": "unbounded_or_conservative",
+        "exact_ray": {
+          "a": 1,
+          "b": 0,
+          "c": 1
+        },
+        "exact_anchor": {
+          "a": 0,
+          "b": 1,
+          "c": 0
+        }
+      },
+      "options": {
+        "presolve": true,
+        "scaling": true
+      }
+    },
+    {
+      "id": "F1-limit-node",
+      "kind": "mip_limit",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 0.006,
+            "y": 0.01
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12,
+        "node_limit": 0
+      },
+      "expected_status": "limit",
+      "expected_objective": 0.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-limit-time",
+      "kind": "mip_limit",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 0.006,
+            "y": 0.01
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12,
+        "time_limit": 0
+      },
+      "expected_status": "limit",
+      "expected_objective": 0.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-limit-pivot",
+      "kind": "mip_limit",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 0.006,
+            "y": 0.01
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12,
+        "lp_iteration_limit": 0
+      },
+      "expected_status": "limit",
+      "expected_objective": 0.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F1-limit-gap",
+      "kind": "mip_limit",
+      "payload": {
+        "name": "prune",
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "binary"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "cover",
+            "coefficients": {
+              "x": 2,
+              "y": 3
+            },
+            "lower": 3
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 0.006,
+            "y": 0.01
+          },
+          "constant": 0
+        }
+      },
+      "options": {
+        "presolve": false,
+        "cuts": false,
+        "heuristics": true,
+        "primal_tolerance": 0.01,
+        "dual_tolerance": 1e-12,
+        "objective_tolerance": 1e-12,
+        "relative_gap": 1
+      },
+      "expected_status": "limit",
+      "expected_objective": 0.01,
+      "expected_point": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": "F2-limit-time",
+      "kind": "cg_limit",
+      "model": {
+        "name": "cg_cap",
+        "rows": [
+          {
+            "name": "cap",
+            "coefficients": {},
+            "sense": "<=",
+            "rhs": 1000000000000.0
+          }
+        ],
+        "initial": [],
+        "pool": [
+          {
+            "name": "x",
+            "cost": -1e-08,
+            "coefficients": {
+              "cap": 1
+            }
+          }
+        ],
+        "expected_status": "optimal",
+        "expected_objective": -10000
+      },
+      "options": {
+        "time_limit": 0
+      },
+      "round_limit": 20
+    },
+    {
+      "id": "F2-limit-pivot",
+      "kind": "cg_limit",
+      "model": {
+        "name": "cg_cap",
+        "rows": [
+          {
+            "name": "cap",
+            "coefficients": {},
+            "sense": "<=",
+            "rhs": 1000000000000.0
+          }
+        ],
+        "initial": [],
+        "pool": [
+          {
+            "name": "x",
+            "cost": -1e-08,
+            "coefficients": {
+              "cap": 1
+            }
+          }
+        ],
+        "expected_status": "optimal",
+        "expected_objective": -10000
+      },
+      "options": {
+        "lp_iteration_limit": 0
+      },
+      "round_limit": 20
+    },
+    {
+      "id": "F2-limit-proof",
+      "kind": "cg_limit",
+      "model": {
+        "name": "cg_cap",
+        "rows": [
+          {
+            "name": "cap",
+            "coefficients": {},
+            "sense": "<=",
+            "rhs": 1000000000000.0
+          }
+        ],
+        "initial": [],
+        "pool": [
+          {
+            "name": "x",
+            "cost": -1e-08,
+            "coefficients": {
+              "cap": 1
+            }
+          }
+        ],
+        "expected_status": "optimal",
+        "expected_objective": -10000
+      },
+      "options": {
+        "proof_operation_limit": 0
+      },
+      "round_limit": 20
+    },
+    {
+      "id": "F2-limit-round",
+      "kind": "cg_limit",
+      "model": {
+        "name": "cg_cap",
+        "rows": [
+          {
+            "name": "cap",
+            "coefficients": {},
+            "sense": "<=",
+            "rhs": 1000000000000.0
+          }
+        ],
+        "initial": [],
+        "pool": [
+          {
+            "name": "x",
+            "cost": -1e-08,
+            "coefficients": {
+              "cap": 1
+            }
+          }
+        ],
+        "expected_status": "optimal",
+        "expected_objective": -10000
+      },
+      "options": {},
+      "round_limit": 1
+    }
+  ],
+  "mps": {
+    "large_integer": 9007199254740993,
+    "equivalent_tokens": [
+      "9007199254740993",
+      "9007199254740993.0",
+      "9007199254740993.000",
+      "9.007199254740993e15",
+      "90071992547409930e-1"
+    ],
+    "fields": [
+      "coefficient",
+      "rhs",
+      "lower",
+      "upper"
+    ],
+    "range_underflow": {
+      "rhs_magnitude": "1e-300",
+      "width": "0.9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999e-300",
+      "derived_magnitude": "1e-400",
+      "row_types": [
+        "L",
+        "G",
+        "E"
+      ],
+      "range_signs": [
+        -1,
+        1
+      ],
+      "expected": "parse_rejection"
+    }
+  },
+  "caps": {
+    "targeted_public_calls": 128,
+    "new_matrix_rounds": 2,
+    "old_matrix_rounds": 2,
+    "full_quality_runs": 3,
+    "install_retries_per_combination": 1,
+    "verification_seconds": 3600
+  }
+}
