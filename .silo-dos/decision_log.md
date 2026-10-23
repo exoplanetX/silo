@@ -1,5 +1,20 @@
 # SILO Decision Log
 
+## DEC-20261024-PROTOTYPE-REVISION-QUALITY-CLOSED
+
+- The human explicitly replied “授权提高到144并完成复验（推荐）”, raising only this
+  task's targeted-call cap from128 to144. The immutable contract and frozen inputs
+  keep their original values; the approval and all previous consumption remain in
+  the append-only revision ledger. Other scope and budget limits stay unchanged.
+- The authorized complete check_quality.py rerun exited0:6327 tests in23.62s,
+  structure and Ruff passed; command wall25.2233518s. Strict repair calls144/144,
+  quality2/3; no further solver calls or matrix rounds follow.
+- All eight execution criteria now pass. Product source f488189 and the four
+  installed0.2.0a2 artifacts remain unchanged; only the budget driver and receipts
+  were updated. The earlier HOLD/exit1 entry below remains historical evidence.
+- Delivery is local-commit without push. Stop for the discussion chat's independent
+  review; original C HOLD/D/E unstarted, native deferral and remote CI pending remain.
+
 ## DEC-20261024-PROTOTYPE-REVISION-EXECUTION
 
 - Bounded task20261024-01-01 produced corrected local0.2.0a2 source f488189,

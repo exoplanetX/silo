@@ -11,7 +11,8 @@ from uuid import uuid4
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "outputs/prototype_revision_20261024"
 CAPS = {
-    "targeted_public_calls": 128,
+    # Direct human approval on 2026-10-24 raises only this task's original128 cap.
+    "targeted_public_calls": 144,
     "new_matrix_rounds": 2,
     "old_matrix_rounds": 2,
     "full_quality_runs": 3,

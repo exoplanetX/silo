@@ -14,15 +14,15 @@ MILP误用可行性容差剪枝、CG漏小负rc并错报全池最优、MPS等值
 Windows3.11.15/3.13.9×wheel/sdist四个新隔离安装通过，工件120模块匹配代码提交。
 原研究A/B已验收、C HOLD、D/E未启动；native Phase9仍parked/deferred；远端CI pending。
 
-唯一剩余为合同验收5的完整质量聚合命令收据。首次check_quality.py的结构与6327测试通过，
-尾部Ruff因新配方格式exit1；保持AST/生成输入/manifest不变的格式修正后同范围Ruff通过。
-不将分步恢复写成整条命令exit0。当前严格调用108/128；为取得完整exit0已请求用户仅将上限
-提高至144，尚待明确答复。其他上限与60分钟验证预算保持；不增加算法、实例或研究任务。
+本单八项执行验收已PASS，交讨论对话独立审查后停止执行。首次check_quality.py因尾部格式lint
+退出1的记录保留；用户明确批准调用上限从128提高至144后，完整复验exit0，6327测试、结构和Ruff通过。
+严格调用144/144，完整质量2/3次，自动验证保守226/3600秒；新旧矩阵均1轮，四安装均首轮成功。
+追加复验未改产品源码或工件，不增加算法、实例或研究任务，不自动进入下一单。
 
-当前分支codex/teaching-research-prototype，f488189时cached origin/main...HEAD=0/47，
+当前分支codex/teaching-research-prototype，追加收尾前cecb26c时cached origin/main...HEAD=0/48，
 没有即时远端查询。两项治理变动按原哈希保留并排除提交；local-commit，未push。
 [修订计划](../tasks/phases/prototype_revision_20261024.md)保持单合同三个内部检查点；
-推荐GPT-6 Sol/high，不声称已切模型。完成本单收据并交讨论对话审查后停止。
+推荐GPT-6 Sol/high，不声称已切模型。本单收据已闭合，最终提交见执行报告Git history。
 
 ## Completed Program — 2026-10-23
 
