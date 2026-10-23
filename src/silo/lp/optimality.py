@@ -107,6 +107,8 @@ def _evidence_problem(model: Model, solution: Solution) -> str:
                 return "Unsupported bounds: require [0, infinity) or exactly fixed finite bounds."
         numbers = [model.objective.constant, *model.objective.coefficients.values()]
         for row in model.constraints:
+            if row.lower_bound is not None or row.upper_bound is not None:
+                return "General row intervals require the unified original-space checker."
             numbers.extend([row.rhs, *row.coefficients.values()])
         if solution.status != SolverStatus.OPTIMAL:
             return "Optimality evidence requires an optimal LP result."

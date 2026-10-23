@@ -639,6 +639,8 @@ def _feasibility_point_is_valid(model: Model, values: dict[str, float]) -> bool:
 
 def _validate_supported_mip_scope(model: Model) -> tuple[str, ...]:
     model.validate()
+    if any(r.lower_bound is not None or r.upper_bound is not None for r in model.constraints):
+        raise ValueError("General row intervals require silo.solve.")
     if model.objective.sense != OptimizationSense.MAXIMIZE:
         raise ValueError("Branch-and-bound supports maximization models only.")
 

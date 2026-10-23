@@ -109,6 +109,8 @@ class Presolver:
         self._max_passes = max_passes
 
     def run(self, model: Model) -> PresolveResult:
+        if any(r.lower_bound is not None or r.upper_bound is not None for r in model.constraints):
+            raise ValueError("General row intervals require silo.solve activity presolve.")
         model.validate()
         scaling = analyze_scaling(model)
 

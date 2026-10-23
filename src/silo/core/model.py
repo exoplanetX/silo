@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from math import isnan
 
 from silo.core.constraint import Constraint
 from silo.core.enums import OptimizationSense, VariableType
@@ -45,18 +46,24 @@ class Model:
             if not variable.name:
                 raise ValueError("Variable name must not be empty.")
             variable.bounds.validate()
+            if variable.bounds.lower == float("inf") or variable.bounds.upper == -float("inf"):
+                raise ValueError(f"Invalid infinite bound direction: {variable.name}")
             if variable.var_type == VariableType.BINARY and (
                 variable.bounds.lower < 0.0 or variable.bounds.upper > 1.0
             ):
-                raise ValueError(
-                    f"Binary variable bounds must stay within [0, 1]: {variable.name}"
-                )
+                raise ValueError(f"Binary variable bounds must stay within [0, 1]: {variable.name}")
             if variable.var_type not in VariableType:
                 raise ValueError(f"Invalid variable type for {variable.name}: {variable.var_type}")
 
         for constraint in self.constraints:
             if not constraint.name:
                 raise ValueError("Constraint name must not be empty.")
+            if constraint.lower_bound is not None or constraint.upper_bound is not None:
+                lower, upper = constraint.row_bounds
+                if isnan(lower) or isnan(upper) or lower > upper:
+                    raise ValueError(f"Invalid/nonfinite row bounds: {constraint.name}")
+                if lower == float("inf") or upper == -float("inf"):
+                    raise ValueError(f"Invalid infinite row bound direction: {constraint.name}")
             for variable_name in constraint.coefficients:
                 if variable_name not in variable_name_set:
                     raise ValueError(
@@ -66,7 +73,6 @@ class Model:
         for variable_name in self.objective.coefficients:
             if variable_name not in variable_name_set:
                 raise ValueError(f"Unknown variable in objective: {variable_name}")
-
         if self.objective.sense not in OptimizationSense:
             raise ValueError(f"Invalid objective sense: {self.objective.sense}")
 

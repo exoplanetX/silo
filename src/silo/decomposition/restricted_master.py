@@ -164,6 +164,8 @@ def _publish_result(reference, solution) -> RestrictedMasterResult:
 
 
 def _copy_model(model: Model, *, negate_objective: bool = False) -> Model:
+    if any(r.lower_bound is not None or r.upper_bound is not None for r in model.constraints):
+        raise ValueError("General row intervals require the general restricted master interface.")
     sign = -1.0 if negate_objective else 1.0
     return Model(
         name=model.name,

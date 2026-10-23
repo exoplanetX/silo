@@ -66,7 +66,29 @@ tasks/README与project_profile/technical_route/standing_approval/decision_log及
 
 ### M1
 
-Pending.
+实现已整合，模块PASS等待补充真值元数据及独立代码复核闭合。
+
+- 一般Constraint区间语义、统一solve/Options/Result、schema2 CLI optimize及python -m silo，
+  JSON/free-MPS读写贯通。原始offset/T/行来源、活动界传播和逆序乘子恢复已实现。
+  连续最优经原始KKT复核，不可行经精确Farkas、无界经精确原始点/射线；精确核验保持
+  既有浮点数实际binary值语义，重构仅提供候选，失败不会发布确定数学结论。
+- 新稠密Phase I/II revised内核及有限B&B已接通，QR/dual/warm细验归M2，GMI/前沿归M3。
+  M1不以存在这些入口宣称后续模块通过。旧标准形类保留并明确拒绝区间字段，避免忽略新侧。
+- 原始组合例20、派生固定行dual1/rc0、自由最优直线及12LP/12MILP基础例实际核对；
+  新模型测试42项，I/O新增104项；包括直接raw输入重构KKT和API/JSON/MPS/CLI一致性。
+- 实际命令：I/O首批96及102通过（0.939/0.796秒墙钟），区间优先级修正后50通过
+  （0.942秒）；模型+I/O整合153通过（1.12秒pytest/1.734秒命令，新增旧入口拒绝后154）。
+  首次全质量15失败/5729通过（pytest34.33秒，文件时间给命令上界36秒计账）：
+  全局Model.validate提前改变旧核验错误身份。将严格有限检查放新linear_data入口后，
+  受影响292项通过（pytest1.17秒/命令1.719秒），未改旧测试来接受回归。
+- 修正后完整pytest **5745 passed /23.39秒**，全质量命令24.901秒；Ruff余一处行长。
+  仅格式修复后全域Ruff、结构/索引及diff检查全部通过（0.699秒），无数学代码变化。
+  本地日志在outputs/prototype_m1_quality*.log（忽略、不提交），没有运行72规模例。
+- 独立协调侧额外3项通过（1.303秒墙钟，reserve向上记2秒），不计成模块通过。
+- 伴学L0011初稿含10节、例子及3题/解答，待代码提交及复核后登记checked。
+- M1验证向上累计记75秒/600秒；reserve2秒；其余模块0。包含静态生成、短调试、
+  全质量失败及修复、I/O与格式检查，第一条无回收会话以保守上界记账，未漏计失败检查。
+  待闭合：补充独立规模/边界依据、64显式诊断、只读verify；独立KKT/恢复代码复核。
 
 ### M2
 

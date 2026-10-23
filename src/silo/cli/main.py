@@ -1,4 +1,5 @@
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -25,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
         "command",
         nargs="?",
         default="help",
-        choices=["compare", "help", "mip-solve", "presolve", "solve"],
+        choices=["compare", "help", "mip-solve", "presolve", "solve", "optimize"],
         help="Command to run.",
     )
     parser.add_argument("path", nargs="?", help="Path to model file.")
@@ -66,6 +67,14 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run presolve before solving. Used only by the solve command.",
     )
+    parser.add_argument("--format", choices=["auto", "json", "mps"], default="auto")
+    parser.add_argument("--time-limit", type=float, default=float("inf"))
+    parser.add_argument("--lp-iteration-limit", type=_nonnegative_int, default=10000)
+    parser.add_argument("--relative-gap", type=float, default=0.0)
+    parser.add_argument("--absolute-gap", type=float, default=0.0)
+    parser.add_argument("--node-strategy", choices=["best_bound", "dfs"], default="best_bound")
+    for option in ("presolve", "scaling", "cuts", "heuristics"):
+        parser.add_argument(f"--no-{option}", action="store_true")
     return parser
 
 
@@ -77,6 +86,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "help":
         parser.print_help()
         return 0
+
+    if args.command == "optimize":
+        if not args.path:
+            parser.error("The optimize command requires a model file path.")
+        return _optimize(args)
 
     if args.node_log and args.command != "mip-solve":
         parser.error("The --node-log option is only supported by mip-solve --details.")
@@ -120,6 +134,51 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.print_help()
     return 0
+
+
+def _optimize(args):
+    from silo import SolveOptions, SolveResult, solve
+    from silo.io import read_mps_model
+
+    try:
+        options = SolveOptions(
+            time_limit=args.time_limit,
+            node_limit=args.node_limit,
+            lp_iteration_limit=args.lp_iteration_limit,
+            relative_gap=args.relative_gap,
+            absolute_gap=args.absolute_gap,
+            node_strategy=args.node_strategy,
+            presolve=not args.no_presolve,
+            scaling=not args.no_scaling,
+            cuts=not args.no_cuts,
+            heuristics=not args.no_heuristics,
+        )
+        path = Path(args.path)
+        use_mps = args.format == "mps" or (args.format == "auto" and path.suffix.lower() == ".mps")
+        model = read_mps_model(path) if use_mps else read_json_model(path)
+        result = solve(model, options)
+    except (ValueError, OSError) as exc:
+        message = str(exc)
+        status = "unsupported" if "unsupported" in message.lower() else "invalid_model"
+        result = SolveResult(status, message)
+    output = json.dumps(result.to_dict(), indent=2, allow_nan=False) + "\n"
+    try:
+        if args.output:
+            Path(args.output).write_text(output, encoding="utf-8")
+        else:
+            print(output, end="")
+    except OSError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    return {
+        "optimal": 0,
+        "infeasible": 2,
+        "unbounded": 3,
+        "limit": 4,
+        "numerical_failure": 5,
+        "invalid_model": 6,
+        "unsupported": 7,
+    }.get(result.status, 1)
 
 
 def _nonnegative_int(value: str) -> int:

@@ -59,6 +59,8 @@ def check_lp_unboundedness(
             if d[name] < 0:
                 return LPUnboundednessCheck(False, f"Direction violates lower bound at {name!r}.")
         for row in model.constraints:
+            if row.lower_bound is not None or row.upper_bound is not None:
+                return LPUnboundednessCheck(False, "General rows require the unified checker.")
             rhs = _fraction(row.rhs, f"RHS row {row.name!r}")
             coefficients = {n: _fraction(a, f"coefficient row {row.name!r}, variable {n!r}")
                             for n, a in row.coefficients.items()}

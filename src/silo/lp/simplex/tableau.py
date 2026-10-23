@@ -212,6 +212,8 @@ def _unbounded_solution(
 
 def _validate_supported_lp(model: Model) -> None:
     model.validate()
+    if any(r.lower_bound is not None or r.upper_bound is not None for r in model.constraints):
+        raise ValueError("General row intervals require silo.solve.")
     if model.objective.sense != OptimizationSense.MAXIMIZE:
         raise ValueError("Tableau simplex supports only maximization models.")
 
