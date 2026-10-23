@@ -5,9 +5,8 @@
 
 ## 当前终态
 
-状态：执行中。初始化、M1和M2本地模块检查已通过，M3完整质量6058项通过，
-精确证明预算路径已获独立只读PASS；M3本地模块PASS，继续M4公开研究接口。
-M2补充实际行/列缩放回归104项通过。规模/完整诊断及发行门槛统一留M5，整体原型未完成。
+状态：执行中。M1–M4本地模块PASS，最近完整质量6137项通过。
+继续M5规模/完整诊断及发行安装门槛；整体原型未完成。
 
 | 检查点 | 当前状态 | 实际证据 |
 |---|---|---|
@@ -15,8 +14,8 @@ M2补充实际行/列缩放回归104项通过。规模/完整诊断及发行门�
 | M1 一般模型与统一输入/结果链 | PASS at local module checkpoint | 一般模型/IO/原始KKT/依据链及独立复核闭合 |
 | M2 可重优化 LP 与数值基础 | PASS at local module checkpoint | 96小LP、四类真实warm、QR/数值回归；规模仍M5 |
 | M3 MILP 搜索控制与 GMI branch-and-cut | PASS (local module) | 96小MILP及证明边界通过；完整质量6058通过；独立算法门控PASS |
-| M4 公开研究接口与两个集成例 | pending | 尚未执行 |
-| M5 综合验证与本地安装交付 | pending | 尚未执行 |
+| M4 公开研究接口与两个集成例 | PASS (local module) | 公开策略15项/CG57项；独立复核及完整质量6137通过 |
+| M5 综合验证与本地安装交付 | in progress | 准备完成；完整矩阵/安装尚未执行 |
 | 远端跨平台实测 | pending / outside local completion | 未 push、未运行远端 CI |
 
 原研究身份：A/B 已验收；C 签发前 HOLD；D/E 未启动。本合同不计为原研究第5–7步完成。
@@ -156,7 +155,28 @@ M3本地模块和算法门控PASS，自动进入同一合同M4。
 
 ### M4
 
-Pending.
+本地模块PASS。公开ResearchExtensions接入真实节点选择、分支、已证明GMI割选择、原始候选启发式
+和只读事件；动作、回调次数、前后deadline由执行器检查。上下文不暴露可写树/数组。
+无效动作保留前沿，已有LP失败优先于后续observer失败；Python回调需协作返回。
+固定MIP策略例保持冻结frozen/p/q/c输入和实际input_sha256，根整数时branch调用0据实登记；
+另有已登记分数根测试实际调用替代branch/node/heuristic/separator。
+
+一般非负列min主问题及公开增列采用LPSession；无隐含凸组合行。完整有限池CG明确
+Phase I人工变量方向、聚合dual、零辅助目标后去人工变量切Phase II；启发式无列为
+incomplete_pricing。最大20轮包含每次辅助和原目标LP。固定覆盖例全池原始/对偶同值2.5。
+两项独立只读复核已确认数学及动作边界，修正出口：增列未重求时清除顶层旧dual；
+定价RuntimeError转结构化pricing_error并保留primal/trace；observer异常保留primary LP failure。
+协调额外4回归通过/0.835秒及两次受控复现0.418秒，reserve累计18秒。
+
+CG57项定向通过，worker所有检查向上记4秒；主线程119、20、14定向检查均通过。
+首次全质量6136项通过/23.78秒pytest、25.014秒命令；随后将primary failure优先语义扩展到
+relaxation和terminated两个事件，最终完整检查 **6137 passed /22.85秒**，命令24.238秒，
+结构及Ruff通过。L0014十节与三习题数学已核对。
+M1–M3伴学verified_code登记真实8a07e4b完整提交及2026-10-24核验日期；L0014待M4提交。
+一次额外未排除历史研究probe的宽Ruff得到52项历史格式债，未修改这些归档文件；正式
+check_quality按既有排除列表通过，和新增代码无关。
+M4全部检查向上记60秒/600秒；M5准备向上记10秒；reserve18秒。
+累计96+30+76+60+10+18=290秒/14400秒。当前仍无规模或64诊断实际运行。
 
 ### M5
 

@@ -36,11 +36,19 @@ class NodeCut:
     proof: dict
 
 
-def solve_milp(model, data, options, start):
+def solve_milp(model, data, options, start, extensions=None):
     from silo.core.solve_types import SolveResult
     from silo.lp.general import solve_lp_data
+    from silo.mip.research import (
+        OpenNodeView,
+        ResearchContext,
+        ResearchControl,
+        VerifiedCutView,
+        readonly,
+    )
 
     deadline = start + options.time_limit
+    control = ResearchControl(extensions, deadline)
     lo, hi = integer_bounds(data)
     stats = dict(
         lp_calls=0,
@@ -82,6 +90,45 @@ def solve_milp(model, data, options, start):
     pseudo = np.zeros((len(data.names), 2, 2))
     unresolved = []
     last_reason, failed = "tree_exhausted", None
+
+    def context(event, active=None, point=None, fractional=(), cuts=()):
+        lower = data.lower if active is None else active.lower
+        upper = data.upper if active is None else active.upper
+        bound = global_bound()
+        if active is not None:
+            bound = min(bound, active.bound)
+        return ResearchContext(
+            event,
+            None if active is None else active.number,
+            None if active is None else active.depth,
+            readonly(
+                {} if point is None else dict(zip(data.names, map(float, point), strict=True))
+            ),
+            readonly(dict(zip(data.names, map(float, lower), strict=True))),
+            readonly(dict(zip(data.names, map(float, upper), strict=True))),
+            readonly(dict(zip(data.names, map(float, data.c), strict=True))),
+            data.constant,
+            "minimize" if data.sign == 1 else "maximize",
+            tuple(data.names[j] for j in fractional),
+            tuple(OpenNodeView(n.number, n.parent, n.depth, data.sign * n.bound) for n in pending),
+            tuple(
+                VerifiedCutView(
+                    c.name, readonly(dict(zip(data.names, c.coefficients, strict=True))), c.lower
+                )
+                for c in cuts
+            ),
+            None if incumbent is None else data.sign * best,
+            data.sign * bound,
+            total_iterations,
+            perf_counter() - start,
+            readonly(
+                {key: value for key, value in stats.items() if not isinstance(value, list | dict)}
+            ),
+        )
+
+    def observe(event, active=None, point=None):
+        if control.extensions.observer is not None:
+            control.invoke("observer", context(event, active, point))
 
     def relaxation(node, fixed=None):
         nonlocal total_iterations
@@ -244,6 +291,22 @@ def solve_milp(model, data, options, start):
                 existing.add(key)
             if not selected:
                 break
+            if control.extensions.separator is not None:
+                choice = control.invoke(
+                    "separator", context("separate", node, point, cuts=selected)
+                )
+                if (
+                    not isinstance(choice, tuple | list)
+                    or any(type(i) is not int or i < 0 or i >= len(selected) for i in choice)
+                    or len(set(choice)) != len(choice)
+                ):
+                    control.reject("separator must select unique verified cut indices.")
+                if control.error is not None:
+                    node.bound = max(node.bound, data.sign * lp.optimality["dual_objective"])
+                    return replace(lp, status="limit", termination_reason=control.reason)
+                selected = [selected[i] for i in choice]
+                if not selected:
+                    break
             previous = lp.objective_value
             node.bound = max(node.bound, data.sign * lp.optimality["dual_objective"])
             node.basis = lp.basis
@@ -285,8 +348,24 @@ def solve_milp(model, data, options, start):
             if options.node_strategy == "dfs"
             else min(range(len(pending)), key=lambda i: (pending[i].bound, pending[i].number))
         )
+        if control.extensions.node_selector is not None:
+            choice = control.invoke("node_selector", context("select_node"), pending[index].number)
+            indices = [
+                i for i, n in enumerate(pending) if type(choice) is int and n.number == choice
+            ]
+            if not indices:
+                control.reject("node_selector must select an existing open node ID.")
+            if control.error is not None:
+                last_reason = control.reason
+                break
+            index = indices[0]
         node = pending.pop(index)
         stats["node_selections"] += 1
+        observe("node_selected", node)
+        if control.error is not None:
+            pending.append(node)
+            last_reason = control.reason
+            break
         if node.bound >= best - options.primal_tolerance and incumbent is not None:
             continue
         nodes += 1
@@ -304,6 +383,21 @@ def solve_milp(model, data, options, start):
         node.lower, node.upper = tightened.lower, tightened.upper
         lp = relaxation(node)
         lp = cut_loop(node, lp)
+        observe(
+            "relaxation",
+            node,
+            (np.array([lp.primal_values[n] for n in data.names]) if lp.primal_values else None),
+        )
+        if control.error is not None:
+            if lp.status == "optimal":
+                node.bound = max(node.bound, data.sign * lp.optimality["dual_objective"])
+            accept(lp)
+            pending.append(node)
+            if lp.status in ("numerical_failure", "invalid_model"):
+                failed, last_reason = lp.status, lp.termination_reason
+            else:
+                last_reason = control.reason
+            break
         stats["node_log"].append(
             {
                 "node": node.number,
@@ -415,6 +509,42 @@ def solve_milp(model, data, options, start):
                     pending.append(node)
                     failed, last_reason = "numerical_failure", "integer_candidate_check_failed"
                     break
+            if control.extensions.heuristic is not None:
+                proposal = control.invoke(
+                    "heuristic", context("heuristic", node, point, fractional)
+                )
+                if proposal is not None:
+                    try:
+                        if set(proposal) != set(data.names):
+                            raise ValueError(
+                                "heuristic requires every original variable exactly once."
+                            )
+                        values = np.array([float(proposal[n]) for n in data.names])
+                        if not np.isfinite(values).all() or not primal_check(
+                            data,
+                            values,
+                            options.primal_tolerance,
+                            integer=True,
+                            integrality_tolerance=options.integrality_tolerance,
+                        ):
+                            raise ValueError(
+                                "heuristic candidate failed original feasibility/integrality."
+                            )
+                        trial = SolveResult(
+                            "limit",
+                            "research_candidate",
+                            primal_values=dict(zip(data.names, map(float, values), strict=True)),
+                        )
+                        if not accept(trial):
+                            stats["research_heuristic_rejections"] = (
+                                stats.get("research_heuristic_rejections", 0) + 1
+                            )
+                    except (TypeError, ValueError, OverflowError) as exc:
+                        control.reject(str(exc))
+                if control.error is not None:
+                    pending.append(node)
+                    last_reason = control.reason
+                    break
             if options.heuristics and (node.depth == 0 or nodes % 16 == 0):
                 for rounded in (np.rint(point[integer]), np.ceil(point[integer])):
                     fixed = np.minimum(
@@ -439,6 +569,24 @@ def solve_milp(model, data, options, start):
             return min(frac, 1 - frac)
 
         branch = max(fractional, key=lambda j: (score(j), -j))
+        if control.extensions.branch_rule is not None:
+            choice = control.invoke(
+                "branch_rule", context("branch", node, point, fractional), data.names[branch]
+            )
+            if not isinstance(choice, str) or choice not in tuple(
+                data.names[j] for j in fractional
+            ):
+                control.reject("branch_rule must select a fractional candidate name.")
+            if control.error is not None:
+                pending.append(node)
+                last_reason = control.reason
+                break
+            branch = data.names.index(choice)
+        observe("branch", node, point)
+        if control.error is not None:
+            pending.append(node)
+            last_reason = control.reason
+            break
         down, up = floor(point[branch]), ceil(point[branch])
         for direction in (0, 1):
             lower, upper = node.lower.copy(), node.upper.copy()
@@ -469,6 +617,14 @@ def solve_milp(model, data, options, start):
         open_nodes=len(pending), unresolved_nodes=len(unresolved), global_bound_normalized=bound
     )
     exhausted = not pending and not unresolved and failed is None
+    observe("terminated")
+    stats.update(
+        research_calls=control.calls, research_error=control.error, research_trace=control.trace
+    )
+    if control.error is not None:
+        exhausted = False
+        if failed is None:
+            last_reason = control.reason
     status = (
         ("optimal" if incumbent is not None else "infeasible") if exhausted else (failed or "limit")
     )

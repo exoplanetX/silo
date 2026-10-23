@@ -11,11 +11,22 @@ from silo.modeling.general import linear_data
 __all__ = ["solve", "SolveOptions", "SolveResult"]
 
 
-def solve(model: Model, options: SolveOptions | None = None, *, basis: BasisSnapshot | None = None):
+def solve(
+    model: Model,
+    options: SolveOptions | None = None,
+    *,
+    basis: BasisSnapshot | None = None,
+    extensions=None,
+):
     start = perf_counter()
     options = SolveOptions() if options is None else options
     if not isinstance(options, SolveOptions):
         raise TypeError("options must be SolveOptions.")
+    if extensions is not None:
+        from silo.mip.research import ResearchExtensions
+
+        if not isinstance(extensions, ResearchExtensions):
+            raise TypeError("extensions must be ResearchExtensions.")
     try:
         data = linear_data(model, options.max_dense_cells)
     except (ValueError, TypeError, AttributeError) as exc:
@@ -34,8 +45,10 @@ def solve(model: Model, options: SolveOptions | None = None, *, basis: BasisSnap
     if data.integer.any():
         from silo.mip.general import solve_milp
 
-        result = solve_milp(model, data, options, start)
+        result = solve_milp(model, data, options, start, extensions)
     else:
+        if extensions is not None:
+            return SolveResult("unsupported", "research_extensions_require_milp")
         result = solve_lp_data(data, options, basis, start + options.time_limit)
     result.elapsed_seconds = perf_counter() - start
     return result

@@ -3,11 +3,11 @@ lesson_id: L0011
 title: 一般模型、可逆变换与原始空间核验
 topic: modeling.general-lp
 version: 0.1.0
-status: draft
+status: checked
 created: 2026-10-23
 updated: 2026-10-24
-verified_code: null
-verified_on: null
+verified_code: 8a07e4b211795c60bf77bfabda1b90a0b2f3f04c
+verified_on: 2026-10-24
 source_tasks: [20261023-02-01_teaching-prototype]
 ---
 

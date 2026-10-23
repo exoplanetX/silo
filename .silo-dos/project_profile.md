@@ -11,12 +11,13 @@ KKT/transform and fixed-input freeze committed 2ca6098. M1/M2 local module check
 general input/restore, original witnesses,96 LPs,4 genuine warm paths,QR and separate tolerances.
 M3 local module/independent algorithm gate PASS; general frontier/unbounded states,
 exact GMI/local cuts and resource guards validated. Full quality6058 passes;
-supplemental raw evidence264+24+64 statically verifies. M4 public research interfaces
-in progress; M5 pending. Scale and64 diagnostic runtime calls remain mandatory in M5.
+supplemental raw evidence264+24+64 statically verifies. M4 public research interfaces,
+finite-pool CG/Phase I and frozen integrations PASS, full quality6137 passes.
+M5 verification/install in progress. Scale and64 diagnostics remain mandatory.
 Branch codex/teaching-research-prototype, issuance 1b7deb9; current code via total report.
 Known governance changes are retained byte-for-byte and excluded from commits;
 local-commit, no push, remote_sync_status=dirty_worktree. Verification accounted: M1 96s,
-M2 30s,M3 76s,M4 0s,M5 preparation3s,reserve16s,total221s/14400s (rounded up);
+M2 30s,M3 76s,M4 60s,M5 preparation10s,reserve18s,total290s/14400s (rounded up);
 no scale solver runs.
 Native Phase 9 remains parked; the original research A/B accepted, C HOLD, D/E not started.
 This program's new general LP/MILP and packaging scope does not complete that research.

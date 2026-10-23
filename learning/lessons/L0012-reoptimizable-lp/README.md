@@ -3,11 +3,11 @@ lesson_id: L0012
 title: 基分解、缩放与原始对偶重优化
 topic: lp.reoptimization-numerics
 version: 0.1.0
-status: draft
+status: checked
 created: 2026-10-24
 updated: 2026-10-24
-verified_code: null
-verified_on: null
+verified_code: 8a07e4b211795c60bf77bfabda1b90a0b2f3f04c
+verified_on: 2026-10-24
 source_tasks: [20261023-02-01_teaching-prototype]
 ---
 
