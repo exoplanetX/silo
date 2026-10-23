@@ -7,3 +7,6 @@
 3. 合法floor/ceil分支的候选域需要真正分数点；非法动作不能悄悄关闭节点。
    执行器保留active/open前沿、已有incumbent和有效界，报告limit/invalid_research_action。
    separator只能选择已验证候选索引；外部系数没有有效性证明就不能进入割池。
+4. lambda=10^12，目标−10000。rc负误差可随lambda任意放大，缺少上界时无法从局部rc容差
+   推出有限目标误差。必须验证全池rc>=0及原始可行P=D；重构结果还须在原始二进制数据上核验。
+   1/3不能由float精确表示；dual向−inf、primal向+inf包络，使D_float<=1/3<=P_float。

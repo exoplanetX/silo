@@ -5,9 +5,9 @@ the caller's original row intervals. No convex-combination row is inserted.
 Pricing uses ``c_j - a_j.T @ dual`` in the public minimization convention.
 ``FiniteColumnPricer`` enumerates a declared, immutable complete pool; arbitrary
 pricers are heuristic, even when they claim completeness. Reduced-cost sums are
-evaluated with Fraction(actual_binary_value), then tested with SolveOptions'
-scaled dual tolerance. Full-pool infeasibility additionally needs an exact
-binary-data Farkas check, never just a positive auxiliary objective.
+evaluated with Fraction(actual_binary_value). Any strictly negative finite-pool
+reduced cost adds a column. Optimality requires an exact original-data primal/dual
+pair over every pool column; infeasibility needs an exact binary-data Farkas check.
 
 CG always begins with one cost-one artificial per finite row side: +1 for a
 lower side and -1 for an upper side. Original columns have auxiliary cost zero.
@@ -23,7 +23,7 @@ from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field, replace
 from fractions import Fraction
-from math import fsum, inf, isfinite
+from math import fsum, inf, isfinite, nextafter
 from numbers import Integral, Real
 from time import perf_counter
 from types import MappingProxyType
@@ -36,6 +36,7 @@ from silo.core.objective import Objective
 from silo.core.solve_types import SolveOptions, SolveResult
 from silo.core.variable import Variable
 from silo.lp.session import LPSession
+from silo.utils.rational import ProofBudget, ProofLimitError
 
 
 def _name(value, what):
@@ -171,16 +172,21 @@ class PricingContext:
             raise ValueError("Dual tolerance must be positive.")
         object.__setattr__(self, "existing_columns", tuple(self.existing_columns))
 
-    def _score(self, column):
+    def _score(self, column, budget=None):
+        if budget is not None:
+            budget.charge()
         unknown = set(column.row_coefficients) - set(self.dual_values)
         if unknown:
             raise ValueError(f"Unknown pricing rows: {sorted(unknown)}")
+        guard = (lambda value: value) if budget is None else budget.guard
         terms = [
-            Fraction(value) * Fraction(self.dual_values[name])
+            guard(guard(Fraction(value)) * guard(Fraction(self.dual_values[name])))
             for name, value in column.row_coefficients.items()
         ]
-        cost = Fraction(0 if self.phase == "phase1" else column.cost)
-        reduced = cost - sum(terms, Fraction(0))
+        cost = guard(Fraction(0 if self.phase == "phase1" else column.cost))
+        reduced = cost
+        for term in terms:
+            reduced = guard(reduced - term)
         threshold = Fraction(self.dual_tolerance) * (1 + abs(cost) + sum(map(abs, terms)))
         return reduced, threshold
 
@@ -245,14 +251,14 @@ class FiniteColumnPricer:
         return proposal
 
 
-def _finite_price(pool, context, deadline=inf):
+def _finite_price(pool, context, deadline=inf, budget=None):
     scores, improving = {}, []
     for index, column in enumerate(pool):
         if perf_counter() >= deadline:
             return None, scores
-        score, threshold = context._score(column)
+        score, _threshold = context._score(column, budget)
         scores[column.name] = float(score)
-        if score < -threshold and column.name not in context.existing_columns:
+        if score < 0 and column.name not in context.existing_columns:
             improving.append((score, index, column))
     best = (min(improving, key=lambda item: item[:2])[2],) if improving else ()
     return PricingResult(best, complete=True), scores
@@ -319,27 +325,27 @@ def _phase1_duals(model, sides, result):
     }
 
 
-def _phase1_certificate(pool, sides, result):
+def _phase1_certificate(pool, sides, result, budget=None):
     """A^T d <= 0 and b^T d > 0 exactly imply infeasibility for lambda>=0."""
-    dual = {name: Fraction(result.dual_values[name]) for name in sides}
+    budget = ProofBudget() if budget is None else budget
+    dual = {name: budget.guard(Fraction(result.dual_values[name])) for name in sides}
     if any(
         (dual[name] < 0 if side == "lower" else dual[name] > 0)
         for name, (_, side, _) in sides.items()
     ):
         return None
-    separation = sum(
-        (Fraction(bound) * dual[name] for name, (_, _, bound) in sides.items()), Fraction(0)
-    )
-    products = {
-        column.name: sum(
-            (
-                Fraction(column.row_coefficients.get(original, 0)) * dual[name]
-                for name, (original, _, _) in sides.items()
-            ),
-            Fraction(0),
-        )
-        for column in pool
-    }
+    separation = Fraction(0)
+    for name, (_, _, bound) in sides.items():
+        separation = budget.guard(separation + budget.guard(Fraction(bound) * dual[name]))
+    products = {}
+    for column in pool:
+        value = Fraction(0)
+        for name, (original, _, _) in sides.items():
+            value = budget.guard(
+                value
+                + budget.guard(Fraction(column.row_coefficients.get(original, 0)) * dual[name])
+            )
+        products[column.name] = value
     if separation <= 0 or any(value > 0 for value in products.values()):
         return None
     return {
@@ -371,6 +377,110 @@ def _projected_point(model, result, options):
         coefficient * values[name] for name, coefficient in model.objective.coefficients.items()
     )
     return (objective, values) if isfinite(objective) else (None, {})
+
+
+def _full_pool_certificate(model, pool, result, options, budget):
+    """Prove original-binary full-pool optimality by an exact feasible pair.
+
+    Float and rational reconstructions propose candidates only. Every original
+    row, side sign, pool column and P=D is checked; tolerances grant no proof.
+    """
+    from silo.lp.tableau_view import exact_basis_candidates
+
+    budget.charge()
+    q = budget.guard
+    names = tuple(column.name for column in pool)
+
+    def verify_pair(candidate):
+        if candidate is None:
+            return None
+        point, duals = candidate
+        values = {name: q(point.get(name, Fraction(0))) for name in names}
+        if any(value < 0 for value in values.values()):
+            return None
+        primal = q(Fraction(model.objective.constant))
+        dual = primal
+        for column in pool:
+            primal = q(primal + q(Fraction(column.cost) * values[column.name]))
+        for row in model.constraints:
+            activity = Fraction(0)
+            for column in pool:
+                activity = q(
+                    activity
+                    + q(Fraction(column.row_coefficients.get(row.name, 0)) * values[column.name])
+                )
+            lower, upper = row.row_bounds
+            if (isfinite(lower) and activity < Fraction(lower)) or (
+                isfinite(upper) and activity > Fraction(upper)
+            ):
+                return None
+            pi = q(duals.get(row.name, Fraction(0)))
+            bound = lower if pi >= 0 else upper
+            if pi and not isfinite(bound):
+                return None
+            if pi:
+                dual = q(dual + q(pi * Fraction(bound)))
+        reduced = {}
+        for column in pool:
+            value = q(Fraction(column.cost))
+            for name, coefficient in column.row_coefficients.items():
+                value = q(value - q(Fraction(coefficient) * duals.get(name, Fraction(0))))
+            if value < 0:
+                return None
+            reduced[column.name] = value
+        if primal != dual:
+            return None
+        proof = {
+            "kind": "finite_pool_optimality",
+            "rational_convention": "Fraction(actual_binary_value)",
+            "point": {name: str(q(value)) for name, value in values.items()},
+            "row_duals": {
+                row.name: str(q(duals.get(row.name, Fraction(0)))) for row in model.constraints
+            },
+            "reduced_costs": {name: str(q(value)) for name, value in reduced.items()},
+            "primal_objective": str(primal),
+            "dual_objective": str(dual),
+            "exact_gap": "0",
+            "all_pool_columns_checked": len(pool),
+        }
+        budget.charge()
+        return proof
+
+    raw = {name: q(Fraction(value)) for name, value in result.primal_values.items()}
+    raw_dual = {name: q(Fraction(value)) for name, value in result.dual_values.items()}
+    proof = verify_pair((raw, raw_dual))
+    if proof is None:
+        proof = verify_pair(
+            (
+                {name: q(value.limit_denominator(100_000_000)) for name, value in raw.items()},
+                {name: q(value.limit_denominator(100_000_000)) for name, value in raw_dual.items()},
+            )
+        )
+    if proof is None:
+        proof = verify_pair(exact_basis_candidates(result, budget))
+    budget.charge()
+    return proof
+
+
+def _refined_dual_tolerance(context, pool, result, current, budget):
+    """A witnessed existing-column violation requests stricter LP work, never looser."""
+    if result._lp is None:
+        return None
+    norm = result._lp[0]
+    scales = {
+        norm.data.names[i]: abs(Fraction(float(scale)))
+        for (i, _), scale in zip(norm.column_origins, norm.col_scale, strict=True)
+    }
+    negative = []
+    for column in pool:
+        score, _ = context._score(column, budget)
+        if score < 0 and column.name in context.existing_columns and column.name in scales:
+            negative.append(budget.guard(-score * scales[column.name]))
+    if not negative:
+        return None
+    cost_scale = 1 + max((abs(Fraction(float(cost))) for cost in norm.costs), default=0)
+    target = float(budget.guard(min(negative) / (8 * cost_scale)))
+    return target if 0 < target < current else None
 
 
 @dataclass(frozen=True)
@@ -445,12 +555,20 @@ class ColumnGenerationResult:
 
     @property
     def primal_bound(self):
+        if self.status == "optimal" and self.witness is not None:
+            exact = Fraction(self.witness["primal_objective"])
+            value = float(exact)
+            return nextafter(value, inf) if Fraction(value) < exact else value
         return self.objective_value
 
     @property
     def dual_bound(self):
         if self.status == "optimal":
-            return self.objective_value
+            if self.witness is None or self.witness.get("kind") != "finite_pool_optimality":
+                return None
+            exact = Fraction(self.witness["dual_objective"])
+            value = float(exact)
+            return nextafter(value, -inf) if Fraction(value) > exact else value
         return -inf if self.status == "unbounded" else None
 
     def to_dict(self):
@@ -517,6 +635,9 @@ def column_generation(
     last, last_original, certificate = None, None, None
     last_original_columns = None
     incumbent = None
+    proof_budget = ProofBudget(options.proof_operation_limit, deadline, clock=perf_counter)
+    work_dual_tolerance = options.dual_tolerance
+    proof_without_presolve = False
 
     def finish(status, reason, complete=False):
         objective, point = (
@@ -524,6 +645,12 @@ def column_generation(
             if status == "infeasible"
             else _projected_point(master.model, last_original, options)
         )
+        if status == "optimal" and certificate is not None:
+            objective = float(Fraction(certificate["primal_objective"]))
+            point = {
+                name: float(Fraction(certificate["point"][name]))
+                for name in master.model.variable_names()
+            }
         if objective is None and status != "infeasible":
             objective, point = _projected_point(master.model, incumbent, options)
         return ColumnGenerationResult(
@@ -531,7 +658,9 @@ def column_generation(
             reason,
             objective,
             point,
-            last_original.dual_values
+            {name: float(Fraction(value)) for name, value in certificate["row_duals"].items()}
+            if status == "optimal" and certificate is not None
+            else last_original.dual_values
             if last_original is not None
             and last_original_columns == tuple(master.model.variable_names())
             else {},
@@ -561,6 +690,8 @@ def column_generation(
                 options,
                 time_limit=remaining,
                 lp_iteration_limit=options.lp_iteration_limit - total_pivots,
+                dual_tolerance=work_dual_tolerance,
+                presolve=options.presolve and not proof_without_presolve,
             )
         )
         total_pivots += last.iterations
@@ -603,7 +734,7 @@ def column_generation(
             )
             try:
                 if finite:
-                    proposal, scores = _finite_price(pool, context, deadline)
+                    proposal, scores = _finite_price(pool, context, deadline, proof_budget)
                     complete = proposal is not None
                 else:
                     proposal = _heuristic_price(pricer, context)
@@ -617,14 +748,22 @@ def column_generation(
                         _verify_proposal(column, master.model)
                         if phase == "phase1" and column.name in artificial:
                             raise ValueError("Pricing column collides with an artificial name.")
-                    candidates = [
-                        column
-                        for column in proposal.columns
-                        if column.name not in context.existing_columns
-                        and context._score(column)[0] < -context._score(column)[1]
-                    ]
+                    # Finite enumeration has already selected its single best
+                    # unused strict-negative candidate under this proof budget.
+                    candidates = (
+                        proposal.columns
+                        if finite
+                        else [
+                            column
+                            for column in proposal.columns
+                            if column.name not in context.existing_columns
+                            and context._score(column)[0] < -context._score(column)[1]
+                        ]
+                    )
                     if candidates:
-                        column = min(candidates, key=context.reduced_cost)
+                        column = (
+                            candidates[0] if finite else min(candidates, key=context.reduced_cost)
+                        )
                         master.add_column(column.name, column.cost, column.row_coefficients)
                         if phase == "phase1":
                             coefficients = {
@@ -633,21 +772,36 @@ def column_generation(
                             }
                             phase_master.add_column(column.name, 0, coefficients)
                         added, reason = (column.name,), "column_added"
-                    elif complete and any(
-                        context._score(column)[0] < -context._score(column)[1] for column in pool
-                    ):
-                        terminal = ("numerical_failure", "master_reduced_cost_inconsistent")
                     elif not complete:
                         terminal = ("limit", "incomplete_pricing")
                     elif phase == "phase2":
-                        terminal = ("optimal", "finite_pool_optimal")
+                        certificate = _full_pool_certificate(
+                            master.model, pool, last, options, proof_budget
+                        )
+                        if certificate is not None:
+                            terminal = ("optimal", "finite_pool_optimal")
+                        else:
+                            refined = _refined_dual_tolerance(
+                                context, pool, last, work_dual_tolerance, proof_budget
+                            )
+                            if options.presolve and not proof_without_presolve:
+                                proof_without_presolve = True
+                                reason = "proof_reoptimize_without_presolve"
+                            elif refined is None:
+                                terminal = ("numerical_failure", "full_pool_proof_failed")
+                            else:
+                                work_dual_tolerance = refined
+                                last.diagnostics["cg_work_dual_tolerance"] = refined
+                                reason = "refine_dual_tolerance"
                     else:
-                        certificate = _phase1_certificate(pool, sides, last)
+                        certificate = _phase1_certificate(pool, sides, last, proof_budget)
                         terminal = (
                             ("infeasible", "finite_pool_infeasible")
                             if certificate is not None
                             else ("numerical_failure", "phase1_certificate_failed")
                         )
+            except ProofLimitError:
+                terminal = ("limit", "time_limit" if perf_counter() >= deadline else "proof_limit")
             except _PricingCallbackError as exc:
                 terminal = ("numerical_failure", "pricing_error")
                 last.diagnostics["pricing_error"] = str(exc)

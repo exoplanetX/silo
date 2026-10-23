@@ -2,13 +2,13 @@
 lesson_id: L0013
 title: 一般整数搜索、全局界与可核验GMI
 topic: mip.branch-and-cut
-version: 0.1.0
-status: checked
+version: 0.2.0
+status: draft
 created: 2026-10-24
 updated: 2026-10-24
 verified_code: 8a07e4b211795c60bf77bfabda1b90a0b2f3f04c
 verified_on: 2026-10-24
-source_tasks: [20261023-02-01_teaching-prototype]
+source_tasks: [20261023-02-01_teaching-prototype, 20261024-01-01_prototype-correctness-revision]
 ---
 
 # L0013｜一般整数搜索、全局界与可核验GMI
@@ -51,6 +51,11 @@ GMI为y/2+t/2>=1/2，回代得到x+y>=2。它切除LP点，保留整数切片的
 父界；新LP dual bound取max加强。P=sU,D=sB，gap只在有incumbent且B有限时公布。
 LP无界须进一步证明整数anchor/ray；分数anchor继续分支，缺证明保留unresolved，不丢前沿。
 
+目标剪枝的条件是beta>=U。可行性容差只用于判断点是否符合原始约束；它不能从U中扣掉，
+也不能授权丢弃可能改善的节点。显式正gap参数可提前停止，状态为limit，活动节点仍计入前沿。
+例如二元x/y、2x+3y>=3、min .006x+.01y：启发式(1,1)值.016，真最优(0,1)值.01。
+把primal容差.01用于目标剪枝会错误接受.016；严格比较在min/max、成本缩小和常数平移下保持职责。
+
 ## 5. 算法到代码的映射
 
 `mip/general.py`管理NodeCut、祖先继承、有效界、pseudocost、启发式、割循环和所有出口。
@@ -66,6 +71,10 @@ LP无界须进一步证明整数anchor/ray；分数anchor继续分支，缺证�
 注入有限继承界与无界冲突时，保留incumbent10、dual无穷及gap=None；这是状态机控制测试。
 具体运行记录和代码提交核验后填元信息，规模仍由M5统一检验。
 
+修订入口：`python -m pytest tests/unit/test_revision_optimality.py -q`。冻结F1矩阵以四个二元点
+独立Fraction枚举核对min/max、两成本尺度、常数0/100、启发式开关、primal容差及四种限额。
+实际运行、失败修正和预算见本次修订报告；旧测试继续覆盖回调异常和未解决节点。
+
 ## 7. 研究意义与可扩展问题
 
 同一框架可比较分支、节点策略、割选择和启发式，轨迹显示实际调用与失败原因。
@@ -76,13 +85,17 @@ LP无界须进一步证明整数anchor/ray；分数anchor继续分支，缺证�
 整数LP无界不意味着MILP无界：x=1/2且x整数、y无界即反例。拒绝near-integer候选也不意味着节点不可行。
 不可表示的原始大整数先拒绝转换，不能先转float再称保格。无损float公开不了的有理anchor只保留witness。
 GMI限80行精确basis、固定深度/轮数/系数和工作预算；跳过割不影响搜索正确性，可能影响性能。
+节点LP最优界仍由浮点原始KKT准则接受；严格目标比较只修复额外的错误放宽，没有证明
+所有浮点KKT接受的界均为任意尺度上的精确下界。此限制必须随教学与研究使用一起保留。
 
 ## 9. 练习与解答入口
 
-见[练习](exercises.md)与[解答](solutions.md)，L0013-E01至E03。
+见[练习](exercises.md)与[解答](solutions.md)，L0013-E01至E04。
 
 ## 10. 开发来源与修订记录
 
 来源[总合同](../../../tasks/codex/20261023-02-01_teaching-prototype.md)、
 [总报告](../../../tasks/reports/20261023-02-01_teaching-prototype_report.md)、
 [算法说明](../../../docs/branch_and_cut.md)。2026-10-24初稿。
+同日v0.2.0按[正确性修订单](../../../tasks/codex/20261024-01-01_prototype-correctness-revision.md)
+补目标剪枝反例、容差职责与数值支持域；原有篇目ID和GMI推导保留。

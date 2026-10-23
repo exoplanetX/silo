@@ -10,6 +10,12 @@ B=min(incumbent,所有开放有效界)，原方向primal=s*U、dual=s*B。
 未知/无界未解决节点按−inf计，gap=None。JSON含positive_infinity/negative_infinity/finite/missing
 bound kind。time/node/LP iteration/gap是不同termination_reason，gap出口status=limit。
 
+目标剪枝仅比较归一化节点界`beta >= incumbent`，两处均不减任何可行性或目标准差。
+`primal_tolerance`只控制原始可行性，不能授权关闭仍可能改进的子树。例：二元x/y，
+2x+3y>=3，min .006x+.01y；primal容差.01时，启发式点(1,1)值.016，正确整数最优为.01。
+显式正absolute_gap/relative_gap可以按请求提前停止，返回limit并保留当前节点和真实界。
+LP节点界仍属于原始空间浮点KKT的既定数值支持域；本修复未给任意条件数的方向安全精确LP界。
+
 默认确定性best-bound，可选DFS；分支使用积累pseudocost，缺乏记录时按分数性与变量序回退。
 有限rounding启发式只在根或每16节点尝试至多两点；整数先实际取整，再核验原始行/界，
 拒绝候选不能关闭节点。近整数但取整不可行时继续合法floor/ceil分支；无法推进则保留数值失败。

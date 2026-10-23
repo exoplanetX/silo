@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.0a2 - Unreleased local correctness revision
+
+- Removed feasibility tolerances from both MILP objective-bound pruning tests.
+- Finite-pool CG now adds every exact negative reduced-cost column and requires
+  an original-binary feasible primal/dual pair with equal objectives over the full
+  declared pool before optimal termination. Proofs share the existing limits;
+  failed proofs retain incumbents without a finite full-pool bound.
+- Preserved mathematically integral MPS values across equivalent decimal forms;
+  rejected nonzero direct/derived underflow and retained compatible roundtrips.
+- Added frozen repair regressions, a repeatable seed20261024 independent audit,
+  and isolated Windows Python3.11/3.13 wheel/sdist candidate checks.
+- This local candidate preserves the original A/B/C/D/E research status and the
+  existing numerical support limits. No public release or remote CI is implied.
+
 ## 0.2.0a1 - Unreleased local candidate
 
 - Added the unified general-form LP/MILP API and optimize CLI, strict JSON/free-MPS,

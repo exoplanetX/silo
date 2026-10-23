@@ -32,3 +32,10 @@ integrality；对偶符号/驻点用dual。互补和目标采用各自容差与�
 核验方向。小分母有理重构只是候选；原始精确等式/不等式检查失败时不会发布不可行/无界。
 LP最优KKT按冻结的浮点残差规则核验。超出float64精确整数表示的整数系数给input_conversion
 数值结果，不默默取整。数值证据的支持范围与任意条件数上的稳定保证分别评价。
+
+MILP两处目标剪枝采用归一化`node.bound >= incumbent`；primal容差不参与该比较。
+显式gap参数的提前停止继续保留前沿，LP界的数值KKT支持域保持上述限制。
+有限池一般CG终止另设精确门：原始二进制数据上的全池对偶可行、原始可行点及P=D。
+raw float、小分母重构和现有basis精确重建都只是候选。核验共享proof操作、4096bit、
+时间、LP枢轴及20轮预算；失败保留incumbent，不发布有限全池dual bound。
+不可用float精确表示的有理目标以witness保留，primal bound向+inf、dual bound向−inf包络。

@@ -1,7 +1,7 @@
 # SILO: Simplex and Integer Linear Optimization
 
 SILO is a Python/NumPy teaching and research prototype for dense, small-scale,
-general-form LP and MILP. The local candidate is **0.2.0a1**. Use `silo.solve()` or
+general-form LP and MILP. The local candidate is **0.2.0a2**. Use `silo.solve()` or
 `silo optimize` for the general model pipeline. Local validation and artifact
 identities are recorded in the [prototype report](tasks/reports/20261023-02-01_teaching-prototype_report.md).
 
@@ -71,7 +71,7 @@ pip install -e ".[dev]"
 ```
 
 For a normal installation, install a specific locally built wheel with
-`python -m pip install dist/silo_solver-0.2.0a1-py3-none-any.whl`.
+`python -m pip install dist/silo_solver-0.2.0a2-py3-none-any.whl`.
 Build, isolated wheel/sdist checks and actual platform status are documented in
 [installation](docs/installation.md). No public package upload is implied.
 

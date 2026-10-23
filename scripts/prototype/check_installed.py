@@ -18,6 +18,7 @@ import subprocess
 import sys
 import sysconfig
 import tempfile
+from fractions import Fraction
 from hashlib import sha256
 from pathlib import Path
 from time import perf_counter
@@ -266,12 +267,92 @@ def _research_checks():
     return records
 
 
-def run_checks(source_root, artifact=None):
+def _repair_checks(silo):
+    """Five public calls plus six parse refusals, using installed modules only."""
+    io = importlib.import_module("silo.io")
+    cg = importlib.import_module("silo.decomposition.general_master")
+    Model = importlib.import_module("silo.core.model").Model
+    Constraint = importlib.import_module("silo.core.constraint").Constraint
+    Objective = importlib.import_module("silo.core.objective").Objective
+    Variable = importlib.import_module("silo.core.variable").Variable
+    records = []
+    options = silo.SolveOptions(
+        presolve=False,
+        cuts=False,
+        primal_tolerance=0.01,
+        dual_tolerance=1e-12,
+        objective_tolerance=1e-12,
+    )
+    for sense, sign in (("minimize", 1), ("maximize", -1)):
+        payload = {
+            "name": "installed_prune",
+            "sense": sense,
+            "variables": [
+                {"name": n, "lower": 0, "upper": 1, "type": "binary"} for n in ("x", "y")
+            ],
+            "constraints": [{"name": "cover", "coefficients": {"x": 2, "y": 3}, "lower": 3}],
+            "objective": {"coefficients": {"x": sign * 0.006, "y": sign * 0.01}},
+        }
+        result = silo.solve(io.model_from_dict(payload), options)
+        assert result.status == "optimal" and result.primal_values == {"x": 0, "y": 1}
+        assert abs(result.objective_value - sign * 0.01) < 1e-14
+        records.append({"id": "F1_" + sense, "result": result.to_dict()})
+    pool = [cg.MasterColumn("x", -1e-8, {"cap": 1})]
+    model = Model("installed_cap", [], [Constraint("cap", {}, "<=", 1e12)], Objective({}))
+    result = cg.column_generation(cg.GeneralRestrictedMaster(model), cg.FiniteColumnPricer(pool))
+    assert result.status == "optimal" and abs(result.objective_value + 10000) < 1e-8
+    proof = result.witness
+    assert Fraction(proof["primal_objective"]) == Fraction(proof["dual_objective"])
+    assert all(Fraction(v) >= 0 for v in proof["reduced_costs"].values())
+    records.append({"id": "F2_bounded", "result": result.to_dict()})
+    pool = [
+        cg.MasterColumn("a", 0, {"r1": 1, "r2": 1}),
+        cg.MasterColumn("b", -1e7, {"r1": 1, "r2": 2}),
+        cg.MasterColumn("c", -1, {"r1": -1, "r2": -1}),
+    ]
+    model = Model(
+        "installed_ray",
+        [Variable("a"), Variable("b")],
+        [Constraint("r1", {"a": 1, "b": 1}, "=", 1), Constraint("r2", {"a": 1, "b": 2}, "=", 2)],
+        Objective({"b": -1e7}),
+    )
+    result = cg.column_generation(cg.GeneralRestrictedMaster(model), cg.FiniteColumnPricer(pool))
+    assert result.status in ("unbounded", "limit", "numerical_failure")
+    assert result.dual_bound is None or result.dual_bound == -math.inf
+    records.append({"id": "F2_unbounded", "result": result.to_dict()})
+    text = (
+        "NAME lattice\nROWS\n N obj\nCOLUMNS\n x obj 1\n"
+        "BOUNDS\n LI bnd x 9007199254740993.0\n PL bnd x\nENDATA\n"
+    )
+    model = io.parse_mps(text)
+    assert model.variables[0].bounds.lower == 9007199254740993
+    result = silo.solve(model)
+    assert result.status == "numerical_failure" and result.termination_reason == "input_conversion"
+    records.append({"id": "F3_integer", "result": result.to_dict()})
+    for kind in ("L", "G", "E"):
+        for sign in (-1, 1):
+            rhs = "-1e-300" if kind == "G" or (kind == "E" and sign > 0) else "1e-300"
+            width = ("-" if sign < 0 else "") + "0." + "9" * 100 + "e-300"
+            text = (
+                f"NAME tiny\nROWS\n N obj\n {kind} r\nCOLUMNS\n x obj 1 r 1\n"
+                f"RHS\n rhs r {rhs}\nRANGES\n rng r {width}\nENDATA\n"
+            )
+            try:
+                io.parse_mps(text)
+            except ValueError as exc:
+                assert "underflow" in str(exc).lower()
+            else:
+                raise AssertionError("Installed MPS accepted a nonzero derived underflow")
+    return {"targeted_public_calls": 5, "derived_underflow_refusals": 6, "records": records}
+
+
+def run_checks(source_root, artifact=None, revision=False):
     start = perf_counter()
     source_root = source_root.resolve()
     silo, provenance = _provenance(source_root)
     cases, api = _api_checks(silo)
     cli, research = _cli_checks(cases), _research_checks()
+    repairs = _repair_checks(silo) if revision else None
     allowed = [Path(path) for path in provenance["site_packages"]]
     imported = {}
     for name, module in tuple(sys.modules.items()):
@@ -295,6 +376,10 @@ def run_checks(source_root, artifact=None):
         "elapsed_seconds": perf_counter() - start,
         "platform_qualification": "this exact interpreter and platform only",
     }
+    if repairs is not None:
+        if provenance["version"] != "0.2.0a2":
+            raise RuntimeError("Correctness-revision installation must be version0.2.0a2")
+        report["repair_regressions"] = repairs
     if artifact is not None:
         artifact = artifact.resolve()
         artifact_hash = sha256(artifact.read_bytes()).hexdigest()
@@ -320,10 +405,11 @@ def main(argv=None):
     parser.add_argument("--source-root", required=True, type=Path)
     parser.add_argument("--artifact", required=True, type=Path)
     parser.add_argument("--report", type=Path)
+    parser.add_argument("--revision", action="store_true")
     args = parser.parse_args(argv)
     start = perf_counter()
     try:
-        report = run_checks(args.source_root, args.artifact)
+        report = run_checks(args.source_root, args.artifact, args.revision)
     except (
         AssertionError,
         RuntimeError,

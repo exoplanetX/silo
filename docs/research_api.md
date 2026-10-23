@@ -39,8 +39,17 @@ tests exercise actual fractional branching and heuristic replacement.
 public column addition and a finite-pool CG reference loop. Its rows retain their
 declared intervals/equalities; no implicit convexity equation is added. Phase I
 uses explicit nonnegative artificial violations for finite row sides. Full-pool
-optimality requires complete finite pricing and zero auxiliary infeasibility;
-heuristic pricing without an improving column returns an incomplete termination.
+optimality requires an exact original-binary feasible primal/dual pair with equal
+objectives over every declared pool column, after auxiliary feasibility recovery.
+Finite pricing adds any strictly negative reduced-cost column, including values
+inside the numerical LP dual tolerance. A negative reduced cost on an existing
+column requests stricter LP dual work; a failed presolve proof may request one
+RMP solve without presolve. Both consume the shared 20-round/time/pivot budget.
+Exact candidate reconstruction also shares the operation/4096-bit/time proof
+budget. Failure retains an incumbent and publishes no finite full-pool dual bound.
+The exact witness retains rational points/objectives; public primal and dual
+bounds round outward when the exact objective is not float-representable.
+Heuristic pricing without an improving column returns an incomplete termination.
 The installed `covering_example()` reproduces objective 2.5.
 
 The old single-convex-combination RMP/DAG APIs retain their original domain.

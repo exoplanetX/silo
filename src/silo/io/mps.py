@@ -391,12 +391,9 @@ class _MPSParser:
     def value(self, token: str) -> float:
         decimal = self.decimal_value(token)
         try:
-            value = _decimal_number(decimal, "MPS value")
-        except ValueError:
-            self.fail(f"invalid finite numeric value: {token}")
-        if value == 0.0 and decimal != 0:
-            self.fail(f"numeric value underflows the model float representation: {token}")
-        return value
+            return _decimal_number(decimal, "MPS value")
+        except ValueError as exc:
+            self.fail(f"invalid finite numeric value: {token}: {exc}")
 
     def decimal_value(self, token: str) -> Decimal:
         if _NUMERIC.fullmatch(token) is None:
@@ -421,12 +418,10 @@ def _row_bounds(kind: str, rhs: Decimal, width: Decimal | None) -> tuple[float, 
         return {"L": (-inf, rhs_float), "G": (rhs_float, inf), "E": (rhs_float, rhs_float)}[kind]
     if kind == "L":
         other = _decimal_add(rhs, width.copy_abs().copy_negate())
-        return _decimal_number(other, "ranged lower bound", rhs.as_tuple().exponent == 0), rhs_float
+        return _decimal_number(other, "ranged lower bound"), rhs_float
     if kind == "G":
-        return rhs_float, _decimal_number(
-            _decimal_add(rhs, width.copy_abs()), "ranged upper bound", rhs.as_tuple().exponent == 0
-        )
-    other = _decimal_number(_decimal_add(rhs, width), "ranged bound", rhs.as_tuple().exponent == 0)
+        return rhs_float, _decimal_number(_decimal_add(rhs, width.copy_abs()), "ranged upper bound")
+    other = _decimal_number(_decimal_add(rhs, width), "ranged bound")
     return (rhs_float, other) if width >= 0 else (other, rhs_float)
 
 
@@ -441,7 +436,11 @@ def _row_encoding(row: Constraint) -> tuple[str, float, str | None]:
         return "G", lower, None
     if lower == -inf:
         return "L", upper, None
-    width = _decimal_add(Decimal(str(upper)), Decimal(str(lower)).copy_negate())
+    # Use exactly the Decimal spellings emitted for each endpoint. In particular,
+    # an integer-valued float such as 1e308 is emitted as its actual exact integer,
+    # not repr's distinct mathematical integer 10**308. Range reconstruction must
+    # use that same value, including when the intermediate width exceeds float64.
+    width = _decimal_add(Decimal(_number(upper)), Decimal(_number(lower)).copy_negate())
     text = format(width, "f")
     if "." in text:
         text = text.rstrip("0").rstrip(".")
@@ -502,9 +501,20 @@ def _finite(value: float, label: str) -> float:
     return original if isinstance(original, int) and int(value) != original else value
 
 
-def _decimal_number(value, label, preserve_integer=True):
+def _decimal_number(value: Decimal, label: str) -> int | float:
+    """One semantic gate for direct tokens and exactly derived Decimal sides.
+
+    Noninteger decimals use finite float64 rounding. Mathematical integers whose
+    value would change are retained as ints for the native input_conversion gate;
+    trailing zeros or scientific notation do not change this decision. Nonzero
+    underflow is rejected here so derived bounds cannot silently become zero.
+    """
     number = _finite(float(value), label)
-    if preserve_integer and value.as_tuple().exponent == 0 and Decimal.from_float(number) != value:
+    if number == 0.0 and value != 0:
+        raise ValueError(
+            f"Invalid {label}: nonzero decimal underflows the model float representation"
+        )
+    if value == value.to_integral_value() and Decimal.from_float(number) != value:
         return int(value)
     return number
 
@@ -515,7 +525,11 @@ def _valid_bounds(lower: float, upper: float, name: str) -> None:
 
 
 def _number(value: float) -> str:
-    return repr(_finite(value, "MPS value"))
+    value = _finite(value, "MPS value")
+    # Every binary64 float above 2**53 is itself an integer. Its shortest decimal
+    # spelling may denote a different exact integer, which the reader must protect.
+    # Emit the actual integer instead of weakening that protection on round-trip.
+    return str(int(value)) if isinstance(value, int) or value.is_integer() else repr(value)
 
 
 def _name(value: str, label: str) -> str:

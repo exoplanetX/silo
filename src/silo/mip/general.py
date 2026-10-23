@@ -366,7 +366,7 @@ def solve_milp(model, data, options, start, extensions=None):
             pending.append(node)
             last_reason = control.reason
             break
-        if node.bound >= best - options.primal_tolerance and incumbent is not None:
+        if node.bound >= best and incumbent is not None:
             continue
         nodes += 1
         tightened = propagate(
@@ -475,7 +475,7 @@ def solve_milp(model, data, options, start, extensions=None):
                 gain = max(0.0, node.bound - old_bound) / max(distance, 1e-8)
                 pseudo[j, direction] += (gain, 1)
                 stats["pseudocost_updates"] += 1
-            if incumbent is not None and node.bound >= best - options.primal_tolerance:
+            if incumbent is not None and node.bound >= best:
                 continue
             fractional = [
                 j

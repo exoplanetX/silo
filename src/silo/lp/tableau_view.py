@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from fractions import Fraction as F
 from math import inf
 
-from silo.utils.rational import ProofBudget, exact_solve
+from silo.utils.rational import ProofBudget, ProofLimitError, exact_solve
 
 
 @dataclass(frozen=True)
@@ -29,6 +29,55 @@ class GmiTableauRow:
     provenance: tuple
     basis_keys: tuple = ()
     effective_box: tuple = ()
+
+
+def exact_basis_candidates(result, budget, basis_limit=80):
+    """Propose unscaled exact primal/row-dual candidates from the numeric basis.
+
+    Reuses existing proof-equation reconstruction, not the floating tableau.
+    It does not establish optimality, and never runs a second LP algorithm.
+    """
+    if result._lp is None:
+        return None
+    norm, native, _ = result._lp
+    if native.status != "optimal" or native.matrix is None or len(native.basis) > basis_limit:
+        return None
+    if any(key[0] == "artificial" for key in native.column_keys):
+        return None
+    try:
+        budget.charge(len(native.row_keys) * len(native.column_keys))
+        matrix, rhs, _, _, flips = _exact_standard_data(norm, native, norm.data.integer, budget)
+        basis = [[row[j] for j in native.basis] for row in matrix]
+        basic = exact_solve(basis, rhs, budget=budget)
+        point = {
+            name: budget.guard(F(float(offset)))
+            for name, offset in zip(norm.data.names, norm.offset, strict=True)
+        }
+        for column, value in zip(native.basis, basic, strict=True):
+            budget.guard(value)
+            key = native.column_keys[column]
+            if key[0] == "variable":
+                _, name, direction = key
+                point[name] = budget.guard(point[name] + direction * value)
+        names = {name: i for i, name in enumerate(norm.data.names)}
+        costs = []
+        for column in native.basis:
+            key = native.column_keys[column]
+            costs.append(
+                budget.guard(F(float(norm.data.c[names[key[1]]])) * key[2] * norm.data.sign)
+                if key[0] == "variable"
+                else F(0)
+            )
+        multipliers = exact_solve(list(zip(*basis, strict=True)), costs, budget=budget)
+        duals = dict.fromkeys(norm.data.row_names, F(0))
+        for key, flip, value in zip(native.row_keys, flips, multipliers, strict=True):
+            if key[0] == "row":
+                duals[key[1]] = budget.guard(duals[key[1]] + flip * value * norm.data.sign)
+        return point, duals
+    except ProofLimitError:
+        raise
+    except (ValueError, OverflowError, ZeroDivisionError):
+        return None
 
 
 def _exact_standard_data(norm, native, original_integer, budget=None):

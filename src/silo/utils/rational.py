@@ -5,20 +5,25 @@ from math import inf
 from time import perf_counter
 
 
+class ProofLimitError(ValueError):
+    """Bounded exact verification could not finish; this is not bad model data."""
+
+
 class ProofBudget:
-    def __init__(self, operations=2_000_000, deadline=inf):
+    def __init__(self, operations=2_000_000, deadline=inf, clock=None):
         self.remaining = operations
         self.deadline = deadline
+        self.clock = perf_counter if clock is None else clock
 
     def charge(self, count=1):
         self.remaining -= count
-        if self.remaining < 0 or perf_counter() >= self.deadline:
-            raise ValueError("Exact proof operation/time budget exhausted.")
+        if self.remaining < 0 or self.clock() >= self.deadline:
+            raise ProofLimitError("Exact proof operation/time budget exhausted.")
 
     def guard(self, value):
         self.charge()
         if value.numerator.bit_length() + value.denominator.bit_length() > 4096:
-            raise ValueError("Exact proof coefficient budget.")
+            raise ProofLimitError("Exact proof coefficient budget.")
         return value
 
 
@@ -46,12 +51,12 @@ def exact_solve(matrix, rhs, operation_limit=2_000_000, deadline=inf, budget=Non
                 budget.charge()
                 new = rows[i].get(j, 0) - factor * value
                 if new.numerator.bit_length() + new.denominator.bit_length() > 4096:
-                    raise ValueError("Exact proof coefficient budget.")
+                    raise ProofLimitError("Exact proof coefficient budget.")
                 if new:
                     rows[i][j] = new
                 else:
                     rows[i].pop(j, None)
             values[i] -= factor * values[k]
         if any(v.numerator.bit_length() + v.denominator.bit_length() > 4096 for v in values):
-            raise ValueError("Exact proof coefficient budget.")
+            raise ProofLimitError("Exact proof coefficient budget.")
     return values

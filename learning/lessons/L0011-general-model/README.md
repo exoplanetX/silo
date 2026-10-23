@@ -2,16 +2,20 @@
 lesson_id: L0011
 title: 一般模型、可逆变换与原始空间核验
 topic: modeling.general-lp
-version: 0.1.0
-status: checked
+version: 0.2.0
+status: draft
 created: 2026-10-23
 updated: 2026-10-24
 verified_code: 8a07e4b211795c60bf77bfabda1b90a0b2f3f04c
 verified_on: 2026-10-24
-source_tasks: [20261023-02-01_teaching-prototype]
+source_tasks: [20261023-02-01_teaching-prototype, 20261024-01-01_prototype-correctness-revision]
 ---
 
 # L0011｜一般模型、可逆变换与原始空间核验
+
+核验状态：上方 `verified_code/verified_on` 保留 v0.1.0 的已核验基线。
+本次 v0.2.0 增补 F3/F4 输入反例与转换原则，定向工作树测试已通过；新稿尚待主线程
+正式提交后统一登记核验提交，当前 `draft` 不把旧提交当作新增内容的核验依据。
 
 ## 1. 问题与学习目标
 
@@ -51,6 +55,24 @@ x_j<=(b−Σk≠j a_k*chosen_bound_k)/a_j。该新界的不等式是原行及其
 因此标准形得到“最优”只是候选。不可行用原始Farkas正矛盾；无界用原始可行点和
 严格改善射线，整数无界另需整数兼容性。无顶点的最优直线不能靠空顶点集判不可行。
 
+原始空间核验还要求数值入口先保留输入语义。取整数下界
+`N=9007199254740993=2**53+1`，文本 `N`、`N.0`、`9.007199254740993e15`
+表示相同数学整数。若将其中一种写法先转成 float，可能得到 `2**53`，从而改变整数格。
+应先按 Decimal 的**数学整数性**判断；float 转换改变其值时保留 Python 整数，
+统一入口再返回 `numerical_failure/input_conversion`。文本指数和尾随小数零不决定整数性。
+可被 float 精确表示的大整数保持可用；一般非整数小数仍采用文档化的 float64 舍入语义。
+
+直接数值与派生端点共用同一转换门。设 `b=10**-300`、
+`w=0.` 后接 100 个 `9` 再接 `e-300`，则十进制精确差 `b-w=10**-400`。
+行 `b-w <= 1e-300*x <= b` 且 x 二元时，原文本只有 x=1 可行。
+将派生下侧转成零会放进 x=0；后续 KKT 只能核验这个已改变的模型。
+因此先在 Decimal 中算完整端点，再拒绝“非零转零”和溢出。G/E 行及负范围同理。
+可表示的非零 subnormal 继续接受，精确零也合法。
+
+写出模型时还须连接文本语义与已有二进制值。整数值 float `1e308` 的实际整数为
+`int(1e308)`；短文本 `1e308` 表示的数学整数与它不同。写入器输出实际整数文本，
+并从同一套已输出端点计算范围宽度，才能同时保持整数保护和原 float 的往返。
+
 ## 5. 算法到代码的映射
 
 - `core/constraint.py:row_bounds`与`core/model.py:validate`定义输入对象。
@@ -59,6 +81,8 @@ x_j<=(b−Σk≠j a_k*chosen_bound_k)/a_j。该新界的不等式是原行及其
 - `lp/general.py:solve_lp_data`统一变换、内核、恢复和原始核验。
 - `lp/verification.py`做KKT、精确Farkas及点/射线核验。
 - `solver.py:solve`与`cli/main.py`提供用户入口，I/O不调用算法。
+- `io/mps.py:_decimal_number`统一直接值/派生侧的整数保护、下溢与有限性；
+  `_number/_row_encoding`使用一致的端点文本计算范围，避免写读改变已有 float。
 
 ## 6. 核验与复现
 
@@ -68,23 +92,39 @@ JSON/MPS/API/CLI保持相同目标。独立Fraction oracle不导入生产规范�
 固定在`tests/fixtures/prototype_manifest.json`，补充证据与运行结果见总报告。
 本篇核验提交与日期在实际检查后登记，draft不构成完成声明。
 
+R1 工作树定向命令为
+`.venv/Scripts/python.exe -m pytest tests/unit/test_revision_mps.py tests/unit/test_mps_io.py -q -s`。
+2026-10-24 首轮 201 passed / pytest 0.32 秒（墙钟 0.7867986 秒），其中新解析/写读用例
+139 项、历史 MPS 62 项。新模块记录公开 `solve` 恰为 1 次，用于验证保留的整数触发
+`input_conversion`；其余仅解析/写读。冻结来源是
+`tests/fixtures/prototype_revision_manifest.json`，未因实现更改输入或期望。
+这些检查覆盖 F3/F4 的反例、L/G/E 正负范围及原浮点往返，完整修订验收由主线程另行登记。
+
 ## 7. 研究意义与可扩展问题
 
 一般建模可使后续LP/MIP/列生成共用同一数学约定；来源账本也可服务敏感性分析和解释。
 这是可复核基础设施，尚不构成新算法贡献。原DAG与资源研究义务保持各自范围。
+输入反例说明：模型与证明链的可信度也依赖文本到数学对象的保真转换。
+该原则可用于审查输入预处理和基准导入，不把整数保留等同于任意精度优化能力。
 
 ## 8. 局限、反例与失效条件
 
 稠密参考内核受工作区和数值预算限制。整数取整的不可行依据不能当作连续LP的Farkas。
 近奇异或重构失败会返回numerical_failure。有限测试不证明任意规模/条件数都可稳定求解。
 旧tableau/Revised标准形入口仍保留其输入域，完整一般用户入口为silo.solve。
+非整数十进制仍经过 float64 舍入；此修订不承诺任意十进制数据的精确算术。
+输入中已因用户侧 float 构造丢失的信息，解析器无法恢复；超出表示能力的原始整数应明确拒绝。
 
 ## 9. 练习与解答入口
 
-见[练习](exercises.md)和[解答](solutions.md)，ID固定L0011-E01至E03。
+见[练习](exercises.md)和[解答](solutions.md)，ID固定L0011-E01至E04。
 
 ## 10. 开发来源与修订记录
 
 来源为[总合同](../../../tasks/codex/20261023-02-01_teaching-prototype.md)、
 [总报告](../../../tasks/reports/20261023-02-01_teaching-prototype_report.md)与
 [原始规格](../../../docs/prototype_model_contract.md)。2026-10-24初稿，模块M1实际代码核验后登记基线。
+
+2026-10-24 v0.2.0 草稿：按
+[正确性修订合同](../../../tasks/codex/20261024-01-01_prototype-correctness-revision.md)的 R1
+补 F3/F4 反例、统一转换门及写读兼容原则；原核验提交保持，新增内容待正式提交后统一登记。
