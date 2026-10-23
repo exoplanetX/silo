@@ -3,11 +3,11 @@ lesson_id: L0014
 title: 受控研究策略、一般主问题与有限列生成
 topic: research.general-column-generation
 version: 0.1.0
-status: draft
+status: checked
 created: 2026-10-24
 updated: 2026-10-24
-verified_code: null
-verified_on: null
+verified_code: 35bb032dacfb6afa21833d4159e795367a72170e
+verified_on: 2026-10-24
 source_tasks: [20261023-02-01_teaching-prototype]
 ---
 
@@ -64,7 +64,7 @@ RMP原始解补零后仍对完整池可行，原始/对偶同值，故完整池�
 核对只读快照、实际分支/节点/启发式/割选择、错误动作保留界、覆盖/分割/混合行、
 辅助可行性恢复、完整定价与启发式终止。两个公开安装例分别为
 `silo.mip.research_example.run_example()`和`general_master.covering_example()`。
-本篇核验基线与命令结果在正式M4检查后登记，当前保持draft。
+M4实际检查57项CG与15项公开策略通过，完整质量6137通过；核验基线见篇首完整提交。
 
 ## 7. 研究意义与可扩展问题
 

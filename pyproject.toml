@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "silo-solver"
-version = "0.1.0"
-description = "A minimal solver kernel for learning LP simplex and mixed-integer optimization."
+version = "0.2.0a1"
+description = "A dense general-form LP/MILP teaching and research prototype."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"

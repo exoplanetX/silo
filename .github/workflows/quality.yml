@@ -1,0 +1,60 @@
+name: Quality and installed artifacts
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install source-check dependencies
+        run: python -m pip install ".[dev,optional-backends]" build
+      - name: Source quality checks
+        run: python scripts/check_quality.py
+      - name: Frozen raw-reference verification
+        run: python scripts/prototype/evidence.py --verify
+      - name: Build wheel and sdist
+        run: python -m build
+      - name: Check both artifacts outside source in fresh NumPy-only environments
+        shell: python
+        run: |
+          import os
+          import pathlib
+          import shutil
+          import subprocess
+          import sys
+          import tempfile
+
+          repository = pathlib.Path.cwd().resolve()
+          artifacts = sorted((repository / "dist").glob("*.whl"))
+          artifacts += sorted((repository / "dist").glob("*.tar.gz"))
+          if len(artifacts) != 2:
+              raise RuntimeError("Expected exactly one wheel and one sdist")
+          outside = pathlib.Path(tempfile.mkdtemp(prefix="silo-installed-", dir=os.environ["RUNNER_TEMP"]))
+          checker = outside / "check_installed.py"
+          shutil.copy2(repository / "scripts/prototype/check_installed.py", checker)
+          for index, artifact in enumerate(artifacts):
+              environment = outside / f"environment-{index}"
+              subprocess.run([sys.executable, "-m", "venv", str(environment)], check=True, timeout=120)
+              interpreter = environment / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+              subprocess.run([str(interpreter), "-m", "pip", "install", str(artifact)],
+                             check=True, cwd=outside, timeout=300)
+              subprocess.run([str(interpreter), "-I", str(checker),
+                              "--source-root", str(repository), "--artifact", str(artifact),
+                              "--report", str(outside / f"installed-{index}.json")],
+                             check=True, cwd=outside, timeout=180)
