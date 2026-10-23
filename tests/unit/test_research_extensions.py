@@ -38,6 +38,8 @@ def test_installed_policy_example_matches_frozen_truth():
     assert result["input_sha256"] == integration["input_sha256"]
     assert result["policy_invocations"]["node_selector"] > 0
     assert result["policy_invocations"]["branch_rule"] == 0  # integral frozen root
+    json.dumps(result, allow_nan=False)
+    assert result["trace"][0]["dual_bound_kind"] == "negative_infinity"
 
 
 def test_replacement_branch_node_and_heuristic_paths_are_real_and_deterministic():

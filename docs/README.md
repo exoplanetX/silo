@@ -16,6 +16,11 @@
 | 目录职责、真实代码入口与版本追溯 | [开发目录说明](development_layout.md) |
 | Pricing 研究笔记、探针、固定输入与复现 | [研究资产入口](../scripts/research/pricing/README.md) |
 | 安装、快速开始、项目概览 | [项目 README](../README.md) |
+| 通用原型能力、参数、终止和限制 | [统一求解入口](general_solver.md) |
+| 本地wheel/sdist安装与平台证据 | [安装与隔离验证](installation.md) |
+| 公开策略、有限池CG与复现例 | [研究接口](research_api.md) |
+| 实际缩放、QR与LP重优化 | [数值内核](numeric_engine.md) |
+| 一般整数搜索、全局界与GMI | [分支割](branch_and_cut.md) |
 | LP 支持范围 | [LP solver](lp_solver.md) |
 | JSON 模型 | [模型格式](json_model_format.md) |
 | LP 求解命令 | [solve](cli_solve.md) |

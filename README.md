@@ -1,6 +1,9 @@
 # SILO: Simplex and Integer Linear Optimization
 
-SILO is a Python-first educational optimization solver kernel for small LPs and early small MIPs. It currently includes dense tableau simplex and revised simplex backends, JSON model input, LP CLI solve and compare workflows, a conservative presolve/scaling diagnostics layer, and a small branch-and-bound MIP CLI.
+SILO is a Python/NumPy teaching and research prototype for dense, small-scale,
+general-form LP and MILP. The local candidate is **0.2.0a1**. Use `silo.solve()` or
+`silo optimize` for the general model pipeline. Local validation and artifact
+identities are recorded in the [prototype report](tasks/reports/20261023-02-01_teaching-prototype_report.md).
 
 ## Project Philosophy
 
@@ -15,40 +18,34 @@ The project follows four principles:
 
 ## Current Scope
 
-The current repository contains a working educational LP path:
+The unified pipeline supports min/max with objective constants, row intervals and
+equalities, free/fixed/upper-only variables, negative bounds and continuous,
+integer or binary domains. It includes:
 
-- Python model objects for LP/MIP-style model representation.
-- JSON model reader.
-- Dense tableau simplex solver with Phase I / Phase II.
-- Basis-oriented revised simplex solver with Phase I / Phase II.
-- Phase I / Phase II support for `<=`, `>=`, and `=` rows.
-- Infeasible and unbounded LP status detection.
-- CLI solve workflow for JSON LP files.
-- Backend selection through `--solver tableau` and `--solver revised`.
-- Backend comparison through `silo compare`.
-- CLI presolve diagnostics for inspecting presolve and scaling without solving.
-- Optional solve-time presolve through `silo solve --presolve`.
-- Conservative presolve with empty-row diagnostics/removal, empty-column diagnostics, fixed-variable elimination, repeated-pass reductions, original-space slack recovery, and coefficient-range scaling diagnostics.
-- Python API and `silo mip-solve` branch-and-bound for small binary and bounded nonnegative integer MIPs.
-- Solution JSON output with primal values, slacks, original-row LP duals, reduced costs,
-  and basis status; original-space primal/dual optimality checks through the Python API.
+- Strict JSON and documented free-MPS input/output.
+- Reversible normalization, activity propagation, integer bound rounding and real scaling.
+- Native Phase I/II revised primal/dual simplex, cached QR factors and public LP reoptimization.
+- Original-space primal/KKT checks and exact binary-rational infeasibility/ray evidence.
+- Deterministic branch-and-cut, global bounds/gaps, limits, heuristics and verified local GMI cuts.
+- Read-only research callbacks and general finite-pool CG with explicit feasibility recovery.
+- Optional SciPy/HiGHS comparisons isolated in `interfaces/`.
+
+The older tableau/revised classes and `solve`/`mip-solve` CLI commands retain their
+documented standard-form domains. Their limits do not define `optimize`'s domain.
 
 The native solver path does not call external solvers.
 
 ## Current Limitations
 
-- `silo solve` workflows are continuous LP only; MIP solving uses `silo mip-solve`.
-- Maximization models only.
-- Variables must have lower bound `0`.
-- Native LP backends do not support finite variable upper bounds directly.
-- MIP support is limited to a small branch-and-bound reference path.
-- Cuts/callbacks provide conservative passive boundaries; real cut materialization,
-  heuristics and branch-and-cut remain future work.
-- Presolve is not enabled by default; solve-time presolve is opt-in.
-- No automatic scaling yet.
-- LP duals cover the current continuous scope; MIP dual values remain empty.
-- No external solver backend is used by native algorithms.
-- No industrial performance claims.
+- Dense reference arithmetic and a conservative memory gate; this is a small-model prototype.
+- Frozen validation sizes reach 200 LP variables/400 rows and 30 integer variables;
+  actual solved sizes and timings must be read from the benchmark report.
+- Finite pricing pools only for the general CG reference; arbitrary external cut expressions,
+  full branch-and-price/Benders, QP/conic/nonlinear models and parallel search remain outside this candidate.
+- Exact proof budgets can conservatively skip cuts or retain an unresolved result.
+- Research callbacks run cooperatively in the caller process and must return promptly.
+- Windows 3.11/3.13 local artifact checks and remote CI have separate validation states.
+- Original pricing research remains A/B accepted, C HOLD, D/E not started.
 
 ## Long-Term Roadmap
 
@@ -73,9 +70,23 @@ Use an editable install for development:
 pip install -e ".[dev]"
 ```
 
+For a normal installation, install a specific locally built wheel with
+`python -m pip install dist/silo_solver-0.2.0a1-py3-none-any.whl`.
+Build, isolated wheel/sdist checks and actual platform status are documented in
+[installation](docs/installation.md). No public package upload is implied.
+
 ## Quick Start
 
-Run the core development and CLI smoke commands:
+Run the general pipeline and public research examples:
+
+```bash
+silo optimize examples/json/production.json
+python -m silo optimize model.mps --time-limit 20 --node-limit 100000
+python -c "from silo.mip.research_example import run_example; print(run_example())"
+python -c "from silo.decomposition.general_master import covering_example; print(covering_example().to_dict())"
+```
+
+Use the original standard-form workflows for compatibility examples:
 
 ```bash
 pip install -e ".[dev]"

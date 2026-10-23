@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+from math import isfinite
 
 from silo import SolveOptions, solve
 from silo.io import model_from_dict
@@ -43,12 +44,22 @@ def run_example():
     trace = []
 
     def observer(context):
+        def finite(value):
+            return value if value is None or isfinite(value) else None
+
         trace.append(
             {
                 "event": context.event,
                 "node": context.node,
-                "primal_bound": context.primal_bound,
-                "dual_bound": context.dual_bound,
+                "primal_bound": finite(context.primal_bound),
+                "dual_bound": finite(context.dual_bound),
+                "dual_bound_kind": (
+                    "finite"
+                    if isfinite(context.dual_bound)
+                    else "negative_infinity"
+                    if context.dual_bound < 0
+                    else "positive_infinity"
+                ),
                 "iterations": context.iterations,
                 "elapsed_seconds": context.elapsed_seconds,
             }
@@ -76,5 +87,5 @@ def run_example():
             name: sum(item["hook"] == name for item in result.diagnostics["research_trace"])
             for name in ("branch_rule", "node_selector", "observer")
         },
-        "diagnostics": result.diagnostics,
+        "diagnostics": result.to_dict()["diagnostics"],
     }
