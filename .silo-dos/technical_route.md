@@ -1,5 +1,16 @@
 # SILO Technical Route
 
+## Authorized continuous prototype program — 2026-10-23
+
+The user directly approved SILO-PROTOTYPE-20261023's five-module implementation.
+[Contract](../tasks/codex/20261023-02-01_teaching-prototype.md) and
+[plan](../tasks/phases/phase_10_teaching_research_prototype.md) authorize general
+LP/MILP, the listed API/CLI/schema and packaging/CI changes, and program-specific
+rule registration. Continue at module PASS without issuing another task or asking
+again. The total report governs recovery; the coordinator owns final acceptance.
+The following native corridor and ordinary-task gates remain valid outside this
+program. Native implementation stays deferred; original research C/D/E stays unchanged.
+
 ## Role / Current State
 
 本文件维护技术边界与决策门控；当前完成项、核验基线和下一步建议统一查

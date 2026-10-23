@@ -1,6 +1,20 @@
 # SILO Project Profile
 
-## Current Snapshot — 2026-10-20
+## Current Program — 2026-10-23
+
+SILO-PROTOTYPE-20261023 is explicitly authorized under the
+[single total contract](../tasks/codex/20261023-02-01_teaching-prototype.md).
+The execution chat implements M1→M2→M3→M4→M5 continuously; the discussion chat owns
+the sole goal and overall review. The [total report](../tasks/reports/20261023-02-01_teaching-prototype_report.md)
+is the execution checkpoint. Initialization: authority registered before source edits;
+KKT/transform and fixed-manifest freeze pending. All M1–M5 remain pending.
+Branch codex/teaching-research-prototype, issuance 1b7deb9, code 13e748f, cached 0/34.
+Known governance changes are retained byte-for-byte and excluded from commits;
+local-commit, no push, remote_sync_status=dirty_worktree. Verification consumed: 0s/14400s.
+Native Phase 9 remains parked; the original research A/B accepted, C HOLD, D/E not started.
+This program's new general LP/MILP and packaging scope does not complete that research.
+
+## Historical Snapshot — 2026-10-20
 
 本文件是当前项目状态的单一摘要入口。任务规则以
 [tasks/README.md](../tasks/README.md)、本轮合同和用户指令为准；阶段范围以

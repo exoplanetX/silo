@@ -1,5 +1,16 @@
 # SILO Roadmap
 
+## Authorized Program: SILO-PROTOTYPE-20261023
+
+Status: initialization active; M1–M5 pending. The
+[five-module plan](tasks/phases/phase_10_teaching_research_prototype.md) is implemented
+under [one contract](tasks/codex/20261023-02-01_teaching-prototype.md), with checkpoints
+in its [total report](tasks/reports/20261023-02-01_teaching-prototype_report.md).
+General-model/API → LP numerics/reoptimization → MILP/GMI → research interfaces →
+fixed validation and clean-install artifacts. Each module PASS advances automatically.
+The historical Phase 0–9 limited scopes below retain their identities; native Phase 9
+is not closed or implemented by this program. Original pricing research C/D/E is separate.
+
 ## Phase 0: Project Scaffold
 
 Status: complete.

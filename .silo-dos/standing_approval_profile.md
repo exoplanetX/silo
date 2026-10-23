@@ -1,5 +1,18 @@
 # SILO Standing Approval Profile
 
+## Explicit program exception — SILO-PROTOTYPE-20261023
+
+Direct human authorization is recorded in the
+[overall contract](../tasks/codex/20261023-02-01_teaching-prototype.md), verified in
+discussion turn 01a16946-c96a-79b0-ac00-dec2921f3cf0. This is specific L3/L2
+authorization for the frozen M1–M5 program, not an enlargement of standing approval.
+Module transitions and necessary internal corrections proceed under that contract.
+The known two governance-file changes and registered local-ahead history are explicitly
+accepted, preserved and excluded from staging; no repeated sync approval is needed.
+No native, publication, original research C/D/E, or sixth module is authorized.
+This registration may be maintained within the same total contract; older separate-task
+maintenance and one-task stopping text continues to govern unrelated work.
+
 ## Role Of This Profile
 
 This file is the repository-local SILO-DOS v0.4 standing approval profile. It records

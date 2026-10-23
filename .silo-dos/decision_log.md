@@ -1,5 +1,19 @@
 # SILO Decision Log
 
+## DEC-20261023-CONTINUOUS-PROTOTYPE
+
+- Direct human request (discussion turn 01a16946-c96a-79b0-ac00-dec2921f3cf0): accelerate
+  development through large modules and continuous autonomous implementation/verification.
+- Scope: [SILO-PROTOTYPE-20261023](../tasks/phases/phase_10_teaching_research_prototype.md),
+  [one immutable contract](../tasks/codex/20261023-02-01_teaching-prototype.md), M1–M5,
+  one total report and the coordinator's sole goal. Registration precedes source edits.
+- Module PASS automatically advances; in-scope repairs remain inside this contract.
+  Verification is capped at 240 minutes; frozen acceptance requirements remain binding.
+- Branch codex/teaching-research-prototype; issuance 1b7deb9; local-commit, no push.
+  Known governance bytes and local-ahead history are accepted, not silently cleaned.
+- Native remains parked; old A/B accepted, C HOLD and D/E unstarted. No claim that
+  the engineering prototype answers the original pricing research question.
+
 Current project status and next-step recommendations are maintained in
 [project_profile.md](project_profile.md). This log preserves durable decisions;
 the dated 2026-06 corridor below is historical and is qualified by the subsequent

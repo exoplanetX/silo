@@ -296,6 +296,24 @@ design/research records remain under `notes/`.
 讨论对话负责设计和审查，开发对话每次只执行一项已批准合同，交付后停止。
 本规则要求前瞻性声明边界，不授权重编号历史任务、启动下一任务或转换ROADMAP阶段。
 
+### 6.10 Approved Overall Program Execution — SILO-PROTOTYPE-20261023
+
+The directly authorized [overall contract](codex/20261023-02-01_teaching-prototype.md)
+and [frozen five-module plan](phases/phase_10_teaching_research_prototype.md) constitute
+one task with M1–M5 checkpoints. Its execution continues after each module PASS;
+in-scope repairs, tests, learning, commits and transitions do not require separate
+contracts or renewed approval. Update only its matching total report. This narrow
+exception overrides older single-atomic-task stopping/standing-approval templates
+for this program only. Ordinary tasks retain all existing rules.
+
+Register the program before source edits; freeze KKT, transformation and verification
+specifications before implementing them. Preserve the immutable contract, CASE files,
+native deferral and original research C/D/E status. The coordinator owns the one goal
+and final review; execution does not create another goal. Mathematical reviews remain
+read-only; implementation agents require explicit file ownership. Keep the fixed
+240-minute verification budget, five-module exit table and honest incomplete handoff
+at a genuine blocker or exhausted budget. Do not push/publish or silently expand scope.
+
 ## 7. Current Entry, History Index and Baselines
 
 - `.silo-dos/project_profile.md` is the single current-status summary: completed items,

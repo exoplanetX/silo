@@ -5,11 +5,11 @@
 
 ## 当前终态
 
-状态：总计划已签发，待执行者完成规则初始化并实施；所有算法模块 pending。本节由执行者逐模块更新，不能将合同签发视为求解器完成。
+状态：执行中。先完成本次连续授权登记，尚未修改solver代码；KKT/变换和manifest冻结进行中，所有算法模块pending。
 
 | 检查点 | 当前状态 | 实际证据 |
 |---|---|---|
-| 初始化：本次总授权登记与规格/manifest | pending | 尚未执行 |
+| 初始化：本次总授权登记与规格/manifest | in progress | 连续授权已登记；规格/manifest正在冻结 |
 | M1 一般模型与统一输入/结果链 | pending | 尚未执行 |
 | M2 可重优化 LP 与数值基础 | pending | 尚未执行 |
 | M3 MILP 搜索控制与 GMI branch-and-cut | pending | 尚未执行 |
@@ -34,7 +34,17 @@
 
 ### 初始化
 
-Pending.
+2026-10-23，实际起点1b7deb9，分支codex/teaching-research-prototype，cached 0/34。
+已只读核验讨论对话的人类原文（turn 01a16946-c96a-79b0-ac00-dec2921f3cf0），
+读取总合同/计划、规则/CASE和当前mirror。未创建重复目标。按总合同先登记
+tasks/README与project_profile/technical_route/standing_approval/decision_log及ROADMAP，
+旧普通任务规则仍适用其他任务；本合同内M1–M5连续实施，不逐补丁签发或请示。
+两治理文件哈希与签发报告一致，原字节保留且不stage。初始化期间未改solver源码。
+协调方已启动只读KKT/变换复核，本执行不重复召集同一数学服务。
+
+验证计算账：M1=0、M2=0、M3=0、M4=0、M5=0、reserve=0秒；总上限14400秒。
+日常阅读/编辑不计验证计算；后续实际测试/build/安装命令逐次计时登记。
+剩余：固定输入/KKT/变换/manifest后实施所有模块；任一模块未达线不得标PASS。
 
 ### M1
 
