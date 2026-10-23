@@ -1,5 +1,18 @@
 # SILO Technical Route
 
+## Authorized corrective task — 2026-10-24
+
+The human requested a five-module audit followed by a repair plan dispatched for execution.
+The [audit](../docs/prototype_audit_20261024.md) confirms four correctness findings;
+[20261024-01-01](../tasks/codex/20261024-01-01_prototype-correctness-revision.md) is one
+bounded maintenance task with R1–R3 internal checkpoints, not a new phase or sixth module.
+Its enumerated solver/input fixes, tests, learning and local0.2.0a2 rebuild are directly
+authorized. Continue the current known local branch/dirty governance state without reset;
+preserve and exclude the two governance files. No GitHub push or publication is authorized.
+Use the separate60-minute verification account and stop at its eight acceptance criteria.
+Original research C/D/E and native deferral remain unchanged. The completed old overall
+program exception below supplies history only and does not authorize the new task.
+
 ## Authorized continuous prototype program — 2026-10-23
 
 The user directly approved SILO-PROTOTYPE-20261023's five-module implementation.

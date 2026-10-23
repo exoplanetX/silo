@@ -1,5 +1,17 @@
 # SILO Decision Log
 
+## DEC-20261024-PROTOTYPE-CORRECTNESS-REVISION
+
+- Current human instruction authorizes audit/testing of the five modules, a bounded repair
+  plan based on findings, and dispatch to the existing development chat.
+- Audit baseline4ca4bab: existing6147 quality checks and new384 public calls pass; four
+  independently reproduced counterexamples still require correction. Retain both facts.
+- One new [contract20261024-01-01](../tasks/codex/20261024-01-01_prototype-correctness-revision.md)
+  covers input conversion, MILP/CG optimality and bounded regression/local installation.
+  Eight exit criteria;60-minute new validation budget; no old-ledger reset or scope expansion.
+- Continue current branch and preserve exact known governance bytes;local-commit,no push.
+  Original C HOLD/D/E unstarted and native deferral unchanged; no automatic next task.
+
 ## DEC-20261023-CONTINUOUS-PROTOTYPE
 
 - Direct human request (discussion turn 01a16946-c96a-79b0-ac00-dec2921f3cf0): accelerate
