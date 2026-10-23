@@ -46,6 +46,24 @@ tasks/README与project_profile/technical_route/standing_approval/decision_log及
 日常阅读/编辑不计验证计算；后续实际测试/build/安装命令逐次计时登记。
 剩余：固定输入/KKT/变换/manifest后实施所有模块；任一模块未达线不得标PASS。
 
+#### 编码前冻结（schema 2）
+
+- `docs/prototype_model_contract.md`固定原始KKT、公共dual换算、变换账本、派生固定回推、
+  scaling、无顶点LP的真值域、不可行/无界依据及结果语义。
+- manifest=192小模型+24具体边界输入/控制参数+72规模输入，8×8诊断及两个研究例。
+  `scripts/prototype/oracles.py`无生产依赖，Fraction独立小模型真值；整数域完整枚举。
+- 独立审查期间schema1草稿尚未用于原生求解。发现并修正生成式的静态问题：
+  一般界family目标正负不匹配构造值、运输与指派成本重复；以原矩阵内两个族覆盖派生固定
+  与无顶点最优，补齐原始组合例、逐条oracle/seed/hash/操作上限和24边界具体输入。
+  此为实现前防错，后续算法失败不得修改这些真值。
+- 草稿SHA256=`39d96b0b15cc5506ffd57fd1b439774008d9fa345ae0d3e341f845043798b82d`；
+  冻结manifest SHA256=`5b037ced206fdf349ca2524dca478a9427902ee136d0a668a449fa62af08c71e`；
+  recipe SHA256=`2aa6f3609ae439a09aec4ef33b7ee865408e21c6b660d6549eb15e5df1474c70`。
+- 静态检查实际0.419秒：264唯一ID/模型哈希、24边界哈希，192小模型的独立oracle域与
+  预期状态一致；最大720次顶点组合（上限2000000），不含任何原生求解或规模算法运行。
+  规模门槛静态满足14个100–200变量/100–400行的可解LP。此不记为模块/规模通过。
+- 计入M1验证约2秒（含生成/静态/ruff）；其余模块仍0。算法实现从冻结提交之后开始。
+
 ### M1
 
 Pending.
