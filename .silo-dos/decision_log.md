@@ -1,5 +1,17 @@
 # SILO Decision Log
 
+## DEC-20261024-PROTOTYPE-REVISION-EXECUTION
+
+- Bounded task20261024-01-01 produced corrected local0.2.0a2 source f488189,
+  fixed new/old matrix evidence,6327 passing tests and four fresh installed checks.
+- Actual receipts are in the [matching report](../tasks/reports/20261024-01-01_prototype-correctness-revision_report.md).
+  The first aggregate quality command exited1 after successful tests because of format lint;
+  pure formatting retained AST/input identity and full-scope lint subsequently passed.
+- Formal acceptance5 still needs aggregate exit0. Strict cumulative repair calls108/128;
+  another full run adds36. A user decision on raising only this task's cap to144 is pending;
+  do not infer approval, reset counters or relabel the failed run as successful.
+- All original research/native/remote limits remain; no next task or push follows.
+
 ## DEC-20261024-PROTOTYPE-CORRECTNESS-REVISION
 
 - Current human instruction authorizes audit/testing of the five modules, a bounded repair

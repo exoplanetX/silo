@@ -2,23 +2,27 @@
 
 ## Current Revision — 2026-10-24
 
-用户本轮要求五模块审查、测试、制定修订并交开发对话执行。基线4ca4bab；
-[独立审查](../docs/prototype_audit_20261024.md)实际运行完整6147测试、192新模型两参数
-384次对照及48纯整数穷举、48输入往返，原工件/封存证据哈希一致。
-另确认4项缺陷：MILP目标容差剪枝与错误零gap、CG漏负约化成本后错误全池最优、
-MPS等值大整数词法绕过精度保护、RANGES派生端点非零下溢。当前候选需要修订；
-旧计划的交付/测试事实保留，不以旧PASS覆盖新增反例。
+正确性修订候选0.2.0a2已完成，代码f488189bd5835d9b1b4c7d0319b847a1671da1d1。
+[合同20261024-01-01](../tasks/codex/20261024-01-01_prototype-correctness-revision.md)的
+R1输入、R2最优性与界、R3四安装均有通过证据；
+[执行报告](../tasks/reports/20261024-01-01_prototype-correctness-revision_report.md)是实际收据入口。
 
-[修订计划](../tasks/phases/prototype_revision_20261024.md)与
-[单一合同20261024-01-01](../tasks/codex/20261024-01-01_prototype-correctness-revision.md)
-限定三个内部检查点R1输入、R2最优性/界、R3回归/本地0.2.0a2安装，尚待执行交付。
-执行归属silo-solver开发；讨论对话审查。新验证账本独立，60分钟计算上限，四缺陷
-和相应回归/学习/工件达到合同八项标准后停止；不新增第六模块或研究里程碑。
-GPT-6 Sol/high为推荐配置，不声称已切模型。
+旧候选基线4ca4bab的[审查](../docs/prototype_audit_20261024.md)确认四反例：
+MILP误用可行性容差剪枝、CG漏小负rc并错报全池最优、MPS等值整数丢精度、派生侧非零下溢。
+修订已修复这些机制；有限CG以原始二进制数据全池精确可行对P=D门控，失败保留无证明状态。
+6327测试、新384调用/192直接HiGHS/48整数穷举、旧288集及两公开例、保存64诊断复核均通过。
+Windows3.11.15/3.13.9×wheel/sdist四个新隔离安装通过，工件120模块匹配代码提交。
+原研究A/B已验收、C HOLD、D/E未启动；native Phase9仍parked/deferred；远端CI pending。
 
-继续当前codex/teaching-research-prototype分支，cached origin/main...4ca4bab为0/44；
-已知两项治理变动按合同哈希原样保留，排除提交。本轮local-commit，交执行不等于GitHub推送。
-原A/B已验收、C HOLD、D/E未启动；native Phase9仍parked/deferred；远端CI pending。
+唯一剩余为合同验收5的完整质量聚合命令收据。首次check_quality.py的结构与6327测试通过，
+尾部Ruff因新配方格式exit1；保持AST/生成输入/manifest不变的格式修正后同范围Ruff通过。
+不将分步恢复写成整条命令exit0。当前严格调用108/128；为取得完整exit0已请求用户仅将上限
+提高至144，尚待明确答复。其他上限与60分钟验证预算保持；不增加算法、实例或研究任务。
+
+当前分支codex/teaching-research-prototype，f488189时cached origin/main...HEAD=0/47，
+没有即时远端查询。两项治理变动按原哈希保留并排除提交；local-commit，未push。
+[修订计划](../tasks/phases/prototype_revision_20261024.md)保持单合同三个内部检查点；
+推荐GPT-6 Sol/high，不声称已切模型。完成本单收据并交讨论对话审查后停止。
 
 ## Completed Program — 2026-10-23
 

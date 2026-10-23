@@ -10,6 +10,12 @@ Its enumerated solver/input fixes, tests, learning and local0.2.0a2 rebuild are 
 authorized. Continue the current known local branch/dirty governance state without reset;
 preserve and exclude the two governance files. No GitHub push or publication is authorized.
 Use the separate60-minute verification account and stop at its eight acceptance criteria.
+R1/R2 and the four local0.2.0a2 installations now have passing evidence at f488189.
+The [execution report](../tasks/reports/20261024-01-01_prototype-correctness-revision_report.md)
+retains the first quality aggregate's exit1: its6327 tests passed, then format lint failed.
+The input recipe is AST/input-identical after formatting and same-scope lint passes;
+the final aggregate exit0 remains outstanding under the strict108/128 call account.
+A narrow user decision about raising only this call cap to144 is pending.
 Original research C/D/E and native deferral remain unchanged. The completed old overall
 program exception below supplies history only and does not authorize the new task.
 

@@ -64,3 +64,14 @@ Git为`local-commit`，沿用当前分支；不推送GitHub、不发布tag/Relea
 这两项必须原样保留、排除提交。原研究状态、native延期、历史合同保持原样。
 
 执行入口：[20261024-01-01](../codex/20261024-01-01_prototype-correctness-revision.md)。
+
+## Execution receipts — 2026-10-24
+
+R1/R2代码为f488189bd5835d9b1b4c7d0319b847a1671da1d1，0.2.0a2四隔离安装通过。
+6327测试、新384/直接192/枚举48、旧288/两公开例及保存64只读复核均通过。
+[执行报告](../reports/20261024-01-01_prototype-correctness-revision_report.md)保留失败及全部来源。
+
+验收5尚待完整check_quality.py exit0；首次6327测试通过但尾部lint exit1，纯格式修正
+保持AST/生成输入/manifest一致且全范围lint通过。严格新修复调用108/128，再完整跑36将达144；
+主线程已请求用户仅提高本单调用上限至144，尚无批准。其余预算、scope及停止线保持。
+不把分步恢复和未发生的聚合成功混同；不把候选交付提升为八项全过。

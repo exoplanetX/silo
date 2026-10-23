@@ -3,10 +3,10 @@ lesson_id: L0013
 title: 一般整数搜索、全局界与可核验GMI
 topic: mip.branch-and-cut
 version: 0.2.0
-status: draft
+status: checked
 created: 2026-10-24
 updated: 2026-10-24
-verified_code: 8a07e4b211795c60bf77bfabda1b90a0b2f3f04c
+verified_code: f488189bd5835d9b1b4c7d0319b847a1671da1d1
 verified_on: 2026-10-24
 source_tasks: [20261023-02-01_teaching-prototype, 20261024-01-01_prototype-correctness-revision]
 ---
@@ -69,7 +69,7 @@ LP无界须进一步证明整数anchor/ray；分数anchor继续分支，缺证�
 包含96独立整数枚举/连续顶点真值、mixed松弛从1.5到2、有限域逐点GMI、局部祖先/兄弟、
 四类限额、三态无界、移位/反射/缩放/slack标签、箱误差和证明预算。
 注入有限继承界与无界冲突时，保留incumbent10、dual无穷及gap=None；这是状态机控制测试。
-具体运行记录和代码提交核验后填元信息，规模仍由M5统一检验。
+实际修订代码提交记录在篇首，规模验证见修订报告中的冻结矩阵。
 
 修订入口：`python -m pytest tests/unit/test_revision_optimality.py -q`。冻结F1矩阵以四个二元点
 独立Fraction枚举核对min/max、两成本尺度、常数0/100、启发式开关、primal容差及四种限额。

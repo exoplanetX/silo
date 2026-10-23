@@ -3,19 +3,18 @@ lesson_id: L0011
 title: 一般模型、可逆变换与原始空间核验
 topic: modeling.general-lp
 version: 0.2.0
-status: draft
+status: checked
 created: 2026-10-23
 updated: 2026-10-24
-verified_code: 8a07e4b211795c60bf77bfabda1b90a0b2f3f04c
+verified_code: f488189bd5835d9b1b4c7d0319b847a1671da1d1
 verified_on: 2026-10-24
 source_tasks: [20261023-02-01_teaching-prototype, 20261024-01-01_prototype-correctness-revision]
 ---
 
 # L0011｜一般模型、可逆变换与原始空间核验
 
-核验状态：上方 `verified_code/verified_on` 保留 v0.1.0 的已核验基线。
-本次 v0.2.0 增补 F3/F4 输入反例与转换原则，定向工作树测试已通过；新稿尚待主线程
-正式提交后统一登记核验提交，当前 `draft` 不把旧提交当作新增内容的核验依据。
+核验状态：v0.2.0按篇首提交核对F3/F4转换、往返与公开拒绝路径；
+139新用例及62历史MPS用例通过，且包含全量6327测试。原0.1.0代码基线见Git历史。
 
 ## 1. 问题与学习目标
 
@@ -90,7 +89,7 @@ x_j<=(b−Σk≠j a_k*chosen_bound_k)/a_j。该新界的不等式是原行及其
 组合例预期20，派生固定例预期行dual1、rc0；测试从原始输入直接重构互补与stationarity。
 JSON/MPS/API/CLI保持相同目标。独立Fraction oracle不导入生产规范化；验收矩阵身份
 固定在`tests/fixtures/prototype_manifest.json`，补充证据与运行结果见总报告。
-本篇核验提交与日期在实际检查后登记，draft不构成完成声明。
+本篇核验提交与日期记录于篇首；对应测试已纳入本轮全量检查。
 
 R1 工作树定向命令为
 `.venv/Scripts/python.exe -m pytest tests/unit/test_revision_mps.py tests/unit/test_mps_io.py -q -s`。
@@ -125,6 +124,6 @@ R1 工作树定向命令为
 [总报告](../../../tasks/reports/20261023-02-01_teaching-prototype_report.md)与
 [原始规格](../../../docs/prototype_model_contract.md)。2026-10-24初稿，模块M1实际代码核验后登记基线。
 
-2026-10-24 v0.2.0 草稿：按
+2026-10-24 v0.2.0：按
 [正确性修订合同](../../../tasks/codex/20261024-01-01_prototype-correctness-revision.md)的 R1
-补 F3/F4 反例、统一转换门及写读兼容原则；原核验提交保持，新增内容待正式提交后统一登记。
+补 F3/F4 反例、统一转换门及写读兼容原则；按本轮正式代码提交登记实际核验。

@@ -3,10 +3,10 @@ lesson_id: L0014
 title: 受控研究策略、一般主问题与有限列生成
 topic: research.general-column-generation
 version: 0.2.0
-status: draft
+status: checked
 created: 2026-10-24
 updated: 2026-10-24
-verified_code: 35bb032dacfb6afa21833d4159e795367a72170e
+verified_code: f488189bd5835d9b1b4c7d0319b847a1671da1d1
 verified_on: 2026-10-24
 source_tasks: [20261023-02-01_teaching-prototype, 20261024-01-01_prototype-correctness-revision]
 ---
@@ -77,7 +77,7 @@ raw浮点、小分母重构、现有basis的Bx=b与B^T*pi=cB只是候选，每�
 核对只读快照、实际分支/节点/启发式/割选择、错误动作保留界、覆盖/分割/混合行、
 辅助可行性恢复、完整定价与启发式终止。两个公开安装例分别为
 `silo.mip.research_example.run_example()`和`general_master.covering_example()`。
-M4实际检查57项CG与15项公开策略通过，完整质量6137通过；核验基线见篇首完整提交。
+历史M4检查57项CG与15项公开策略通过，完整质量6137通过；历史核验基线见Git记录。
 上述为历史M4计数。本轮另运行`tests/unit/test_revision_optimality.py`、固定新旧矩阵及
 隔离安装反例；实际本轮计数和最终代码基线见[修订报告](../../../tasks/reports/20261024-01-01_prototype-correctness-revision_report.md)。
 
@@ -106,5 +106,5 @@ M4实际检查57项CG与15项公开策略通过，完整质量6137通过；核�
 
 来源为[原型总合同](../../../tasks/codex/20261023-02-01_teaching-prototype.md)M4及
 [总报告](../../../tasks/reports/20261023-02-01_teaching-prototype_report.md)。2026-10-24初稿，
-与原十篇及M1–M3共同保持稳定ID；实际代码核验待M4 checkpoint。
+与原十篇及M1–M3共同保持稳定ID；本轮核验基线记录在篇首。
 v0.2.0补全池精确可行对、负约化成本放大反例、共享证明预算与方向安全浮点界。
