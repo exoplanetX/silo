@@ -340,6 +340,14 @@ prechecks and refactor/ratio/commit consistency remain unresolved. Preserve the 
 Goal and the total report. No third correction is authorized by unused time alone;
 direct human count-extension authorization is required before further solver execution.
 
+Direct human exception2026-10-25 (reply to the development chat's bounded question):
+authorize exactly one additional SP2 factor-generation/state/commit consistency
+correction and one affected fixed-group recheck. Total SP2 correction ceiling is now3
+for this program only; previous two attempts, failures and time remain charged.
+Inputs, tolerances, all phase/time/group caps and eight completion targets are unchanged.
+After this correction passes independent review and the fixed groups, continueSP3–SP4.
+This does not authorize a fourth SP2 correction or another Goal.
+
 Record the activating human instruction and program state before product edits. Freeze
 designs, inputs and truth before the implementation intended to pass them. Preserve the
 fixed effects, eight exit criteria, 480-minute verification ceiling and group/retry caps

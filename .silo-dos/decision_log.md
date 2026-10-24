@@ -1,5 +1,15 @@
 # SILO Decision Log
 
+## DEC-20261025-SPARSE-SP2-ONE-EXTRA-CORRECTION
+
+- Direct human reply authorizes one additional factor-generation/state/commit
+  consistency correction and one affected fixed-group recheck; then continueSP3–SP4
+  only after the existing independent and fixed-input gates pass.
+- SP2 total correction ceiling3; no fourth attempt implied. All previous evidence,
+  time charges, inputs, tolerances, phase/time caps and eight targets are retained.
+- Preserve the existing unfinished Goal; do not create a replacement. Its last tool
+  statusblocked is separate from this human authorization to execute the bounded work.
+
 ## DEC-20261025-SPARSE-SP2-HOLD
 
 - SP1 independent GO and two input/truth commits precede all product edits.
