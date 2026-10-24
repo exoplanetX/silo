@@ -2,6 +2,14 @@
 
 ## Explicit human activation — SILO-SPARSE-LP-20261024
 
+Current authority2026-10-25: the human requested review and dispatch of necessary repair
+and original-goal continuation. [RR02](../tasks/codex/20261024-02-02_sparse-lp-program.md)
+and its recovery plan supersede the exhausted7/7 boundary only for the listed concentrated
+package: <=3 additional60s diagnostic batches within old20 and <=2 SP2 joint checks within
+remaining original time. Supported numerical strategy changes are explicitly scoped;
+fixed inputs/truth/tolerances/eight outcomes stay. Same Goal/ledger, SP2 GO then SP3-SP4,
+local-only commits. No generic standing approval expansion or renewed patch-by-patch ask.
+
 The human directly started the prepared contract20261024-02-01 in the development
 chat using Goal mode on2026-10-24. This exact program now has its listed L2/L3
 solver/dependency/API/local packaging authority and SP1–SP4 continuity; it does not

@@ -2,6 +2,17 @@
 
 ## Activated sparse LP program — 2026-10-24
 
+**Current2026-10-25 recovery corridor:** direct human instruction in the discussion
+chat authorizes the reviewed repair/continuation package to be dispatched for execution.
+[RR02](../tasks/codex/20261024-02-02_sparse-lp-program.md) and the
+[recovery plan](../tasks/phases/sparse_lp_recovery_20261025.md) govern continuation;
+the previous7/7 stop remains a preserved historical event. Same Goal and ledger,
+fixed eight outcomes/inputs/truth/tolerances, original stage/global time. Up to3 new60s
+diagnostics within old20 and2 SP2 joint checks, then actualSP2 GO before SP3-SP4.
+Internal ratio/finite recovery/scaling and evidence-supported pricing-control adjustment
+are allowed; perturbation/new solver methods/externals/new Goal are excluded.
+No automaticpush/native/original C/D/E. The following is the pre-RR02 authority history.
+
 The human directly instructed the development chat to read the latest staged plan and
 complete the overall design in Goal mode. Contract20261024-02-01 is now activated,
 issuancea480985; the existing single Goal is owned by this development chat.

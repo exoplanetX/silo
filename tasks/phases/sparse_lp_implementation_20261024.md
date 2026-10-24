@@ -1,20 +1,23 @@
 # SILO 稀疏 LP 与连续重优化：详细实施计划
 
-计划身份：`SILO-SPARSE-LP-20261024 / implementation-v1.0`，2026-10-24。
+计划身份：`SILO-SPARSE-LP-20261024 / implementation-v1.1`，2026-10-25。
 总目标及数字门槛以[总体规划](sparse_lp_reoptimization_program_20261024.md)为准；
 本文件将其展开为一个总任务内的实施顺序、责任、接口、输入和交付门。
 准备阶段只生成计划与合同。2026-10-24用户已在“silo-solver开发”以Goal模式明确启动；
 SP1输入a3cff29、真值/基线3c27324已冻结，架构/完整证据独立GO先于产品。
-2026-10-25当前SP2 HOLD：原两次与人类获批一次追加轮均已使用；generation已独立GO，
-两容量预检仍失去primal feasibility。停止新增求解，下一数值包需明确扩展次数，目标/阈值不变。
+2026-10-25审查确认SP2七轮后仍HOLD：48/24和四小Netlib通过，两容量在全部改善列被拒绝后
+数值失败，SP3/SP4未正式验收。用户现明确要求交付修复并继续完成，当前按
+[集中恢复计划](sparse_lp_recovery_20261025.md)与RR02续接；本文件保留原工作包及完成标准。
+恢复包修订比值/有限恢复策略和SP2整包轮数，原输入、容差、预算及八项不变。
 
 ## 0. 唯一执行入口与读取顺序
 
-入口合同：[20261024-02-01_sparse-lp-program](../codex/20261024-02-01_sparse-lp-program.md)。
+当前入口合同：[20261024-02-02_sparse-lp-program](../codex/20261024-02-02_sparse-lp-program.md)。
+原[01合同](../codex/20261024-02-01_sparse-lp-program.md)保留为启动/原目标依据。
 该合同是一个整体任务，SP1–SP4是内部工作包，不另签四个或更多原子任务。
 
-未来启动时按顺序读取：根AGENTS及案例通告 → tasks/README → 入口合同 → 总体规划 →
-本实施计划 → 当前mirror/0.2.0a2验收。冲突按当前直接用户指令、合同、总体目标处理，
+恢复时按顺序读取：根AGENTS及案例通告 → tasks/README → 当前及原入口合同 → 总体规划 →
+本实施计划/集中恢复计划 → 当前mirror/历史报告。冲突按当前直接用户指令、合同、总体目标处理，
 不得用旧已完成目标的授权代替本次启动授权。
 
 用户明确以目标模式启动后：
@@ -367,7 +370,8 @@ start/end/elapsed、started/completed calls、退出码、失败/重试、预算
 
 ## 8. 总报告与阶段记录模板
 
-唯一报告：`tasks/reports/20261024-02-01_sparse-lp-program_report.md`。
+当前唯一总报告：`tasks/reports/20261024-02-02_sparse-lp-program_report.md`，RR02实际执行时创建；
+`tasks/reports/20261024-02-01_sparse-lp-program_report.md`保留七轮恢复前历史。
 启动登记人类实际启动指令、Goal owner、分支/HEAD/dirty例外、依赖、读取记录、阶段预算。
 每阶段记录：目标 → 对应内部工作包 → 变更/提交 → 实际命令/案例/来源 → 失败及根因 →
 只读审核结论 → 门判定 → 剩余义务/预算 → 自动进入的下一个既定阶段。

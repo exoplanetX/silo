@@ -316,6 +316,26 @@ at a genuine blocker or exhausted budget. Do not push/publish or silently expand
 
 ### 6.11 Activated Goal Program — SILO-SPARSE-LP-20261024
 
+**Current recovery authority,2026-10-25:** the human explicitly requested the discussion
+chat to review the failed implementation, prepare a repair/continuation plan and dispatch
+it to `silo-solver开发`. The immutable
+[RR02 revision](codex/20261024-02-02_sparse-lp-program.md) and
+[bounded recovery plan](phases/sparse_lp_recovery_20261025.md) govern current continuation.
+Preserve all seven previous attempts and their costs. Authorize one coherent SP2 recovery
+package: at most3 new diagnostic batches of60s within the original20, and2 full SP2 joint
+checks (initial package plus at most1 evidence-based revision), within the original
+remaining SP2/480-minute budgets. Internal code patches are not separate task/approval
+rounds. The old no-round8 statements below describe exhausted prior authority, not a
+veto of this new directly requested recovery.
+
+Inputs, truth, acceptance tolerances and all eight outcomes stay fixed; RR02 explicitly
+allows supported internal ratio/finite recovery/scaling changes, with conditional
+Devex/Bland control adjustment and independent mathematical review. No perturbation,
+external optimizer, new Goal or extra program. Actual joint SP2 GO precedes continuous
+original SP3-SP4. Existing Goal and append-only ledger persist. RR02's matching report
+becomes the single current total report when execution starts;01 report retains history.
+No push/publication/native/original C/D/E. Other tasks keep their existing rules.
+
 The human requested a detailed execution package and said they will later start it
 in the development conversation using Goal mode. The
 [prepared total contract](codex/20261024-02-01_sparse-lp-program.md),

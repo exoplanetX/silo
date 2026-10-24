@@ -2,6 +2,25 @@
 
 ## Active Sparse LP Program — 2026-10-24
 
+### 当前恢复入口（2026-10-25）
+
+用户已直接要求本讨论对话审查原因、制定计划并交付开发对话修复和继续完成。
+当前入口为[RR02合同](../tasks/codex/20261024-02-02_sparse-lp-program.md)、
+[集中恢复计划](../tasks/phases/sparse_lp_recovery_20261025.md)，依据
+[实施审查](../docs/sparse_execution_review_20261025.md)。
+仍是原SILO-SPARSE-LP-20261024及开发对话现有唯一Goal，当前SP1 GO、SP2 HOLD，未完成。
+沿用fc33014产品/e70fe59审查基线及codex/sparse-lp-reoptimization；原七轮证据保留。
+原ledger现累计SP2 635.2621407/3600秒、总1008.2659505/28800秒；以启动实账为准。
+授权一套联合数值恢复包，最多3新增60秒诊断（包含在原20批）和2次完整SP2联合验收
+（初包+最多1次有证据的修订），全部在原剩余时间内，不按内部补丁重复请求授权。
+优先修正严格最小比值并列筛主元的已证明缺口，有限恢复/稀疏重新平衡依诊断和数学门，
+Devex/Bland控制调整须有独立证据；不扰动原问题，不改变输入、真值、容差或验收指标。
+两容量真实optimal且48/24/6、独立联合GO后连续完成原SP3/SP4；全部八项齐备才完成Goal。
+当前总报告在实际启动后为RR02同名报告；01保留恢复前历史。local-commit，无push。
+原研究C HOLD/D/E未开始、native延期、两治理文件保护和远端CI pending保持。
+
+### 第7轮终止快照（历史，以下耗尽权限已由RR02窄范围续接）
+
 用户已在silo-solver开发直接以Goal模式启动整体执行。沿用唯一Goal，目标仍为完整执行
 [总合同20261024-02-01](../tasks/codex/20261024-02-01_sparse-lp-program.md)、
 [总体规划](../tasks/phases/sparse_lp_reoptimization_program_20261024.md)及

@@ -1,5 +1,22 @@
 # SILO Decision Log
 
+## DEC-20261025-SPARSE-CONCENTRATED-RECOVERY-RR02
+
+- Direct user instruction: audit implementation, identify causes, formulate continuation
+  and dispatch to `silo-solver开发` for repair and completion of the original goal.
+- Review at e70fe59 confirms SP1 GO/SP2 HOLD after seven corrections:48/24 pass,
+  smoke4/6. Two capacity cases remain numerical failures. Independent136-test regression
+  passes; mathematical review proves a ratio-selector defect class, not a sole CAP cause.
+- Issue same-blockRR02 and one bounded recovery plan; original contract stays immutable.
+  Preserve old7 attempts/costs, source/input/truth identities, the one Goal and ledger.
+- At most3 new60s diagnostics within original20; concentrated package plus at most1
+  evidence-based revision, <=2 SP2 joint checks and unchanged remaining stage/global time.
+  Supported ratio/finite recovery/scaling, conditional pricing-control changes; no perturbation.
+- Actual SP2 jointGO then continue originalSP3/SP4; all eight original criteria remain.
+  Unmet outcomes remain incomplete. No new research, native, publication or automaticpush.
+- Audit:docs/sparse_execution_review_20261025.md. Current execution entry:RR02 contract;
+  matchingRR02 report becomes current on execution,01 report retains seven-round history.
+
 ## DEC-20261025-SPARSE-SP2-ROUND7-CLOSED-HOLD
 
 - Sourcefc33014 closes the trusted-owner same-B voluntary-publication invariant;
