@@ -4,15 +4,64 @@
 依据：[总体规划](../phases/sparse_lp_reoptimization_program_20261024.md)、
 [实施计划](../phases/sparse_lp_implementation_20261024.md)。
 
-当前状态（2026-10-25）：**SP1 GO；人类已批准剩余SP2原预算内最多再3轮数值稳定性包。**
-原1–3轮保留，第4轮pivot观测/一次current-B复核已完成，smoke6仍为4/6；
-第5轮raw-candidate门关闭原失败换基，但smoke仍4/6；最后第6轮完整状态事务
-已获源码GO，96组件/172当前源集成通过，接下来唯一smoke6，完整SP2仍未GO。
+当前状态（2026-10-25）：**SP1 GO；SP2 HOLD/STOP，已用满人类允许的第4–6轮，完整目标未完成。**
+产品a4eccb17704b04cc939d97ac39461156358fbeb7；最后96组件、172当前源公开集成及源码门通过，
+smoke仍4/6，两容量LP数值失败。SP3及SP4正式验收未开始，0.3.0a1和8安装未交付。
+所有新增修复、诊断与求解已停止；原输入/阈值/目标保持，不自行开始第7轮。
 
 直接授权答复：“授权剩余预算内最多3轮（推荐）”，对应问题call_c43d2b03430449b49ec2dd3a8a0bc91e。
 本单SP2修正上限从3扩至6；原时间预算、输入、阈值、Bland/Devex及八项目标不变。
 此节更新下文提案的待授权状态，不重置旧账本或另开Goal。
 原HOLD代码2b40d87、元数据2d6e337保留；整体Goal及八项目标仍未完成。
+
+
+## 本次数值包的终止快照
+
+本节是当前结论；后文各轮的待运行/待授权文字为当时快照。
+直接授权的“最多再3轮”已按第4、5、6轮完整使用，停止依据是人类次数上限，
+时间余额不构成第7轮授权。集中包：outputs/sparse_lp_program_20261024/reviews/numeric_package_stop.json。
+
+第6轮唯一smoke组a5fffafc-36a6-4a13-9ea5-c16c07ca8e37，6root/6LP均完成，
+总54.9617354秒；四小Netlib optimal，两个必过容量预检未达：
+
+| 实例 | 状态 | pivot | 实例完整耗时 | 保守OS峰值RSS |
+|---|---|---:|---:|---:|
+| CAP-FLOW-01 | numerical_failure | 4308 | 8.1437734秒 | 119664640字节 |
+| CAP-TRANS-01 | numerical_failure | 14496 | 43.6914253秒 | 177844224字节 |
+
+两例均未触120秒或1GiB保护，失败属于正确性门。源码GO不能替代容量通过。
+FLOW候选4308次均接受并消费完整pending状态；TRANS14499次候选接受14496、丢弃3，
+pending消费14496。末次成功提交后，同一B上的raw_candidate_feasibility主动刷新
+才首次导致失可行：FLOW generation527→528→529，TRANS1391→1392→1393；
+后一个代次是再次primal复核，仍失败。对应三份矩阵CSC SHA各自相同，未发生换基。
+高置信边界是“同基重构的新generation在完整state验收前已原位发布”；
+具体底层条件数或SuperLU误差来源尚未证明，不能称为唯一数值根因。
+只读数学复核BLOCK/STOP见reviews/numeric_round6_terminal_cause.json及原始trace提取。
+独立red_team_reviewer从原始summary/result/trace、源码和账本再次确认STOP/HOLD，
+排除engine、checker、进程exit与真实求解状态的混淆；见reviews/numeric_package_stop_red_team.json。
+两份审查复用同一smoke，不能重复计为容量成功证据。待授权同基提案范围合规，但没有第7轮权限。
+
+截至原证据保护复核，SP1=368.5422803秒、SP2=505.1359841秒、SP3=0、SP4静态准备=4.4615295秒，
+总878.1397939秒；SP2原3600秒约余3094.864秒。最终静态收尾实耗继续写原append-only账本。
+旧984文件及完整目录清单、两治理文件哈希全部保持，来源与最后smoke相同；local-commit，无push/发布。
+索引生成、项目结构复核及diff静态检查均通过，0新增solver。收尾前a4eccb1的
+cached origin/main...HEAD=0/67，仅本地缓存、未查询即时远端；完整Git证明见
+reviews/numeric_package_git_proof.json。最后文档收尾提交从Git history定位，避免自引用。
+
+原八项完成线继续保留：SP1已GO；端到端cold容量门未达；8机制、160修改状态/5重复及收益、
+固定12MIP/4CG、当前完整质量/旧矩阵、0.3.0a1/8安装和最终伴学/独立终验均未完成。
+已做的组件与接口检查按其范围保留，不能充当未执行正式矩阵的结果。
+
+下一项仅为待人类授权的单一提案：把“旧owner仍有完整可行状态、为继续primal选择主动发起的
+同基刷新”纳入私有完整state验证后发布，失败保留可信旧owner并拒绝触发entering；
+若旧残差已失效的强制恢复也失败，仍保守numerical_failure，不能回滚到不可信旧因子继续。
+建议只追加1次针对修复及1轮受影响48tiny/24pressure/6smoke，沿原剩余时间、输入、阈值和总目标；
+SP2通过后才按原授权继续SP3–SP4。此提案尚未执行、不新建Goal、不提高时间预算。
+推荐GPT-6 Sol/high，困难集中于同基generation发布与可信旧状态的异常隔离；不声称已切模型。
+
+## 第4–6轮实施历史
+
+以下按当时进度保留；当前结论以上方终止快照为准。
 
 第4轮观测仅保留末次成功pivot，失败时投影为before最差8项、after最差8项及leaving的
 并集，最多17项；重构后必须重算完整state，仍失可行则保守失败，原阈值与pricing不变。
@@ -74,7 +123,7 @@ SP4机械评价helper和8项纯逻辑测试已准备，0native/安装；SP1旧�
 注入失败与未返回事件保留在原收据。最后仅补post-SPLU deadline前的已生成LU单体/并存峰记账，
 未改变数值轨迹；对应toy的actual单体8/并存14，仍抛time_limit且旧owner不发布。
 root当前源公开集成172项通过，1.95134秒；此前峰值补丁前另一次1.9634991秒亦保留计费。
-正常通过toy仍6次B/BT求解、1次初始LU。正式smoke结果待实际运行，禁止增加第7修正轮。
+正常通过toy仍6次B/BT求解、1次初始LU。本段为运行前快照；随后正式结果见上方终止快照，禁止增加第7修正轮。
 
 直接授权原文答复：“授权追加一次修复和复验（推荐）”，对应问题为仅追加1次
 “因子重建后状态与换基提交保持同一代次”的针对修复和1轮受影响固定组复验；
