@@ -179,4 +179,14 @@ lp/modeling仅允许列明的sparse矩阵函数及splu。optimize、HiGHS、csgr
 ## Remote Sync Proof
 
 branch=codex/sparse-lp-reoptimization；known governance dirty_worktree；push=not_attempted。
-最后提交、cached领先差异和阶段提交在各检查点补实。报告最终commit用Git history定位。
+HOLD产品保存提交2b40d87cae0153538592abd2af492c9e6c9e7be7，前一主体提交8d72a3c；
+后续MIP遗漏暂存已由独立跟进提交补齐，当前124个源码/pyproject均与已保存运行身份一致。
+逐文件git blob严格只作CRLF→LF运输等价核对通过；不把实质差异归为换行。
+sp2_hold_committed_identity.json保存实际源码SHA、Git/source匹配、状态、last5和cached引用。
+产品保存时cached origin/main...HEAD=0/57；只读本地引用，没有fetch或即时远端核对。
+该时刻last5为2b40d87、8d72a3c、8aa0946、3c27324、a3cff29。
+两项已接受治理差异仍原SHA且未暂存，旧证据逐文件SHA保持。
+截至保存身份复核总验证534.3422841秒（SP1 368.5422803，SP2 165.8000038）；
+完整质量/容量组/Netlib组/warm/安装均未执行，无发布。
+额外一次修复授权问题已在开发对话提出；提出问题不等于获准，回复前保持HOLD。
+报告最后元数据提交从Git history定位；最终cached计数因本地报告提交再前进，不冒充远端状态。
