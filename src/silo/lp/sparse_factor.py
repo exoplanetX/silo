@@ -14,7 +14,7 @@ from scipy.sparse.linalg import splu
 RESIDUAL_TOLERANCE = 1e-10
 REFINEMENTS = 2
 GROWTH_LIMIT = 1e8
-FACTOR_POLICY = ("silo-sparse-lu-eta-v1", "COLAMD", RESIDUAL_TOLERANCE, REFINEMENTS, GROWTH_LIMIT)
+FACTOR_POLICY = ("silo-sparse-lu-eta-v2", "COLAMD", RESIDUAL_TOLERANCE, REFINEMENTS, GROWTH_LIMIT)
 
 
 @dataclass(frozen=True)
@@ -78,6 +78,14 @@ class FactorResourceError(MemoryError):
     pass
 
 
+class FactorRetry(RuntimeError):
+    """Current B was rebased; the caller must discard every uncommitted choice."""
+
+    def __init__(self, reason, generation):
+        super().__init__(reason)
+        self.reason, self.generation = reason, generation
+
+
 class SparseFactor:
     """Owned B=B0 E1...Ek; apply inverse etas in the mathematically required order."""
 
@@ -89,6 +97,7 @@ class SparseFactor:
         self.etas = []
         self.lu = None
         self.scope_calls = 0
+        self.generation = 0
         self.refactor(self.matrix, "initial")
 
     @property
@@ -116,6 +125,7 @@ class SparseFactor:
             factor_fill_ratio=n / max(1, self.matrix.nnz),
             eta_chain_length=len(self.etas),
             eta_storage_bytes=sum(d.nbytes + 8 for _, d in self.etas),
+            factor_generation=self.generation,
         )
         self.counters["factor_nnz_peak"] = max(self.counters.get("factor_nnz_peak", 0), n)
         self.counters["eta_chain_peak"] = max(
@@ -147,6 +157,7 @@ class SparseFactor:
             self.counters["rejected_factor_nnz"] = int(lu.L.nnz + lu.U.nnz)
             raise FactorResourceError("Sparse LU fill exceeds max_factor_nnz.")
         self.matrix, self.lu, self.etas, self.scope_calls = matrix, lu, [], 0
+        self.generation += 1
         self._statistics()
 
     def configure(self, options, counters, deadline):
@@ -244,31 +255,37 @@ class SparseFactor:
     def solve_BT(self, rhs):
         return self.solve(rhs, transpose=True)
 
-    def replace_column(self, position, column, direction=None):
+    def replace_column(self, position, column, direction=None, *, expected_generation=None):
         """Commit a verified same-size replacement, then eta or a real rebuild.
 
         Return whether a base rebuild occurred, so pricing can reset its frame.
+        Recovery of OLD B returns an uncommitted FactorRetry: a newly computed
+        direction must never inherit the caller's previously chosen leaving row.
+        Planned chain-limit and next-B rebuilds are atomic commits of the
+        already verified direction, with no intervening recomputation.
         All accepted replacements, including safety/periodic rebuilds, enter the
         denominator. A rejected pivot never changes the owned current matrix.
         """
         self._deadline()
+        generation = self.generation if expected_generation is None else expected_generation
+        if generation != self.generation:
+            raise FactorRetry("stale_commit_generation", self.generation)
         n = self.matrix.shape[0]
         column = np.asarray(column, dtype=float)
         if column.shape != (n,) or not 0 <= position < n or not np.isfinite(column).all():
             raise ValueError("Invalid basis-column replacement.")
         before = self.counters.get("base_factorizations", 0)
         direction = self.solve_B(column) if direction is None else np.array(direction, copy=True)
+        if self.generation != generation:
+            raise FactorRetry("direction_solve_rebased", self.generation)
         if direction.shape != (n,) or not self._residual(column, direction, False)[0]:
             self.refactor(reason="direction_residual")
-            direction = self.solve_B(column)
+            raise FactorRetry("direction_residual", self.generation)
         size = float(np.max(np.abs(direction), initial=0))
         pivot = float(direction[position])
         if not pivot_safe(direction, position, self.options.pivot_tolerance):
             self.refactor(reason="pivot")
-            direction = self.solve_B(column)
-            size, pivot = float(np.max(np.abs(direction), initial=0)), float(direction[position])
-            if not pivot_safe(direction, position, self.options.pivot_tolerance):
-                raise np.linalg.LinAlgError("Unsafe basis pivot after current-B refactor.")
+            raise FactorRetry("unsafe_pivot", self.generation)
         indices = np.flatnonzero(column)
         sparse_column = csc_matrix(
             (column[indices], (indices, np.zeros(len(indices), dtype=int))), shape=(n, 1)

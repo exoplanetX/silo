@@ -12,6 +12,7 @@ from silo.lp.sparse_factor import (
     FACTOR_POLICY,
     FactorDeadline,
     FactorResourceError,
+    FactorRetry,
     SparseCoefficients,
     SparseFactor,
     canonical,
@@ -348,20 +349,37 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
             pricing.reset(basis, "new_factor")
         return factor
 
-    def basis_solve(rhs, transpose=False):
+    def basis_solve(rhs, transpose=False, expected_generation=None):
         current = get_factor()
-        before = counters["base_factorizations"]
+        before = current.generation
         answer = current.solve(rhs, transpose)
-        if counters["base_factorizations"] != before:
+        if current.generation != before:
             pricing.reset(basis, "factor_recovery")
+        if expected_generation is not None and current.generation != expected_generation:
+            raise FactorRetry("basis_solve_rebased", current.generation)
         return answer
 
     def state(cost):
-        xb = basis_solve(b)
-        dual = basis_solve(cost[basis], True)
-        reduced = np.asarray(cost - a.T @ dual).reshape(-1)
-        reduced[basis] = 0
-        return xb, dual, reduced
+        # Initial construction happens before selecting the token. A rebase in
+        # either solve invalidates BOTH vectors, even if each residual is valid.
+        for _ in range(3):
+            generation = get_factor().generation
+            xb = basis_solve(b)
+            if get_factor().generation != generation:
+                increment(counters, "state_generation_restarts")
+                continue
+            dual = basis_solve(cost[basis], True)
+            if get_factor().generation != generation:
+                increment(counters, "state_generation_restarts")
+                continue
+            reduced = np.asarray(cost - a.T @ dual).reshape(-1)
+            reduced[basis] = 0
+            return xb, dual, reduced, generation
+        raise np.linalg.LinAlgError("State factor-generation retry limit.")
+
+    def same_generation(generation):
+        if get_factor().generation != generation:
+            raise FactorRetry("uncommitted_generation_changed", get_factor().generation)
 
     def finish(status, reason, xb=None, lam=None, reduced=None, ray=None, proof=False):
         point = None
@@ -409,99 +427,127 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
         result._factor_state = cache
         return result
 
-    def pivot(entering, leaving, direction=None):
+    def pivot(entering, leaving, generation, direction=None):
         nonlocal iterations
         column = _column(a, entering)
-        direction = basis_solve(column) if direction is None else direction
-        rebuilt = get_factor().replace_column(leaving, column, direction)
+        direction = (
+            basis_solve(column, expected_generation=generation) if direction is None else direction
+        )
+        same_generation(generation)
+        try:
+            rebuilt = get_factor().replace_column(
+                leaving, column, direction, expected_generation=generation
+            )
+        except FactorRetry:
+            pricing.reset(basis, "commit_retry")
+            raise
         basis[leaving] = entering
         iterations += 1
         return rebuilt
 
     def run(cost, mode="primal"):
+        selected_basis = None
+        rejected, refreshed, retries = set(), False, 0
         while True:
             if perf_counter() >= deadline:
                 return "limit", "time_limit", None, None, None, None
             if iterations >= options.lp_iteration_limit:
                 return "limit", "lp_iteration_limit", None, None, None, None
-            pricing.basis_seen(basis)
-            xb, lam, rc = state(cost)
+            if selected_basis != tuple(basis):
+                selected_basis = tuple(basis)
+                rejected, refreshed, retries = set(), False, 0
+                pricing.basis_seen(basis)
+            xb, lam, rc, generation = state(cost)
             basic = set(basis)
             nonbasic = [j for j in range(len(cost)) if j not in basic]
             ptol = options.primal_tolerance * (1 + np.max(abs(xb), initial=0))
             dtol = options.dual_tolerance * (1 + abs(cost) + abs(a).T @ abs(lam))
-            if mode == "primal":
-                if np.min(xb, initial=0) < -ptol:
-                    raise np.linalg.LinAlgError("Primal simplex lost feasibility.")
-                # Rejections live only for this B and this phase/cost. Every
-                # accepted pivot clears the set by starting a new outer step.
-                rejected, refreshed = set(), False
-                while True:
-                    if perf_counter() >= deadline:
-                        return "limit", "time_limit", None, None, None, None
-                    improving = [j for j in nonbasic if rc[j] > dtol[j]]
-                    if not improving:
-                        return "optimal", "optimal", xb, lam, rc, None
-                    eligible = [j for j in improving if j not in rejected]
-                    if not eligible:
-                        raise np.linalg.LinAlgError(
-                            "Unsafe blocking pivot: all improving columns were rejected."
+            try:
+                if mode == "primal":
+                    if np.min(xb, initial=0) < -ptol:
+                        raise np.linalg.LinAlgError("Primal simplex lost feasibility.")
+                    while True:
+                        if perf_counter() >= deadline:
+                            return "limit", "time_limit", None, None, None, None
+                        improving = [j for j in nonbasic if rc[j] > dtol[j]]
+                        if not improving:
+                            if rejected:
+                                raise np.linalg.LinAlgError(
+                                    "Rejected entering history cannot establish optimality."
+                                )
+                            return "optimal", "optimal", xb, lam, rc, None
+                        eligible = [j for j in improving if j not in rejected]
+                        if not eligible:
+                            raise np.linalg.LinAlgError(
+                                "Unsafe blocking pivot: all improving columns were rejected."
+                            )
+                        entering = pricing.entering(eligible, rc, basis)
+                        direction = basis_solve(
+                            _column(a, entering), expected_generation=generation
                         )
-                    entering = pricing.entering(eligible, rc, basis)
-                    direction = basis_solve(_column(a, entering))
-                    candidates = [i for i, value in enumerate(direction) if value > 0]
-                    if not candidates:
-                        ray = np.zeros(len(cost))
-                        ray[entering], ray[basis] = 1, -direction
-                        return "unbounded", "improving_ray", xb, lam, rc, ray
-                    theta = min(max(xb[i], 0) / direction[i] for i in candidates)
-                    ties = [i for i in candidates if max(xb[i], 0) / direction[i] == theta]
-                    safe = [i for i in ties if pivot_safe(direction, i, options.pivot_tolerance)]
-                    if safe:
-                        break
-                    if not refreshed:
-                        get_factor().refactor(reason="pivot_selection")
-                        pricing.reset(basis, "pivot_selection")
-                        xb, lam, rc = state(cost)
-                        ptol = options.primal_tolerance * (1 + np.max(abs(xb), initial=0))
-                        dtol = options.dual_tolerance * (1 + abs(cost) + abs(a).T @ abs(lam))
-                        if np.min(xb, initial=0) < -ptol:
-                            raise np.linalg.LinAlgError("Primal feasibility failed after refactor.")
-                        refreshed = True
-                        continue
-                    rejected.add(entering)
-                    increment(counters, "rejected_entering_columns")
-                    increment(
-                        counters.setdefault("pivot_rejection_reasons", {}), "unsafe_true_blocker"
-                    )
-                    pricing.reset(basis, "rejected_pivot")
-                leaving = min(safe, key=lambda i: keys[basis[i]])
-                weights = pricing.update(a, basis, entering, leaving, direction, basis_solve)
-                rebuilt = pivot(entering, leaving, direction)
-                if rebuilt or weights is None:
-                    pricing.reset(basis, "factor_rebuild" if rebuilt else "nonfinite_weight")
+                        candidates = [i for i, value in enumerate(direction) if value > 0]
+                        if not candidates:
+                            ray = np.zeros(len(cost))
+                            ray[entering], ray[basis] = 1, -direction
+                            return "unbounded", "improving_ray", xb, lam, rc, ray
+                        theta = min(max(xb[i], 0) / direction[i] for i in candidates)
+                        ties = [i for i in candidates if max(xb[i], 0) / direction[i] == theta]
+                        safe = [
+                            i for i in ties if pivot_safe(direction, i, options.pivot_tolerance)
+                        ]
+                        if safe:
+                            break
+                        if not refreshed:
+                            refreshed = True
+                            get_factor().refactor(reason="pivot_selection")
+                            pricing.reset(basis, "pivot_selection")
+                            raise FactorRetry("pivot_selection", get_factor().generation)
+                        rejected.add(entering)
+                        increment(counters, "rejected_entering_columns")
+                        increment(
+                            counters.setdefault("pivot_rejection_reasons", {}),
+                            "unsafe_true_blocker",
+                        )
+                        pricing.reset(basis, "rejected_pivot")
+                    leaving = min(safe, key=lambda i: keys[basis[i]])
+
+                    def checked_solve(rhs, transpose=False, token=generation):
+                        return basis_solve(rhs, transpose, token)
+
+                    weights = pricing.update(a, basis, entering, leaving, direction, checked_solve)
+                    same_generation(generation)
+                    rebuilt = pivot(entering, leaving, generation, direction)
+                    if rebuilt or weights is None:
+                        pricing.reset(basis, "factor_rebuild" if rebuilt else "nonfinite_weight")
+                    else:
+                        pricing.weights.update(weights)
+                    pricing.step(theta, options.primal_tolerance)
+                    increment(counters, "primal_pivots")
                 else:
-                    pricing.weights.update(weights)
-                pricing.step(theta, options.primal_tolerance)
-                increment(counters, "primal_pivots")
-            else:
-                if any(rc[j] > dtol[j] for j in nonbasic):
-                    raise np.linalg.LinAlgError("Dual simplex lost dual feasibility.")
-                candidates = [i for i, value in enumerate(xb) if value < -ptol]
-                if not candidates:
-                    return "optimal", "optimal", xb, lam, rc, None
-                leaving = min(candidates, key=lambda i: keys[basis[i]])
-                unit = np.zeros(len(b))
-                unit[leaving] = 1
-                witness = basis_solve(unit, True)
-                tableau = np.asarray(a.T @ witness).reshape(-1)
-                eligible = [j for j in nonbasic if tableau[j] < -options.pivot_tolerance]
-                if not eligible:
-                    return "infeasible", "dual_farkas", xb, witness, -a.T @ witness, None
-                entering = min(eligible, key=lambda j: (rc[j] / tableau[j], keys[j]))
-                pivot(entering, leaving)
-                pricing.reset(basis, "dual_pivot")
-                increment(counters, "dual_pivots")
+                    if any(rc[j] > dtol[j] for j in nonbasic):
+                        raise np.linalg.LinAlgError("Dual simplex lost dual feasibility.")
+                    candidates = [i for i, value in enumerate(xb) if value < -ptol]
+                    if not candidates:
+                        return "optimal", "optimal", xb, lam, rc, None
+                    leaving = min(candidates, key=lambda i: keys[basis[i]])
+                    unit = np.zeros(len(b))
+                    unit[leaving] = 1
+                    witness = basis_solve(unit, True, generation)
+                    tableau = np.asarray(a.T @ witness).reshape(-1)
+                    same_generation(generation)
+                    eligible = [j for j in nonbasic if tableau[j] < -options.pivot_tolerance]
+                    if not eligible:
+                        return "infeasible", "dual_farkas", xb, witness, -a.T @ witness, None
+                    entering = min(eligible, key=lambda j: (rc[j] / tableau[j], keys[j]))
+                    pivot(entering, leaving, generation)
+                    pricing.reset(basis, "dual_pivot")
+                    increment(counters, "dual_pivots")
+            except FactorRetry as exc:
+                retries += 1
+                increment(counters, "pivot_generation_restarts")
+                increment(counters.setdefault("generation_restart_reasons", {}), exc.reason)
+                if retries > 3:
+                    raise np.linalg.LinAlgError("Current-B factor-generation retry limit.") from exc
 
     if not m:
         if perf_counter() >= deadline or options.lp_iteration_limit == 0:
@@ -548,7 +594,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                     else:
                         increment(counters, "cache_invalidations")
                         counters["cache_invalidation_reason"] = "basis_or_coordinate_identity"
-                xb, lam, rc = state(c)
+                xb, lam, rc, _ = state(c)
                 primal_feasible = np.min(xb, initial=0) >= -options.primal_tolerance
                 dual_feasible = np.max(rc, initial=0) <= options.dual_tolerance * (
                     1 + np.max(abs(c), initial=0)
@@ -590,38 +636,62 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                     )
                 if art not in basis:
                     continue
-                position = basis.index(art)
-                unit = np.zeros(len(b))
-                unit[position] = 1
-                tableau = np.asarray(a.T @ basis_solve(unit, True)).reshape(-1)
-                choices = [
-                    j
-                    for j in range(len(c))
-                    if j not in arts
-                    and j not in basis
-                    and abs(tableau[j]) > options.pivot_tolerance
-                ]
-                if choices:
-                    pivot(min(choices, key=lambda j: keys[j]), position)
-                    increment(counters, "artificial_cleanup_pivots")
-                else:
-                    increment(counters, "exact_dependency_checks")
-                    if not _dependent_in_original_space(
-                        norm, a, b, basis, row_keys, keys, position, options, deadline
-                    ):
-                        raise np.linalg.LinAlgError(
-                            "Unproved near-dependent row in artificial cleanup."
+                retries = 0
+                while True:
+                    try:
+                        xb, lam, rc, generation = state(phase)
+                        tolerance = options.primal_tolerance * (1 + np.max(abs(xb), initial=0))
+                        dual_tolerance = options.dual_tolerance * (
+                            1 + abs(phase) + abs(a).T @ abs(lam)
                         )
-                    support = a.indices[a.indptr[art] : a.indptr[art + 1]]
-                    if len(support) != 1:
-                        raise np.linalg.LinAlgError("Artificial identity column changed.")
-                    physical = int(support[0])
-                    keep_rows = [i for i in range(len(b)) if i != physical]
-                    a, b = a[keep_rows, :].tocsc(), b[keep_rows]
-                    row_map.pop(physical)
-                    row_keys.pop(physical)
-                    basis.pop(position)
-                    increment(counters, "dependent_rows_removed")
+                        if np.min(xb, initial=0) < -tolerance or np.any(rc > dual_tolerance):
+                            raise np.linalg.LinAlgError(
+                                "Phase-I cleanup lost a current optimal state."
+                            )
+                        if phase[basis] @ xb < -options.primal_tolerance:
+                            return finish("infeasible", "phase_one_farkas", xb, lam, rc, proof=True)
+                        position = basis.index(art)
+                        unit = np.zeros(len(b))
+                        unit[position] = 1
+                        tableau = np.asarray(a.T @ basis_solve(unit, True, generation)).reshape(-1)
+                        same_generation(generation)
+                        choices = [
+                            j
+                            for j in range(len(c))
+                            if j not in arts
+                            and j not in basis
+                            and abs(tableau[j]) > options.pivot_tolerance
+                        ]
+                        if choices:
+                            pivot(min(choices, key=lambda j: keys[j]), position, generation)
+                            increment(counters, "artificial_cleanup_pivots")
+                        else:
+                            increment(counters, "exact_dependency_checks")
+                            if not _dependent_in_original_space(
+                                norm, a, b, basis, row_keys, keys, position, options, deadline
+                            ):
+                                raise np.linalg.LinAlgError(
+                                    "Unproved near-dependent row in artificial cleanup."
+                                )
+                            same_generation(generation)
+                            support = a.indices[a.indptr[art] : a.indptr[art + 1]]
+                            if len(support) != 1:
+                                raise np.linalg.LinAlgError("Artificial identity column changed.")
+                            physical = int(support[0])
+                            keep_rows = [i for i in range(len(b)) if i != physical]
+                            a, b = a[keep_rows, :].tocsc(), b[keep_rows]
+                            row_map.pop(physical)
+                            row_keys.pop(physical)
+                            basis.pop(position)
+                            increment(counters, "dependent_rows_removed")
+                        break
+                    except FactorRetry as exc:
+                        retries += 1
+                        increment(counters, "cleanup_generation_restarts")
+                        if retries > 3:
+                            raise np.linalg.LinAlgError(
+                                "Cleanup factor-generation retry limit."
+                            ) from exc
                 factor = None
                 pricing.fresh_phase(keys, basis, "artificial_cleanup")
             keep = [j for j in range(len(c)) if j not in arts]

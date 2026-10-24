@@ -236,6 +236,9 @@ def execute_group(args):
             assert packet["native_lp_calls_started"] == packet["native_lp_calls_completed"]
             record["native_lp_calls"] = packet["native_lp_calls_completed"]
             assert result["status"] in entry["expected_statuses"]
+            expected_reason = entry.get("metadata", {}).get("expected_reason")
+            if expected_reason is not None:
+                assert result["termination_reason"] == expected_reason
             if entry["group"] != "cg":
                 record["raw_check"] = checker.check(
                     read_payload(entry),

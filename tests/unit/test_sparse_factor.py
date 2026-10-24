@@ -93,9 +93,16 @@ def test_updates_zero_use_real_lu_and_do_not_increment_eta():
     assert_solves(factor)
 
 
-def test_bad_direction_is_recomputed_before_committing():
+def test_bad_direction_rebases_without_committing_old_leaving_row():
     factor = make(np.eye(2))
-    factor.replace_column(0, [1, 1], np.array([9.0, -3.0]))
+    identity, generation = factor.identity, factor.generation
+    with pytest.raises(sf.FactorRetry, match="direction_residual"):
+        factor.replace_column(1, [2, 0.1], np.array([0.1, 2.0]))
+    assert factor.identity == identity and factor.generation == generation + 1
+    assert factor.counters.get("basis_replacements", 0) == 0
+    direction = factor.solve_B([2, 0.1])
+    assert np.argmin(1 / direction) == 0  # The new true blocker differs.
+    factor.replace_column(0, [2, 0.1], direction, expected_generation=factor.generation)
     assert factor.counters["refactorizations_by_reason"] == {"direction_residual": 1}
     assert_solves(factor)
 
@@ -103,7 +110,7 @@ def test_bad_direction_is_recomputed_before_committing():
 def test_rejected_pivot_leaves_matrix_unchanged():
     factor = make(np.eye(2))
     original = factor.identity
-    with pytest.raises(np.linalg.LinAlgError, match="Unsafe basis pivot"):
+    with pytest.raises(sf.FactorRetry, match="unsafe_pivot"):
         factor.replace_column(0, [1e-12, 1])
     assert factor.identity == original
     assert factor.counters.get("basis_replacements", 0) == 0
@@ -164,3 +171,41 @@ def test_factor_owns_actual_matrix_and_immutable_identity():
     matrix.data[:] = 17
     assert factor.identity == identity
     assert_solves(factor)
+
+
+def test_generation_changes_only_after_successful_rebase():
+    factor = make(np.eye(2))
+    first = factor.generation
+    factor.refactor(reason="test_success")
+    assert factor.generation == first + 1
+    identity = factor.identity
+    with pytest.raises(np.linalg.LinAlgError):
+        factor.refactor(csc_matrix([[1, 1], [1, 1]]), "test_failure")
+    assert factor.generation == first + 1 and factor.identity == identity
+
+
+def test_stale_generation_never_commits_even_with_valid_direction():
+    factor = make(np.eye(2))
+    generation = factor.generation
+    direction = factor.solve_B([1, 1])
+    factor.refactor(reason="before_commit")
+    identity = factor.identity
+    with pytest.raises(sf.FactorRetry, match="stale_commit_generation"):
+        factor.replace_column(0, [1, 1], direction, expected_generation=generation)
+    assert factor.identity == identity and factor.counters.get("basis_replacements", 0) == 0
+
+
+def test_chain_limit_failed_rebuild_is_an_uncommitted_atomic_operation(monkeypatch):
+    factor = make(np.eye(2), max_factor_updates=1)
+    factor.replace_column(0, [1, 1])
+    identity, generation = factor.identity, factor.generation
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("injected chain-limit failure")
+
+    monkeypatch.setattr(sf, "splu", fail)
+    with pytest.raises(np.linalg.LinAlgError, match="injected chain-limit"):
+        factor.replace_column(1, [1, 2])
+    assert factor.identity == identity and factor.generation == generation
+    assert factor.counters["basis_replacements"] == factor.counters["eta_updates"] == 1
+    assert len(factor.etas) == 1

@@ -236,3 +236,158 @@ def test_rejected_entering_does_not_prevent_other_safe_improving_column(monkeypa
     assert result.diagnostics["primal_pivots"] == 1
     if bland:
         assert result.diagnostics["bland_pricings"] >= 2
+
+
+def test_state_recomputes_both_vectors_when_second_solve_rebases(monkeypatch):
+    original = sf.SparseFactor.solve
+    seen, fired = [], False
+
+    def injected(self, rhs, transpose=False):
+        nonlocal fired
+        if not transpose and np.array_equal(rhs, [1, 1]) and self.matrix.nnz == 2:
+            seen.append(self.generation)
+            answer = original(self, rhs, transpose)
+            return np.array([100.0, 1.0]) if not fired else answer
+        if transpose and not fired:
+            fired = True
+            self.refactor(reason="injected_second_state_solve")
+        return original(self, rhs, transpose)
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert result.status == "optimal" and result.point[0] == 0.5
+    assert len(seen) >= 2 and seen[0] < seen[1]
+    assert result.diagnostics["state_generation_restarts"] == 1
+
+
+@pytest.mark.parametrize("stage", ["direction", "devex_btran", "before_commit"])
+def test_primal_generation_change_never_commits_the_old_blocker(monkeypatch, stage):
+    original_solve, original_replace = sf.SparseFactor.solve, sf.SparseFactor.replace_column
+    fired, old_direction = False, False
+    attempted, committed = [], []
+
+    def injected_solve(self, rhs, transpose=False):
+        nonlocal fired, old_direction
+        answer = original_solve(self, rhs, transpose)
+        if not fired and not transpose and np.array_equal(rhs, [1, 2]):
+            old_direction = True
+            if stage == "direction":
+                fired = True
+                self.refactor(reason="injected_direction")
+            return np.array([1.0, 0.1])
+        if stage == "devex_btran" and old_direction and not fired and transpose:
+            fired = True
+            self.refactor(reason="injected_devex_btran")
+            return original_solve(self, rhs, transpose)
+        return answer
+
+    def injected_replace(self, position, *args, **kwargs):
+        nonlocal fired
+        attempted.append(position)
+        if stage == "before_commit" and not fired:
+            fired = True
+            self.refactor(reason="injected_before_commit")
+        value = original_replace(self, position, *args, **kwargs)
+        committed.append(position)
+        return value
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected_solve)
+    monkeypatch.setattr(sf.SparseFactor, "replace_column", injected_replace)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert fired and result.status == "optimal" and result.point[0] == 0.5
+    assert committed == [1] and 0 not in committed
+    assert result.diagnostics["pivot_generation_restarts"] == 1
+    if stage == "before_commit":
+        assert attempted == [0, 1]
+
+
+@pytest.mark.parametrize("stage", ["dual_tableau", "dual_direction"])
+def test_dual_witness_and_direction_rebase_restart_the_complete_choice(monkeypatch, stage):
+    first = call(ordinary(), SolveOptions())
+    original = sf.SparseFactor.solve
+    fired = False
+
+    def injected(self, rhs, transpose=False):
+        nonlocal fired
+        answer = original(self, rhs, transpose)
+        target = (
+            transpose and np.count_nonzero(rhs) == 1 and np.max(rhs) == 1
+            if stage == "dual_tableau"
+            else not transpose and not np.array_equal(rhs, [4, 2, 3, 1.5])
+        )
+        if self.matrix.shape == (4, 4) and not fired and target:
+            fired = True
+            self.refactor(reason="injected_" + stage)
+            return original(self, rhs, transpose)
+        return answer
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    larger = norm([[1, 1], [1, 0], [0, 1], [1, 0]], [4, 2, 3, 1.5], [3, 2])
+    result = call(larger, SolveOptions(), first.snapshot, factor_state=first._factor_state)
+    assert fired and result.status == "optimal" and np.allclose(result.point, [1.5, 2.5])
+    assert result.diagnostics["pivot_generation_restarts"] == 1
+    assert result.diagnostics["dual_pivots"] == 1
+
+
+@pytest.mark.parametrize("stage", ["cleanup_tableau", "cleanup_direction"])
+def test_cleanup_rechecks_phase_state_after_generation_change(monkeypatch, stage):
+    original = sf.SparseFactor.solve
+    fired = False
+
+    def injected(self, rhs, transpose=False):
+        nonlocal fired
+        answer = original(self, rhs, transpose)
+        target = (
+            transpose and np.array_equal(rhs, [1])
+            if stage == "cleanup_tableau"
+            else not transpose and np.array_equal(rhs, [-1])
+        )
+        if not fired and target:
+            fired = True
+            self.refactor(reason="injected_" + stage)
+            return original(self, rhs, transpose)
+        return answer
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    result = call(norm([[-1, -1]], [0], [-1, -2], ["="]), SolveOptions())
+    assert fired and result.status == "optimal" and np.allclose(result.point, [0, 0])
+    assert result.diagnostics["cleanup_generation_restarts"] == 1
+    assert result.diagnostics["artificial_cleanup_pivots"] == 1
+
+
+def test_repeated_generation_change_has_a_finite_current_basis_retry_limit(monkeypatch):
+    original = sf.SparseFactor.solve
+
+    def injected(self, rhs, transpose=False):
+        answer = original(self, rhs, transpose)
+        if not transpose and np.array_equal(rhs, [1, 2]):
+            self.refactor(reason="injected_repeated_direction")
+        return answer
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert result.status == "numerical_failure" and result.iterations == 0
+    assert "factor-generation retry limit" in result.reason
+    assert result.diagnostics["pivot_generation_restarts"] == 4
+
+
+def test_rejected_history_survives_rebase_when_new_reduced_costs_disappear(monkeypatch):
+    original = sf.SparseFactor.solve
+    fired = False
+
+    def injected(self, rhs, transpose=False):
+        nonlocal fired
+        answer = original(self, rhs, transpose)
+        if not fired and not transpose and np.array_equal(rhs, [0, 1, 1]):
+            fired = True
+            self.refactor(reason="injected_after_rejection")
+            return original(self, rhs, transpose)
+        if fired and transpose:
+            return np.full(3, 1e9)
+        return answer
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    result = call(norm([[1e-8, 0], [1e4, 1], [0, 1]], [0, 2, 1], [2, 1]), SolveOptions())
+    assert fired and result.status == "numerical_failure" and result.iterations == 0
+    assert "Rejected entering history" in result.reason
+    assert result.diagnostics["rejected_entering_columns"] == 1
