@@ -206,8 +206,9 @@ def command(argv, *, stage, group, timeout=None, reserve_round=False, calls=None
             try:
                 code = process.wait(timeout=limit)
             except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait()
+                from .resources import kill_tree
+
+                kill_tree(process)
                 stream.write("\nHarness timeout: not a solver-returned limit.\n")
                 code = 124
         except OSError as exc:

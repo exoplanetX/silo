@@ -49,6 +49,31 @@ def test_budget_refusal_preserves_prior_consumption(tmp_path, monkeypatch):
     assert ledger.totals()["total_seconds"] == 0.75
 
 
+def test_warm_metric_pairs_repetitions_and_preserves_initial_cost(monkeypatch):
+    monkeypatch.syspath_prepend(str(ROOT / "scripts"))
+    from sparse_program.warm import aggregate
+
+    records = [
+        {
+            "id": f"chain-{i}",
+            "mode": mode,
+            "repetition": r,
+            "pass": True,
+            "segment_seconds": (10 if mode == "warm" else 20) * (r + 1),
+            "total_seconds": (30 if mode == "warm" else 20) * (r + 1),
+        }
+        for i in range(8)
+        for r in range(5)
+        for mode in ("cold", "warm")
+    ]
+    measured = aggregate(records)
+    assert measured["median_ratio"] == 2 and measured["nonregressing"] == 8
+    assert measured["performance_pass"]
+    assert all(r == pytest.approx(2 / 3) for r in measured["initial_inclusive_ratios"].values())
+    with pytest.raises(AssertionError):
+        aggregate(records[:-1] + [records[0]])
+
+
 @pytest.mark.parametrize("scenario", ["normal", "timeout", "rss"])
 def test_external_guards_report_os_peak_and_never_solver_limit(tmp_path, scenario):
     guard = module("resources")

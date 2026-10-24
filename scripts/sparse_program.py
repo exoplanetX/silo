@@ -26,6 +26,9 @@ def main():
     native = sub.add_parser("_native-one")
     native.add_argument("--request", required=True)
     native.add_argument("--response", required=True)
+    warm_worker = sub.add_parser("_warm-one")
+    warm_worker.add_argument("--request", required=True)
+    warm_worker.add_argument("--response", required=True)
     sub.add_parser("freeze-inputs")
     sub.add_parser("check-inputs")
     baseline = sub.add_parser("baseline")
@@ -61,6 +64,10 @@ def main():
         from sparse_program.runner import native_one
 
         return native_one(args.request, args.response)
+    if args.command == "_warm-one":
+        from sparse_program.warm import one
+
+        return one(args.request, args.response)
     if args.command == "_preflight":
         from sparse_program.preflight import main as preflight
 

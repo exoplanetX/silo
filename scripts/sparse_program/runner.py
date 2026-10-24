@@ -21,6 +21,22 @@ def read_payload(entry):
     return json.loads(path.read_text())
 
 
+def oracle(entry, chain=None):
+    """Bind the independent reference and its raw witness to this frozen payload."""
+    path = ledger.ROOT / "tests/fixtures/sparse_program_oracles.json"
+    frozen = json.loads(path.read_text())
+    assert frozen["manifest_sha256"] == ledger.sha(
+        ledger.ROOT / "tests/fixtures/sparse_program_manifest.json"
+    )
+    if chain is None:
+        record = frozen["cases"][entry["id"]]
+    else:
+        record = frozen["trajectories"][chain]["states"][entry["id"]]
+    assert record["payload_sha256"] == entry["payload_sha256"]
+    assert ledger.sha(ledger.ROOT / record["witness_path"]) == record["witness_sha256"]
+    return record["truth"]
+
+
 def check_inputs():
     from .cases import build_cases, build_trajectories, sha
 
@@ -189,6 +205,7 @@ def execute_group(args):
                 record["raw_check"] = checker.check(
                     read_payload(entry),
                     result,
+                    truth=None if args.command == "baseline" else oracle(entry),
                     options=packet["options"],
                     mip=entry["group"] == "mip",
                 )
@@ -234,5 +251,17 @@ def dispatch(args):
     if args.command == "check-inputs":
         return check_inputs()
     if args.command in ("baseline", "run"):
+        if getattr(args, "group", None) == "historical":
+            from .historical import run
+
+            return run()
         return execute_group(args)
+    if args.command == "warm":
+        from .warm import execute
+
+        return execute(args)
+    if args.command == "evaluate":
+        from .evaluation import evaluate
+
+        return evaluate(args.stage)
     raise RuntimeError(f"Stage adapter is not yet implemented: {args.command}")
