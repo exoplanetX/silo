@@ -9,6 +9,7 @@ import numpy as np
 
 from silo.lp.verification import exact_ray, primal_check, witness_float_point
 from silo.modeling.general import integer_bounds
+from silo.modeling.matrix_ops import append_rows
 from silo.presolve.activity import propagate
 
 
@@ -52,6 +53,10 @@ def solve_milp(model, data, options, start, extensions=None):
     lo, hi = integer_bounds(data)
     stats = dict(
         lp_calls=0,
+        lp_engine=options.lp_engine,
+        lp_engine_counts={"dense": 0, "sparse": 0},
+        sparse_base_factorizations=0,
+        sparse_eta_updates=0,
         heuristic_calls=0,
         heuristic_incumbents=0,
         heuristic_skips_integral=0,
@@ -137,9 +142,23 @@ def solve_milp(model, data, options, start, extensions=None):
             lower[integer], upper[integer] = fixed, fixed
         nd = replace(data, lower=lower, upper=upper, integer=np.zeros_like(data.integer))
         if node.cuts:
+            if (
+                options.lp_engine == "sparse"
+                and nd.a.nnz
+                + sum(sum(value != 0 for value in cut.coefficients) for cut in node.cuts)
+                > options.max_sparse_nnz
+            ):
+                return SolveResult(
+                    "limit",
+                    "resource_limit",
+                    diagnostics={
+                        "message": "Sparse local-cut rows exceed max_sparse_nnz.",
+                        "lp_engine": "sparse",
+                    },
+                )
             nd = replace(
                 nd,
-                a=np.vstack([nd.a, *[c.coefficients for c in node.cuts]]),
+                a=append_rows(nd.a, [c.coefficients for c in node.cuts]),
                 row_lower=np.append(nd.row_lower, [c.lower for c in node.cuts]),
                 row_upper=np.append(nd.row_upper, [c.upper for c in node.cuts]),
                 row_names=nd.row_names + tuple(c.name for c in node.cuts),
@@ -152,6 +171,9 @@ def solve_milp(model, data, options, start, extensions=None):
             deadline,
         )
         stats["lp_calls"] += 1
+        stats["lp_engine_counts"][options.lp_engine] += 1
+        stats["sparse_base_factorizations"] += result.diagnostics.get("base_factorizations", 0)
+        stats["sparse_eta_updates"] += result.diagnostics.get("eta_updates", 0)
         total_iterations += result.iterations
         stats["warm_starts"] += result.diagnostics.get("warm_starts", 0)
         stats["dual_pivots"] += result.diagnostics.get("dual_pivots", 0)
@@ -324,6 +346,8 @@ def solve_milp(model, data, options, start, extensions=None):
                     "before": previous,
                     "after": lp.objective_value,
                     "status": lp.status,
+                    "lp_engine": options.lp_engine,
+                    "lp_diagnostics": lp.diagnostics.copy(),
                     "proofs": [c.proof for c in selected],
                 }
             )
