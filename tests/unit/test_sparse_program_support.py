@@ -87,6 +87,41 @@ def test_os_rss_includes_real_interpreter_and_nested_children(tmp_path):
     assert result["process_scope"] == "root_and_descendants"
 
 
+@pytest.mark.parametrize(
+    "kind,calls,message,diagnostics",
+    [
+        ("sparse_nnz_limit", 0, "Sparse input exceeds max_sparse_nnz.", {}),
+        (
+            "factor_nnz_limit",
+            1,
+            "Basis input exceeds max_factor_nnz.",
+            {"standard_nnz": 7, "base_factorizations": 0},
+        ),
+    ],
+)
+def test_resource_category_requires_matching_gate_evidence(
+    monkeypatch, kind, calls, message, diagnostics
+):
+    monkeypatch.syspath_prepend(str(ROOT / "scripts"))
+    from sparse_program.runner import check_exit
+
+    name = "max_sparse_nnz" if kind == "sparse_nnz_limit" else "max_factor_nnz"
+    entry = {"metadata": {"expected_reason": kind}, "statistics": {"matrix_nonzeros": 3}}
+    packet = {
+        "options": {name: 0},
+        "native_lp_calls_completed": calls,
+        "result": {
+            "status": "limit",
+            "termination_reason": "resource_limit",
+            "diagnostics": {"resource_message": message, **diagnostics},
+        },
+    }
+    assert check_exit(entry, packet)["expected_category"] == kind
+    packet["result"]["diagnostics"]["resource_message"] = "An unrelated allocation failed"
+    with pytest.raises(AssertionError):
+        check_exit(entry, packet)
+
+
 @pytest.mark.parametrize("scenario", ["normal", "timeout", "rss"])
 def test_external_guards_report_os_peak_and_never_solver_limit(tmp_path, scenario):
     guard = module("resources")

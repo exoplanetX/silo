@@ -38,6 +38,38 @@ def oracle(entry, chain=None):
     return record["truth"]
 
 
+def check_exit(entry, packet):
+    """Bind frozen resource categories to the unchanged public resource_limit."""
+    result = packet["result"]
+    expected = entry.get("metadata", {}).get("expected_reason")
+    if expected is None:
+        return None
+    if expected not in ("sparse_nnz_limit", "factor_nnz_limit"):
+        assert result["termination_reason"] == expected
+        return {"expected_category": expected, "public_reason": result["termination_reason"]}
+    assert (result["status"], result["termination_reason"]) == ("limit", "resource_limit")
+    diagnostic = result["diagnostics"]
+    message = diagnostic.get("resource_message", diagnostic.get("message", ""))
+    name = "max_sparse_nnz" if expected == "sparse_nnz_limit" else "max_factor_nnz"
+    assert packet["options"][name] == 0 and name in message
+    calls = packet["native_lp_calls_completed"]
+    if expected == "sparse_nnz_limit":
+        assert (calls == 0 and entry["statistics"]["matrix_nonzeros"] > 0) or (
+            calls == 1 and diagnostic.get("normalized_nnz", 0) > 0
+        )
+    else:
+        assert calls == 1 and diagnostic["standard_nnz"] > 0
+        assert diagnostic["base_factorizations"] == 0
+    return {
+        "expected_category": expected,
+        "public_reason": "resource_limit",
+        "resource_option": name,
+        "resource_value": 0,
+        "lp_calls": calls,
+        "diagnostic_message": message,
+    }
+
+
 def check_inputs():
     from .cases import build_cases, build_trajectories, sha
 
@@ -236,9 +268,7 @@ def execute_group(args):
             assert packet["native_lp_calls_started"] == packet["native_lp_calls_completed"]
             record["native_lp_calls"] = packet["native_lp_calls_completed"]
             assert result["status"] in entry["expected_statuses"]
-            expected_reason = entry.get("metadata", {}).get("expected_reason")
-            if expected_reason is not None:
-                assert result["termination_reason"] == expected_reason
+            record["exit_check"] = check_exit(entry, packet)
             if entry["group"] != "cg":
                 record["raw_check"] = checker.check(
                     read_payload(entry),

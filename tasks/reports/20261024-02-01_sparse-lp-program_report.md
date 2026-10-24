@@ -4,7 +4,7 @@
 依据：[总体规划](../phases/sparse_lp_reoptimization_program_20261024.md)、
 [实施计划](../phases/sparse_lp_implementation_20261024.md)。
 
-当前状态（2026-10-25）：**SP1 GO；人类已批准唯一追加一次SP2代次一致性修复及一轮复验。**
+当前状态（2026-10-25）：**SP1 GO；获批的追加代次修复与固定78复验已完成，SP2仍HOLD。**
 原HOLD代码2b40d87、元数据2d6e337保留；整体Goal及八项目标仍未完成。
 
 直接授权原文答复：“授权追加一次修复和复验（推荐）”，对应问题为仅追加1次
@@ -12,6 +12,62 @@
 保留原输入、阈值和时间预算，通过后继续原SP3–SP4。本节覆盖下文此前HOLD的待授权状态，
 不删除旧失败或重置次数。唯一Goal工具最后仍blocked，API不能代用户切active；
 保留其身份并执行此次已明确授权的工作，不创建第二Goal或声称状态已切换。
+
+## 获批追加轮的实际结果与下一项决策
+
+产品提交4fc79d466bde9a8252b6c216cfe5f1cf751a0977关闭generation一致性对象。
+独立只读代码门GO；46组件首轮通过，44次direct kernel/88次LU，0public root，1.5385044秒。
+root集成172测试通过，父进程118public root/315LP全部完成，另有隔离NumPy探针2root，
+命令2.5609089秒。组件与代码门不预支整个SP2。
+
+唯一获准固定轮cohort=ce5713f1-cdec-4840-b7ff-33812ca978c9，78root/77LP实际完成：
+
+| 组 | 当前源码事实 | 完整命令耗时 |
+|---|---|---:|
+| tiny48 | 48/48通过，groups/7147981f-29a7-4270-8fb4-54792db4e268 | 34.2051397秒 |
+| pressure24 | 原始22/24；两资源类别规范重评后24/24，原记录保留 | 17.5045307秒 |
+| smoke6 | 四Netlib optimal，两个CAP numerical_failure，groups/ec300be2-e01d-4a6c-89b5-970bd3d8747e | 101.8175287秒 |
+
+资源标签澄清由独立experiment_auditor确认：冻结metadata的sparse_nnz_limit/factor_nnz_limit
+是资源种类，公开API仍为limit/resource_limit。LIMIT03有max_sparse_nnz0、输入nnz3、
+未进入LP及对应message；LIMIT04有max_factor_nnz0、进入LP/standardnnz7/0次LU及factor message。
+新check_exit以这些实际门据核验，不改输入/标签/数学/容差。
+reviews/extra_fixed78_resource_reassessment.json只读重评既有24输出，0新solve/参考调用；
+原始pass=false与原轮exit_codes=[0,1,1]保持，不能改写成原轮全绿。
+
+容量结果：FLOW在3963pivot后Primal simplex lost feasibility，13.7941493秒，RSS115511296；
+TRANS在13830pivot后同一错误，84.3660445秒，RSS172306432。均未碰120秒或1GiB外guard，
+但正确性失败，不能算容量通过。FLOW补丁前后相同pivot失败；generation恢复类型仅pivot_selection，
+无residual/direction_residual/pivot隐式恢复证据。因此代次缺陷是已关闭的真实风险，
+本次两个CAP失败的具体数值根因仍未确定。
+
+独立数学门继续BLOCK：已接受pivot的下一轮fresh state失去可行性；
+当前后向残差门不提供基本解/方向分量符号或比率排序的前向保证。
+现日志缺末次pivot的old xb/d/theta/leaving、预测new xb与fresh new-B解的对照，
+不能武断归因eta累积、主元大小或Bland。TRANS最后eta链为0，尤其不能简单归因eta链。
+
+追加授权已完整使用；原3次SP2修正到此停止，不自行执行第四次修复/诊断，不进入SP3。
+截至规范重评：SP1 368.5422803秒，SP2 324.4619693秒，总693.0042496秒；
+SP2原3600秒尚余约3275秒。时间余额不自动授权次数扩展。
+
+### 建议的有界后续数值包（提案，未执行）
+
+建议在SP2剩余时间内自主推进同一个“容量LP接受pivot后可行性保持”问题，最多再3轮
+诊断—针对修复—受影响复验；每批启动前仍核完整预算，任一上限先到即停。
+这会把本单SP2修正总上限从3扩至6，其余原时间/实例/阈值/正式组上限均保持。
+
+第一步仅增加有限pivot观测并在首次lost-feasibility时，对实际current B重构/重算一次：
+记录old/new ptol和min xb、enter/leave、theta、最小/次小ratio、失败行旧d/ratio、
+B*d-a与B*xb-b的残差及允许bound、eta/generation/refactor reason、预测与fresh new-B值。
+观测都为稀疏矩阵与有界向量，不全局dense，不调用外部优化器。
+
+随后只按证据落入的分支修复：预测值已不可行→ratio/符号路径；
+current-B重构恢复可行→数值表示恢复；重构仍不可行→先证明事务化pivot核验/候选拒绝，
+再实施。持久不可行保持numerical_failure，不改阈值或跳过真实blocker宣称optimal。
+不预选新算法、不修改已冻结Bland/Devex、65536及位数/操作门。
+
+接受标准仍为当前源码fixed48/24/6全过与独立SP2 GO，然后继续原SP3–SP4八项目标。
+推荐继续GPT-6 Sol/high；本提案需要人类明确扩展次数，不把原追加一次授权泛化。
 
 ## 激活与完整目标
 
@@ -50,7 +106,7 @@ SP1/SP2/SP3/SP4/余量=30/60/180/180/30分钟，总计480分钟；不设混合�
 | 阶段 | 当前状态 | 仍需证据 |
 |---|---|---|
 | SP1设计、输入与基线冻结 | GO；a3cff29输入、3c27324真值/基线 | 架构子门和完整证据设计门均独立GO；产品仍未改时登记 |
-| SP2稀疏cold链 | HOLD，两次修正后容量预检仍未达 | 重构/比率/提交代次一致性及固定组复验；尚无SP2 GO |
+| SP2稀疏cold链 | HOLD，原两次加获批一次均已使用 | generation已独立GO；容量pivot后可行性保持未达 |
 | SP3更新与会话 | 未开始 | 公式/缓存/机制/160状态/公平5重复收益及独立数值门 |
 | SP4上层和总体交付 | 未开始 | 完整矩阵/历史/8安装/伴学/独立八项最终GO |
 
@@ -196,3 +252,7 @@ sp2_hold_committed_identity.json保存实际源码SHA、Git/source匹配、状�
 完整质量/容量组/Netlib组/warm/安装均未执行，无发布。
 额外一次修复授权问题已在开发对话提出；提出问题不等于获准，回复前保持HOLD。
 报告最后元数据提交从Git history定位；最终cached计数因本地报告提交再前进，不冒充远端状态。
+
+后续更新：该追加授权已直接获得并执行完毕，最新算法提交4fc79d4，授权登记5893ba7。
+上面的2b40d87/534秒等为前次HOLD快照，保留作历史。当前generation对象GO、SP2容量仍HOLD；
+规范资源重评与最新数值包提案见报告首部。后续metadata提交从本报告Git history定位。

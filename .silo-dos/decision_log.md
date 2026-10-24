@@ -1,5 +1,17 @@
 # SILO Decision Log
 
+## DEC-20261025-SPARSE-SP2-GENERATION-CLOSED-CAPACITY-HOLD
+
+- Authorized one-extra repair and fixed78 cohort completed; source4fc79d4.
+  Generation object independentGO,46 components and172 integration tests pass.
+- Fixed tiny48 and four Netlib pass; pressure24 pass on a canonical resource-category
+  saved-output reassessment, with original22/24 checker false negatives retained.
+- Both required capacity cases lose primal feasibility after3963/13830 pivots.
+  SP2 remainsHOLD; no fourth repair/diagnostic or SP3 run is authorized.
+- Save a concrete pivot-observation and evidence-led numeric recovery proposal under
+  the remaining SP2 budget (up to3 additional rounds only if human approved).
+  No threshold/input/research-objective change and no replacement Goal.
+
 ## DEC-20261025-SPARSE-SP2-ONE-EXTRA-CORRECTION
 
 - Direct human reply authorizes one additional factor-generation/state/commit

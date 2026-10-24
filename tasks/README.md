@@ -347,6 +347,9 @@ for this program only; previous two attempts, failures and time remain charged.
 Inputs, tolerances, all phase/time/group caps and eight completion targets are unchanged.
 After this correction passes independent review and the fixed groups, continueSP3–SP4.
 This does not authorize a fourth SP2 correction or another Goal.
+The exception is now consumed: source4fc79d4 closes generation coherence, while
+both capacity prechecks still fail. Stop further solver runs; any proposed numeric
+diagnosis/repair package needs new direct human count-extension authorization.
 
 Record the activating human instruction and program state before product edits. Freeze
 designs, inputs and truth before the implementation intended to pass them. Preserve the
