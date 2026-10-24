@@ -98,6 +98,7 @@ class SparseFactor:
         self.lu = None
         self.scope_calls = 0
         self.generation = 0
+        self.last_refactor_reason = None
         self.refactor(self.matrix, "initial")
 
     @property
@@ -158,6 +159,7 @@ class SparseFactor:
             raise FactorResourceError("Sparse LU fill exceeds max_factor_nnz.")
         self.matrix, self.lu, self.etas, self.scope_calls = matrix, lu, [], 0
         self.generation += 1
+        self.last_refactor_reason = reason
         self._statistics()
 
     def configure(self, options, counters, deadline):

@@ -10,6 +10,7 @@ from scipy.sparse import coo_matrix, csc_matrix, hstack
 from silo.lp.kernel import BasisSnapshot, KernelResult
 from silo.lp.sparse_factor import (
     FACTOR_POLICY,
+    RESIDUAL_TOLERANCE,
     FactorDeadline,
     FactorResourceError,
     FactorRetry,
@@ -21,6 +22,182 @@ from silo.lp.sparse_factor import (
     pivot_safe,
     same_matrix,
 )
+
+
+def _infinity_norm(value):
+    return float(np.max(np.abs(value), initial=0))
+
+
+def _residual_observation(matrix, rhs, solution):
+    """Pure observation with the factor's existing scale; no solve or counters."""
+    residual = rhs - matrix @ solution
+    norm = _infinity_norm(residual)
+    bound = RESIDUAL_TOLERANCE * (
+        1 + _infinity_norm(rhs) + _infinity_norm(abs(matrix) @ abs(solution))
+    )
+    return {
+        "infinity_norm": norm,
+        "bound": bound,
+        "within_bound": bool(np.isfinite(residual).all() and norm <= bound),
+    }
+
+
+def _matrix_observation(matrix):
+    import hashlib
+
+    digest = hashlib.sha256()
+    for value in (
+        np.asarray(matrix.shape, dtype=np.int64),
+        matrix.indptr,
+        matrix.indices,
+        matrix.data,
+    ):
+        digest.update(value.tobytes())
+    return {"shape": matrix.shape, "nnz": int(matrix.nnz), "csc_sha256": digest.hexdigest()}
+
+
+class _PivotObservation:
+    """Only the last committed pivot, holding sparse references and O(m) vectors.
+
+    Residual matrix products and serialization happen on failure, never in the
+    ordinary pivot path. The factor replaces its CSC object instead of changing
+    the old CSC in place, so retaining that read-only reference is safe.
+    """
+
+    def __init__(
+        self,
+        old_matrix,
+        rhs,
+        xb,
+        direction,
+        column,
+        theta,
+        leaving,
+        old_keys,
+        new_keys,
+        entering_key,
+        run_identity,
+        mode,
+        pivot_tolerance,
+        primal_tolerance,
+        old_metadata,
+        new_matrix,
+        new_metadata,
+    ):
+        self.old_matrix, self.new_matrix = old_matrix, new_matrix
+        self.rhs, self.xb, self.direction, self.column = (
+            np.array(value, copy=True) for value in (rhs, xb, direction, column)
+        )
+        self.theta, self.leaving = float(theta), leaving
+        self.old_keys, self.new_keys = old_keys, new_keys
+        self.entering_key, self.run_identity, self.mode = entering_key, run_identity, mode
+        self.old_metadata, self.new_metadata = old_metadata, new_metadata
+        self.old_ptol = primal_tolerance * (1 + _infinity_norm(xb))
+        self.primal_tolerance = primal_tolerance
+        self.pivot_tolerance = pivot_tolerance
+        self.predicted = self.xb - self.theta * self.direction
+        self.predicted[leaving] = self.theta  # This is the ENTERING basic coordinate.
+
+    def matches(self, factor, basis_keys, run_identity):
+        return (
+            self.run_identity == run_identity
+            and self.mode == "primal"
+            and self.new_keys == basis_keys
+            and same_matrix(self.new_matrix, factor.matrix)
+        )
+
+    def trace(self, before, after, outcome, recovery_error=None):
+        positive = np.flatnonzero(self.direction > 0)
+        ratios = np.maximum(self.xb[positive], 0) / self.direction[positive]
+        minimum = float(np.min(ratios)) if len(ratios) else None
+        second = float(np.partition(ratios, 1)[1]) if len(ratios) > 1 else None
+        larger = ratios[ratios > minimum] if minimum is not None else np.array([])
+        positions = set(map(int, np.argsort(before["xb"], kind="stable")[:8]))
+        if after is not None:
+            positions.update(map(int, np.argsort(after["xb"], kind="stable")[:8]))
+        positions = sorted(positions | {self.leaving})  # At most 17 projected coordinates.
+        projections = []
+        for i in positions:
+            d = float(self.direction[i])
+            projections.append(
+                {
+                    "position": i,
+                    "old_basic_key": self.old_keys[i],
+                    "new_basic_key": self.new_keys[i],
+                    "old_xb": float(self.xb[i]),
+                    "old_direction": d,
+                    "old_raw_ratio": float(self.xb[i] / d) if d else None,
+                    "old_selection_ratio": float(max(self.xb[i], 0) / d) if d > 0 else None,
+                    "predicted_new_basic": float(self.predicted[i]),
+                    "fresh_before_rebase": float(before["xb"][i]),
+                    "fresh_after_rebase": None if after is None else float(after["xb"][i]),
+                }
+            )
+        result = {
+            "run_identity": self.run_identity,
+            "mode": self.mode,
+            "outcome": outcome,
+            "entering_key": self.entering_key,
+            "leaving_key": self.old_keys[self.leaving],
+            "leaving_position": self.leaving,
+            "theta": self.theta,
+            "old_basis_keys": self.old_keys,
+            "new_basis_keys": self.new_keys,
+            "old_factor": self.old_metadata,
+            "committed_factor": self.new_metadata,
+            "before_recheck_factor": before["metadata"],
+            "after_recheck_factor": None if after is None else after["metadata"],
+            "old_matrix": _matrix_observation(self.old_matrix),
+            "committed_matrix": _matrix_observation(self.new_matrix),
+            "before_recheck_matrix": _matrix_observation(before["matrix"]),
+            "after_recheck_matrix": None if after is None else _matrix_observation(after["matrix"]),
+            "minimum_computed_ratio": minimum,
+            "second_computed_ratio_including_ties": second,
+            "next_distinct_computed_ratio": float(np.min(larger)) if len(larger) else None,
+            "ratio_convention": "max(old_xb,0)/d for every strictly positive d",
+            "direction_infinity_norm": _infinity_norm(self.direction),
+            "pivot_value": float(self.direction[self.leaving]),
+            "pivot_acceptance_threshold": self.pivot_tolerance
+            * (1 + _infinity_norm(self.direction)),
+            "growth_indicator": max(
+                _infinity_norm(self.direction), 1 / abs(float(self.direction[self.leaving]))
+            ),
+            "old_state_residual": _residual_observation(self.old_matrix, self.rhs, self.xb),
+            "direction_residual": _residual_observation(
+                self.old_matrix, self.column, self.direction
+            ),
+            "predicted_new_state_residual": _residual_observation(
+                self.new_matrix, self.rhs, self.predicted
+            ),
+            "fresh_before_residual": _residual_observation(
+                before["matrix"], self.rhs, before["xb"]
+            ),
+            "fresh_after_residual": None
+            if after is None
+            else _residual_observation(after["matrix"], self.rhs, after["xb"]),
+            "old_primal_threshold": self.old_ptol,
+            "predicted_primal_threshold": self.primal_tolerance
+            * (1 + _infinity_norm(self.predicted)),
+            "old_minimum_basic": float(np.min(self.xb)),
+            "predicted_minimum_basic": float(np.min(self.predicted)),
+            "before_recheck_primal_threshold": before["ptol"],
+            "after_recheck_primal_threshold": None if after is None else after["ptol"],
+            "before_argmin_position": int(np.argmin(before["xb"])),
+            "before_argmin_basic_key": self.new_keys[int(np.argmin(before["xb"]))],
+            "after_argmin_position": None if after is None else int(np.argmin(after["xb"])),
+            "after_argmin_basic_key": None
+            if after is None
+            else self.new_keys[int(np.argmin(after["xb"]))],
+            "rejected_before_recheck": before.get("rejected_keys", ()),
+            "rejected_after_recheck": None if after is None else after.get("rejected_keys", ()),
+            "coordinate_projections": projections,
+            "vector_storage": (
+                "Only last pivot O(m) vectors retained privately; output is bounded projections."
+            ),
+        }
+        if recovery_error is not None:
+            result["recovery_error"] = recovery_error
+        return result
 
 
 def _column(matrix, index):
@@ -340,6 +517,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
     counters["standard_nnz"] = int(a.nnz)
     counters["standard_storage_bytes"] = int(a.data.nbytes + a.indices.nbytes + a.indptr.nbytes)
     iterations, factor = 0, None
+    last_pivot, feasibility_rechecked, run_number = None, False, 0
     pricing = Devex(keys, basis, counters)
 
     def get_factor():
@@ -380,6 +558,68 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
     def same_generation(generation):
         if get_factor().generation != generation:
             raise FactorRetry("uncommitted_generation_changed", get_factor().generation)
+
+    def factor_metadata():
+        current = get_factor()
+        return {
+            "generation": current.generation,
+            "eta_chain_length": len(current.etas),
+            "last_refactor_reason": current.last_refactor_reason,
+            "refactorizations_by_reason": counters["refactorizations_by_reason"].copy(),
+        }
+
+    def state_observation(xb):
+        return {
+            "xb": xb.copy(),
+            "matrix": get_factor().matrix,
+            "metadata": factor_metadata(),
+            "ptol": options.primal_tolerance * (1 + _infinity_norm(xb)),
+        }
+
+    def primal_state(cost, values, run_identity, rejected):
+        nonlocal feasibility_rechecked
+        xb, _, _, _ = values
+        tolerance = options.primal_tolerance * (1 + _infinity_norm(xb))
+        if np.min(xb, initial=0) >= -tolerance:
+            return values
+        before = state_observation(xb)
+        before["rejected_keys"] = tuple(sorted(keys[j] for j in rejected))
+        if last_pivot is None or not last_pivot.matches(
+            get_factor(), tuple(keys[j] for j in basis), run_identity
+        ):
+            counters["lost_feasibility_without_matching_pivot"] = True
+            raise np.linalg.LinAlgError("Primal simplex lost feasibility.")
+        if feasibility_rechecked:
+            previous = counters.get("last_pivot_trace")
+            counters["last_pivot_trace"] = last_pivot.trace(before, None, "already_rechecked")
+            if previous is not None:
+                counters["last_pivot_trace"]["prior_recheck"] = previous
+            raise np.linalg.LinAlgError(
+                "Primal feasibility failed after its one current-B recheck."
+            )
+        feasibility_rechecked = True
+        increment(counters, "primal_feasibility_rechecks")
+        try:
+            get_factor().refactor(reason="primal_feasibility")
+            pricing.reset(basis, "primal_feasibility")
+            fresh = state(cost)
+        except (FactorDeadline, MemoryError, np.linalg.LinAlgError) as exc:
+            counters["last_pivot_trace"] = last_pivot.trace(
+                before, None, "recheck_failed", str(exc)
+            )
+            raise
+        after = state_observation(fresh[0])
+        after["rejected_keys"] = tuple(sorted(keys[j] for j in rejected))
+        # Backward residuals are recorded below; componentwise feasibility is
+        # always decided independently using the unchanged primal threshold.
+        recovered = np.min(fresh[0], initial=0) >= -after["ptol"]
+        counters["last_pivot_trace"] = last_pivot.trace(
+            before, after, "recovered" if recovered else "persistent_failure"
+        )
+        if not recovered:
+            raise np.linalg.LinAlgError("Primal feasibility failed after current-B recheck.")
+        increment(counters, "primal_feasibility_recoveries")
+        return fresh
 
     def finish(status, reason, xb=None, lam=None, reduced=None, ray=None, proof=False):
         point = None
@@ -427,13 +667,16 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
         result._factor_state = cache
         return result
 
-    def pivot(entering, leaving, generation, direction=None):
-        nonlocal iterations
+    def pivot(entering, leaving, generation, direction=None, observation=None):
+        nonlocal iterations, last_pivot, feasibility_rechecked
         column = _column(a, entering)
         direction = (
             basis_solve(column, expected_generation=generation) if direction is None else direction
         )
         same_generation(generation)
+        old_matrix = get_factor().matrix
+        old_metadata = factor_metadata()
+        old_keys = tuple(keys[j] for j in basis) if observation is not None else None
         try:
             rebuilt = get_factor().replace_column(
                 leaving, column, direction, expected_generation=generation
@@ -443,9 +686,41 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
             raise
         basis[leaving] = entering
         iterations += 1
+        feasibility_rechecked = False
+        counters.pop("last_pivot_trace", None)
+        if observation is not None:
+            xb, theta, run_identity, mode = observation
+            if theta is None:
+                theta = xb[leaving] / direction[leaving]
+            last_pivot = _PivotObservation(
+                old_matrix,
+                b,
+                xb,
+                direction,
+                column,
+                theta,
+                leaving,
+                old_keys,
+                tuple(keys[j] for j in basis),
+                keys[entering],
+                run_identity,
+                mode,
+                options.pivot_tolerance,
+                options.primal_tolerance,
+                old_metadata,
+                get_factor().matrix,
+                factor_metadata(),
+            )
+        else:
+            last_pivot = None
         return rebuilt
 
-    def run(cost, mode="primal"):
+    def run(cost, mode="primal", phase="phase_two"):
+        nonlocal last_pivot, run_number
+        run_number += 1
+        run_identity = (run_number, phase, mode)
+        last_pivot = None
+        counters.pop("last_pivot_trace", None)
         selected_basis = None
         rejected, refreshed, retries = set(), False, 0
         while True:
@@ -458,6 +733,10 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                 rejected, refreshed, retries = set(), False, 0
                 pricing.basis_seen(basis)
             xb, lam, rc, generation = state(cost)
+            if mode == "primal":
+                xb, lam, rc, generation = primal_state(
+                    cost, (xb, lam, rc, generation), run_identity, rejected
+                )
             basic = set(basis)
             nonbasic = [j for j in range(len(cost)) if j not in basic]
             ptol = options.primal_tolerance * (1 + np.max(abs(xb), initial=0))
@@ -516,7 +795,9 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
 
                     weights = pricing.update(a, basis, entering, leaving, direction, checked_solve)
                     same_generation(generation)
-                    rebuilt = pivot(entering, leaving, generation, direction)
+                    rebuilt = pivot(
+                        entering, leaving, generation, direction, (xb, theta, run_identity, mode)
+                    )
                     if rebuilt or weights is None:
                         pricing.reset(basis, "factor_rebuild" if rebuilt else "nonfinite_weight")
                     else:
@@ -539,7 +820,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                     if not eligible:
                         return "infeasible", "dual_farkas", xb, witness, -a.T @ witness, None
                     entering = min(eligible, key=lambda j: (rc[j] / tableau[j], keys[j]))
-                    pivot(entering, leaving, generation)
+                    pivot(entering, leaving, generation, observation=(xb, None, run_identity, mode))
                     pricing.reset(basis, "dual_pivot")
                     increment(counters, "dual_pivots")
             except FactorRetry as exc:
@@ -622,12 +903,14 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
             phase = np.zeros(len(c))
             phase[list(arts)] = -1
             pricing.fresh_phase(keys, basis, "phase_one")
-            out = run(phase)
+            out = run(phase, phase="phase_one")
             if out[0] != "optimal":
                 return finish(*out[:2], *out[2:5], ray=out[5])
             xb, lam, rc = out[2:5]
             if phase[basis] @ xb < -options.primal_tolerance:
                 return finish("infeasible", "phase_one_farkas", xb, lam, rc, proof=True)
+            last_pivot = None
+            counters.pop("last_pivot_trace", None)
             for art in sorted(arts):
                 if perf_counter() >= deadline or iterations >= options.lp_iteration_limit:
                     return finish(

@@ -178,10 +178,12 @@ def test_generation_changes_only_after_successful_rebase():
     first = factor.generation
     factor.refactor(reason="test_success")
     assert factor.generation == first + 1
+    assert factor.last_refactor_reason == "test_success"
     identity = factor.identity
     with pytest.raises(np.linalg.LinAlgError):
         factor.refactor(csc_matrix([[1, 1], [1, 1]]), "test_failure")
     assert factor.generation == first + 1 and factor.identity == identity
+    assert factor.last_refactor_reason == "test_success"
 
 
 def test_stale_generation_never_commits_even_with_valid_direction():

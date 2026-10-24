@@ -260,7 +260,10 @@ def execute_group(args):
             "result_path": str(output.relative_to(ledger.ROOT)),
             "input_sha256": entry["payload_sha256"],
             "pass": False,
+            "request_sha256": ledger.sha(request),
         }
+        if output.exists():
+            record["result_sha256"] = ledger.sha(output)
         try:
             assert monitor["exit_code"] == 0 and monitor["guard_reason"] is None
             packet = json.loads(output.read_text())
@@ -369,4 +372,8 @@ def dispatch(args):
         from .evaluation import evaluate
 
         return evaluate(args.stage)
+    if args.command == "install-checks":
+        from .delivery import execute
+
+        return execute(args)
     raise RuntimeError(f"Stage adapter is not yet implemented: {args.command}")

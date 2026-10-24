@@ -50,6 +50,9 @@ def main():
         ),
     )
     run.add_argument("--engine", choices=("dense", "sparse"), default="sparse")
+    run.add_argument(
+        "--stage", choices=("SP2", "SP3", "SP4"), help="Charge an explicit final recheck stage"
+    )
     evaluate = sub.add_parser("evaluate")
     evaluate.add_argument("--stage", choices=("SP1", "SP2", "SP3", "SP4"), required=True)
     warm = sub.add_parser("warm")
@@ -99,7 +102,7 @@ def main():
         elif args.command in ("install-checks", "summary"):
             stage = "SP4"
         else:
-            stage = (
+            stage = getattr(args, "stage", None) or (
                 "SP2"
                 if args.group in ("tiny", "pressure", "sp2-smoke")
                 else "SP3"

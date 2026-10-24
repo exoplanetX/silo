@@ -265,6 +265,12 @@ def test_primal_generation_change_never_commits_the_old_blocker(monkeypatch, sta
     original_solve, original_replace = sf.SparseFactor.solve, sf.SparseFactor.replace_column
     fired, old_direction = False, False
     attempted, committed = [], []
+    observed = []
+    original_observation = sk._PivotObservation.__init__
+
+    def observe(self, *args, **kwargs):
+        original_observation(self, *args, **kwargs)
+        observed.append(self.leaving)
 
     def injected_solve(self, rhs, transpose=False):
         nonlocal fired, old_direction
@@ -293,9 +299,11 @@ def test_primal_generation_change_never_commits_the_old_blocker(monkeypatch, sta
 
     monkeypatch.setattr(sf.SparseFactor, "solve", injected_solve)
     monkeypatch.setattr(sf.SparseFactor, "replace_column", injected_replace)
+    monkeypatch.setattr(sk._PivotObservation, "__init__", observe)
     result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
     assert fired and result.status == "optimal" and result.point[0] == 0.5
     assert committed == [1] and 0 not in committed
+    assert observed == [1]  # Uncommitted retries never replace last-pivot data.
     assert result.diagnostics["pivot_generation_restarts"] == 1
     if stage == "before_commit":
         assert attempted == [0, 1]
@@ -391,3 +399,223 @@ def test_rejected_history_survives_rebase_when_new_reduced_costs_disappear(monke
     assert fired and result.status == "numerical_failure" and result.iterations == 0
     assert "Rejected entering history" in result.reason
     assert result.diagnostics["rejected_entering_columns"] == 1
+
+
+@pytest.mark.parametrize("kind", ["eta", "growth"])
+def test_one_current_basis_recheck_recovers_and_observes_last_pivot(monkeypatch, kind):
+    original = sf.SparseFactor.solve
+    original_step, original_reset = sk.Devex.step, sk.Devex.reset
+    fired, reset_seen = False, []
+    rhs = [1, 1] if kind == "eta" else [1, 1e9]
+    matrix = [[1], [2]] if kind == "eta" else [[1], [1e9]]
+
+    def injected(self, values, transpose=False):
+        nonlocal fired
+        answer = original(self, values, transpose)
+        if not fired and not transpose and self.matrix.nnz == 3 and np.array_equal(values, rhs):
+            fired = True
+            answer = answer.copy()
+            answer[0] = -1
+        return answer
+
+    def sticky(self, *args):
+        original_step(self, *args)
+        self.bland, self.degenerate = True, 2
+        self.visited.add(("retained through feasibility recheck",))
+
+    def observe_reset(self, basis, reason):
+        if reason == "primal_feasibility":
+            history = self.bland, self.visited.copy(), self.degenerate
+        original_reset(self, basis, reason)
+        if reason == "primal_feasibility":
+            assert history == (self.bland, self.visited, self.degenerate)
+            assert self.bland and self.degenerate == 2
+            assert all(value == 1 for value in self.weights.values())
+            assert self.reference == set(self.keys) - {self.keys[j] for j in basis}
+            reset_seen.append(reason)
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    monkeypatch.setattr(sk.Devex, "step", sticky)
+    monkeypatch.setattr(sk.Devex, "reset", observe_reset)
+    result = call(norm(matrix, rhs, [1]), SolveOptions())
+    assert fired and result.status == "optimal"
+    assert result.diagnostics["primal_feasibility_rechecks"] == 1
+    assert result.diagnostics["primal_feasibility_recoveries"] == 1
+    assert reset_seen == ["primal_feasibility"]
+    trace = result.diagnostics["last_pivot_trace"]
+    assert trace["outcome"] == "recovered" and trace["run_identity"][1] == "phase_two"
+    leaving = next(
+        p for p in trace["coordinate_projections"] if p["position"] == trace["leaving_position"]
+    )
+    assert leaving["predicted_new_basic"] == trace["theta"] > 0
+    assert trace["old_state_residual"]["within_bound"]
+    assert trace["direction_residual"]["within_bound"]
+    assert trace["predicted_new_state_residual"]["within_bound"]
+    assert trace["fresh_after_residual"]["within_bound"]
+    assert (
+        trace["after_recheck_factor"]["generation"] > trace["before_recheck_factor"]["generation"]
+    )
+    assert trace["after_recheck_factor"]["last_refactor_reason"] == "primal_feasibility"
+    assert trace["predicted_primal_threshold"] == pytest.approx(
+        1e-7 * (1 + max(abs(p["predicted_new_basic"]) for p in trace["coordinate_projections"]))
+    )
+    if kind == "eta":
+        assert trace["committed_factor"]["eta_chain_length"] == 1
+        assert trace["minimum_computed_ratio"] == 0.5
+        assert trace["second_computed_ratio_including_ties"] == 1
+    else:
+        assert trace["committed_factor"]["eta_chain_length"] == 0
+        assert trace["committed_factor"]["last_refactor_reason"] == "growth"
+
+
+def test_persistent_primal_failure_rebuilds_current_basis_once_and_retains_trace(monkeypatch):
+    original = sf.SparseFactor.solve
+
+    def injected(self, rhs, transpose=False):
+        answer = original(self, rhs, transpose)
+        if not transpose and self.matrix.nnz == 3 and np.array_equal(rhs, [1, 1]):
+            answer = answer.copy()
+            answer[0] = -1
+        return answer
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert result.status == "numerical_failure" and result.iterations == 1
+    assert result.diagnostics["primal_feasibility_rechecks"] == 1
+    assert result.diagnostics["refactorizations_by_reason"]["primal_feasibility"] == 1
+    trace = result.diagnostics["last_pivot_trace"]
+    assert trace["outcome"] == "persistent_failure"
+    assert trace["before_argmin_position"] == trace["after_argmin_position"] == 0
+    assert trace["coordinate_projections"][0]["fresh_after_rebase"] == -1
+    assert not trace["fresh_after_residual"]["within_bound"]
+
+
+def test_ordinary_pivots_do_not_compute_observation_residuals_or_extra_lu(monkeypatch):
+    def forbidden(*args):
+        raise AssertionError("Observation residual computed on the ordinary pivot path")
+
+    monkeypatch.setattr(sk, "_residual_observation", forbidden)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert result.status == "optimal" and result.diagnostics["base_factorizations"] == 1
+    assert "last_pivot_trace" not in result.diagnostics
+
+
+def test_phase_one_pivot_observation_cannot_authorize_phase_two_recovery(monkeypatch):
+    original = sf.SparseFactor.solve
+
+    def injected(self, rhs, transpose=False):
+        answer = original(self, rhs, transpose)
+        if not transpose and self.counters["base_factorizations"] >= 2:
+            return -np.ones_like(answer)
+        return answer
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    result = call(norm([[1]], [1], [-1], [">="]), SolveOptions())
+    assert result.status == "numerical_failure" and result.diagnostics["primal_pivots"] == 1
+    assert result.diagnostics["lost_feasibility_without_matching_pivot"]
+    assert "primal_feasibility_rechecks" not in result.diagnostics
+    assert "last_pivot_trace" not in result.diagnostics
+
+
+def test_backward_error_bound_is_observed_separately_from_primal_sign():
+    matrix = csr_matrix([[1, 1], [1, 1 + 1e-8]])
+    truth = np.array([0.001, 1.0])
+    bad = np.array([-0.001, 1.002])
+    rhs = matrix @ truth
+    observed = sk._residual_observation(matrix, rhs, bad)
+    assert observed["within_bound"]
+    expected = 1e-10 * (1 + np.max(abs(rhs)) + np.max(abs(matrix) @ abs(bad)))
+    assert observed["bound"] == expected
+    assert min(bad) < -1e-7 * (1 + np.max(abs(bad)))
+
+
+def test_primal_recheck_preserves_rejected_candidates_and_blocks_false_optimal(monkeypatch):
+    original = sf.SparseFactor.solve
+    fired, bad_sent = False, False
+
+    def injected(self, rhs, transpose=False):
+        nonlocal fired, bad_sent
+        answer = original(self, rhs, transpose)
+        if (
+            not fired
+            and not transpose
+            and self.counters.get("basis_replacements") == 1
+            and np.array_equal(rhs, [0, 0, 0, 1])
+        ):
+            fired = True
+            self.refactor(reason="injected_rebase_with_rejected_candidate")
+            return original(self, rhs, transpose)
+        if fired and not bad_sent and not transpose and np.array_equal(rhs, [0, 1e4, 1, 1]):
+            bad_sent = True
+            answer = answer.copy()
+            answer[0] = -1
+        if fired and transpose and self.last_refactor_reason == "primal_feasibility":
+            return np.full(4, 1e9)
+        return answer
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    model = norm([[1e-8, 0, 0], [1e4, 0, 0], [0, 1, 0], [0, 0, 1]], [0, 1e4, 1, 1], [3, 2, 1])
+    result = call(model, SolveOptions())
+    assert fired and bad_sent and result.status == "numerical_failure"
+    assert "Rejected entering history" in result.reason
+    trace = result.diagnostics["last_pivot_trace"]
+    assert trace["outcome"] == "recovered"
+    assert (
+        trace["rejected_before_recheck"]
+        == trace["rejected_after_recheck"]
+        == (("variable", "x0", 1),)
+    )
+
+
+def test_pivot_trace_keeps_both_pre_and_post_rebase_failure_coordinates():
+    n, leaving = 20, 19
+    old_matrix = sk.canonical(np.eye(n))
+    dense_new = np.eye(n)
+    dense_new[:, leaving] = 1
+    new_matrix = sk.canonical(dense_new)
+    old_keys = tuple(("old", i) for i in range(n))
+    new_keys = tuple(("new", i) for i in range(n))
+    observation = sk._PivotObservation(
+        old_matrix,
+        np.ones(n),
+        np.ones(n),
+        np.ones(n),
+        np.ones(n),
+        1,
+        leaving,
+        old_keys,
+        new_keys,
+        new_keys[leaving],
+        (1, "phase_two", "primal"),
+        "primal",
+        1e-10,
+        1e-7,
+        {"generation": 1},
+        new_matrix,
+        {"generation": 1},
+    )
+    before_values = np.r_[-np.arange(1, 9), np.ones(12)]
+    after_values = np.r_[np.arange(100, 108), np.arange(12)]
+    before = {
+        "xb": before_values,
+        "matrix": new_matrix,
+        "metadata": {"generation": 1},
+        "ptol": 1e-7 * (1 + max(abs(before_values))),
+    }
+    after = {
+        "xb": after_values,
+        "matrix": new_matrix,
+        "metadata": {"generation": 2},
+        "ptol": 1e-7 * (1 + max(abs(after_values))),
+    }
+    trace = observation.trace(before, after, "recovered")
+    projections = {p["position"]: p for p in trace["coordinate_projections"]}
+    assert len(projections) == 17
+    assert set(projections) == set(range(16)) | {leaving}
+    assert trace["before_argmin_position"] == 7 and trace["after_argmin_position"] == 8
+    original_failure = projections[7]
+    assert original_failure["old_xb"] == original_failure["old_direction"] == 1
+    assert original_failure["old_raw_ratio"] == 1
+    assert original_failure["predicted_new_basic"] == 0
+    assert original_failure["fresh_before_rebase"] == -8
+    assert original_failure["fresh_after_rebase"] == 107
