@@ -1,5 +1,15 @@
 # SILO Decision Log
 
+## DEC-20261025-SPARSE-SP2-THREE-NUMERIC-ROUNDS-AUTHORIZED
+
+- Direct human question reply authorizes the saved numeric-stability package within
+  remaining original SP2 time: at most3 further diagnosis/repair/affected-recheck rounds.
+- Total SP2 correction ceiling6, with original rounds1–3 preserved and charged.
+  Start with last-pivot observations and one actual current-B feasibility rebuild.
+- Do not preselect a cause, tune fixed tolerances/instances, change Bland/Devex,
+  expand total/phase time, or bypass standalone diagnostic60s limits.
+- Preserve the existing unfinished Goal identity and the entire SP1–SP4 objective.
+
 ## DEC-20261025-SPARSE-SP2-GENERATION-CLOSED-CAPACITY-HOLD
 
 - Authorized one-extra repair and fixed78 cohort completed; source4fc79d4.

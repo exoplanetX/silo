@@ -351,6 +351,16 @@ The exception is now consumed: source4fc79d4 closes generation coherence, while
 both capacity prechecks still fail. Stop further solver runs; any proposed numeric
 diagnosis/repair package needs new direct human count-extension authorization.
 
+Direct human exception2026-10-25, replycall_c43d2b03430449b49ec2dd3a8a0bc91e:
+authorize the proposed SP2 numerical-stability package under the remaining original
+SP2 time budget, with at most3 additional diagnosis/correction/affected-recheck rounds.
+SP2 correction ceiling is6 in total, with rounds1–3 already charged. Capture pivot
+prediction/fresh-state/residual evidence first and repair only the supported branch.
+Keep fixed inputs, tolerances, Bland/Devex, all original time/group limits and the
+complete objective. Ordinary SP2 smoke runs retain their120s per-capacity limit;
+any separately added diagnostic batch still obeys60s and the20-batch limit.
+No new Goal, budget reset, public release or unrelated method work is authorized.
+
 Record the activating human instruction and program state before product edits. Freeze
 designs, inputs and truth before the implementation intended to pass them. Preserve the
 fixed effects, eight exit criteria, 480-minute verification ceiling and group/retry caps
