@@ -1,5 +1,17 @@
 # SILO Decision Log
 
+## DEC-20261025-SPARSE-SP2-HOLD
+
+- SP1 independent GO and two input/truth commits precede all product edits.
+- Sparse components/tiny cases pass; four small Netlib pass. Two required capacity
+  prechecks still fail after the two allowed targeted corrections. All failures remain.
+- Independent code review found refactor-generation/old-leaving commit inconsistency.
+  A bounded next-repair proposal is concrete in the total report, not executed.
+- Stop additional solver validation under contractsection6; do not consume a third
+  correction implicitly from unused time. Preserve the single unfinished Goal.
+- Keep the complete target, thresholds, inputs, phase bounds and local-only policy.
+  No SP2 GO, SP3/SP4 run,0.3.0a1 build or final acceptance is claimed.
+
 ## DEC-20261024-SPARSE-PROGRAM-ACTIVATED
 
 - Human directly activated the latest sparse LP staged plan in this development chat

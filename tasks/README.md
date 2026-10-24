@@ -334,7 +334,11 @@ prototype program's separate Goal-owner arrangement.
 Human activation recorded2026-10-24: the development chat was directly instructed to read
 the latest discussion plan and continuously complete its full design in Goal mode.
 The existing unique Goal is active; report20261024-02-01 records the actual instruction,
-issuancea480985 and branchcodex/sparse-lp-reoptimization. SP1 is now in progress.
+issuancea480985 and branchcodex/sparse-lp-reoptimization. SP1 is independently GO.
+As of2026-10-25 SP2 is HOLD after both allowed targeted corrections; required capacity
+prechecks and refactor/ratio/commit consistency remain unresolved. Preserve the unfinished
+Goal and the total report. No third correction is authorized by unused time alone;
+direct human count-extension authorization is required before further solver execution.
 
 Record the activating human instruction and program state before product edits. Freeze
 designs, inputs and truth before the implementation intended to pass them. Preserve the

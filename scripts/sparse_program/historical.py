@@ -58,14 +58,15 @@ def run():
         result = solve(model_from_dict(payload), SolveOptions(**options)).to_dict()
         reference = {"status": truth["reference_status"], "objective": truth["reference_objective"]}
         assert result["status"] == reference["status"]
+        is_mip = any(v["type"] != "continuous" for v in payload["variables"])
         checked = checker.check(
             payload,
             result,
             truth=reference,
             options=options,
-            mip=any(v["type"] != "continuous" for v in payload["variables"]),
+            mip=is_mip,
         )
-        if result["status"] in ("infeasible", "unbounded"):
+        if not is_mip and result["status"] in ("infeasible", "unbounded"):
             checker.certificate(payload, result)
         output = folder / (payload["name"] + "_" + config + ".json")
         write_json(output, result)

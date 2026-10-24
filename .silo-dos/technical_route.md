@@ -6,7 +6,11 @@ The human directly instructed the development chat to read the latest staged pla
 complete the overall design in Goal mode. Contract20261024-02-01 is now activated,
 issuancea480985; the existing single Goal is owned by this development chat.
 The [execution report](../tasks/reports/20261024-02-01_sparse-lp-program_report.md)
-records the instruction and SP1 preflight. SP1 freezes inputs/design before product edits.
+records SP1 GO (inputsa3cff29, truth3c27324) before product edits.
+SP2 is HOLD on2026-10-25: both targeted corrections are used; required capacity
+prechecks still fail and refactor/ratio/commit generation consistency is unresolved.
+Do not run a third correction without direct human extension of this task's count.
+The Goal and all eight completion targets remain unmet; no0.3.0a1 artifact was built.
 ContinueSP1–SP4 after internal checks and independent review; no routine cross-chat wait.
 Keep the fixed numerical targets,480-minute/group caps, original C/D/E/native deferral,
 known governance hashes and local-only Git policy. No publication or next program.

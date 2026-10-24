@@ -4,6 +4,9 @@
 依据：[总体规划](../phases/sparse_lp_reoptimization_program_20261024.md)、
 [实施计划](../phases/sparse_lp_implementation_20261024.md)。
 
+当前状态（2026-10-25）：**SP1 GO，SP2 HOLD；两次针对修正已用完，整体Goal未完成。**
+停止新增求解器验证；当前只保存可复查代码、证据和下一项修复方案。
+
 ## 激活与完整目标
 
 2026-10-24，人类在本开发对话以Goal模式直接要求：
@@ -41,7 +44,7 @@ SP1/SP2/SP3/SP4/余量=30/60/180/180/30分钟，总计480分钟；不设混合�
 | 阶段 | 当前状态 | 仍需证据 |
 |---|---|---|
 | SP1设计、输入与基线冻结 | GO；a3cff29输入、3c27324真值/基线 | 架构子门和完整证据设计门均独立GO；产品仍未改时登记 |
-| SP2稀疏cold链 | 进行中 | 小型/压力/4外部/2中等预检及独立数学门 |
+| SP2稀疏cold链 | HOLD，两次修正后容量预检仍未达 | 重构/比率/提交代次一致性及固定组复验；尚无SP2 GO |
 | SP3更新与会话 | 未开始 | 公式/缓存/机制/160状态/公平5重复收益及独立数值门 |
 | SP4上层和总体交付 | 未开始 | 完整矩阵/历史/8安装/伴学/独立八项最终GO |
 
@@ -92,9 +95,86 @@ SP1/SP2/SP3/SP4/余量=30/60/180/180/30分钟，总计480分钟；不设混合�
   BLEND旧dense失败只保留为失败，不计入速度倍数或成功性能分母。
 
 先核本报告、ledger链、Git/source身份及具体进程handle，再继续SP1。
-输入准备由唯一写入者生成；输入/真值两提交及完整SP1独立门已完成，当前进入SP2。
+输入准备由唯一写入者生成；输入/真值两提交及完整SP1独立门已完成，当前SP2 HOLD。
 主线程负责CLI/账本/契约/集成；只读Devex原始依据和稠密边界核查不被计为算法实测。
 所有缺口保持原范围；当前Goal未完成。原A/B已验收、C HOLD、D/E未开始，native延期。
+
+## SP2实现与首轮证据
+
+- 矩阵/变换/传播/原始核验/受限证明组件148测试通过，130public/134kernel完成，
+  3.2221124秒。因子组件首验27通过，26kernel、45次实际LU，1.1033935秒。
+  root公开接口/会话隔离/资源/旧MIP及CG集成171通过，完整命令1.9201998秒。
+  这些组件结果均不代表容量或整体GO。
+- 首轮tiny48/48，25.042362秒，groups/bfbe0b12-ffac-4db3-a02b-94a5b373c2ec。
+- 首轮pressure21/24，12.6221512秒，groups/8bbb52d6-b632-4c71-83b6-2901dc4872a4。
+  LIMIT01是harness覆盖time_limit0；NUM03/04是近相关等式被错误删除，错报optimal−1对真值0。
+- 首轮smoke4/6，67.4896826秒，groups/f20168f4-f4e7-4c1b-b875-e3ba9a8e53f3。
+  AFIRO/ADLITTLE/SC50A/SC50B正确optimal；CAP-FLOW-01在5592pivot后unsafe pivot，
+  CAP-TRANS-01在13308pivot后失去primal feasibility。没有替换模型或调整阈值。
+- 初轮Windows RSS只监控venv redirector，约7MB并非真实解释器峰值；旧值不能作为容量证据。
+  已改为root及后代进程OS PeakWorkingSetSize之和（保守上界），真实40MiB子进程回归通过。
+  time_limit改为min(冻结选项,外层上限)，保留零值；支撑7测试通过，2.1415432秒。
+- MatOps冻结操作清单补齐、15组件通过，1.4502346秒。全池证明预留
+  4*nResult+4*mResult+2*pool+32外层Fraction槽，与basis共用ProofBudget；
+  58测试通过，0.7091256秒，真实1/100000007重构路径达到65536通过、65537在basis分配前拒绝。
+
+## 两次针对修正及当前阻断
+
+1. 第一次：删除行需原始二进制方程精确依赖证明；真正相同比值才按semantic key并列；
+   factor/kernel共用安全主元谓词，并保留所有真实阻塞行。31组件通过，新增验证1.2109429秒。
+   一批两模型诊断1.5189188秒，FLOW117/TRANS47pivot后均unsafe blocker数值失败。
+   保存diagnostics/kernel_sp2_fix1，后代RSS约75/76MB；不计容量通过。
+2. 第二次：当前B/cost/phase内拒绝不可安全换基的进入列，保留sticky Bland及visited，
+   按既定顺序尝试其余列；全拒保守numerical_failure。33组件通过，新增验证1.1067804秒。
+   两模型诊断36.574997秒，FLOW3963pivot后Primal simplex lost feasibility；
+   TRANS5057pivot后solver自返25.0497秒time_limit，外层25.4847秒也标harness_timeout。
+   原始输出完整、exit0仍按harness失败保留；RSS约102.6/132.1MB。
+   保存diagnostics/kernel_sp2_fix2；没有第三次修复或额外正式组。
+
+独立theory_architect仍判代码门BLOCK，指出同一代次不变量尚未落实：
+factor.replace_column可在已选leaving后重构并重算direction，却提交旧leaving；
+direction solve或Devex BTRAN隐式重构时，kernel也未统一撤销已算state/ratio。
+旧d=(1,2)、xB=(1,1)选第二行，若重构后d=(2,.5)，真实blocker已是第一行，
+沿用第二行会把第一基本值降至−3。该数学反例说明具体提交风险，未声称它是全部性能根因。
+
+### 可审阅的下一项修复方案（尚未授权执行）
+
+范围只涉及sparse_factor.py/sparse_kernel.py及对应组件tests，不改输入、容差、Bland定义或目标：
+
+- SparseFactor增加单调generation；一次成功current-B refactor更新代次。
+- state、direction、Devex BTRAN、ratio、commit携带同一代次。
+  任一步重构即取消尚未提交pivot，从同一B重算xB、dual、rc、direction、true-min-ratio。
+- replace_column需要重构时返回未提交retry；不以新direction提交旧leaving。
+  拒绝集不授权optimal；fresh-state后有历史被拒列而改善信号消失时仍保守失败。
+- 增加两项注入测试：direction solve及BTRAN分别强制重构并改变真实blocker，
+  断言旧leaving从未提交；保留candidate恢复/全拒失败/小阻塞不越过测试。
+- 建议仅追加一次针对修正及一次受影响正式复验（48tiny/24pressure/6smoke），
+  仍遵守各例原时间/RSS、SP2剩余时间和原总预算；不重置已用额度。
+  源码通过独立复读且上述组全部通过后，才可给SP2 GO并继续原SP3–SP4。
+  推荐GPT-6 Sol/high，复用当前实现上下文；未声称切换实际模型。
+
+合同第6节限定每阶段初验+两次修正；本阶段两次已使用。需要人类明确扩展本阶段次数，
+才可实施上述额外修复。技术问题与次数授权分别保留，目标/完成标准不变。
+
+## 未完成义务与证据状态
+
+- SP2容量两个必过预检和独立数学GO未达，pressure固定整组尚未在最新修正源码重跑。
+- SP3的8机制正式组、160修改状态×5重复、公平收益≥1.5及6/8≥1均未运行。
+- SP4完整12容量/12Netlib、12MIP/4CG、旧288/192/64整组、全质量及8安装未运行。
+- 没有0.3.0a1工件、发布或最终八项GO；pyproject/runtime仍为0.2.0a2实验分支。
+- L0012保留旧dense已核基线并注明未验稀疏增补；新L0015为draft，verified_code=null。
+- 暂存/提交仅本任务代码与HOLD材料，两治理文件原SHA及所有旧输出/工件/账本保持。
+
+截至第二次诊断：SP1 368.5422803秒，SP2 157.034505秒，总525.5767853秒；
+后续保存材料只进行静态检查，准确新总量从append-only ledger读取。
+capacity/netlib/warm/quality正式轮次均0；diagnostic2/20；本次HOLD由阶段修正次数上限触发，
+480分钟总时间并未耗尽。后续不把剩余时间自动解释为第三次修正授权。
+
+HOLD保存检查：结构检查原先将任何SciPy导入都当作优化器调用，现按本合同
+已授权的矩阵/LU边界做最小白名单适配；仅modeling矩阵adapter允许from scipy import sparse，
+lp/modeling仅允许列明的sparse矩阵函数及splu。optimize、HiGHS、csgraph及core反向依赖仍拒绝。
+9项纯AST策略测试通过（0次SILO），随后结构/全仓ruff/diff检查均exit0；
+没有运行完整check_quality.py或新增算法试验。首次静态失败收据同样保留。
 
 ## Remote Sync Proof
 

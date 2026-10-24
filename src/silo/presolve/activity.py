@@ -7,6 +7,8 @@ from time import perf_counter
 
 import numpy as np
 
+from silo.modeling.matrix_ops import row_support
+
 
 @dataclass(frozen=True)
 class BoundDerivation:
@@ -51,36 +53,46 @@ def propagate(
         return result
     for pass_id in range(max_passes):
         changed = False
-        for i, row in enumerate(data.a):
+        for i in range(len(data.row_names)):
             if perf_counter() >= deadline:
                 result.timed_out = True
                 return result
-            indices = np.flatnonzero(row)
+            indices, coefficients = row_support(data.a, i)
             for side, bound, sign in (
                 ("upper", data.row_upper[i], 1),
                 ("lower", data.row_lower[i], -1),
             ):
                 if not isfinite(bound):
                     continue
-                coeff = sign * row
-                for j in indices:
+                # The bound inferred for j is opposite to the bound used by its
+                # own minimum contribution. Consequently these contributions
+                # stay current throughout this row-side's sequential updates.
+                coeff = sign * coefficients
+                exact_coeff = [Fraction(float(value)) for value in coeff]
+                contributions, source_sides = [], []
+                minimum, unbounded = Fraction(0), 0
+                for j, a in zip(indices, exact_coeff, strict=True):
                     if perf_counter() >= deadline:
                         result.timed_out = True
                         return result
-                    minimum, others, finite = Fraction(0), [], True
-                    for k in indices:
-                        if k == j:
-                            continue
-                        value, bside = (lo[k], "lower") if coeff[k] > 0 else (hi[k], "upper")
-                        if not isfinite(value):
-                            finite = False
-                            break
-                        minimum += Fraction(float(coeff[k])) * Fraction(float(value))
-                        others.append((int(k), bside, abs(coeff[k] / coeff[j])))
-                    if not finite:
+                    value, bside = (lo[j], "lower") if a > 0 else (hi[j], "upper")
+                    term = a * Fraction(float(value)) if isfinite(value) else None
+                    contributions.append(term)
+                    source_sides.append(bside)
+                    if term is None:
+                        unbounded += 1
+                    else:
+                        minimum += term
+                for position, j in enumerate(indices):
+                    if perf_counter() >= deadline:
+                        result.timed_out = True
+                        return result
+                    term = contributions[position]
+                    if unbounded - (term is None):
                         continue
-                    exact = (sign * Fraction(float(bound)) - minimum) / Fraction(float(coeff[j]))
-                    target_side = "upper" if coeff[j] > 0 else "lower"
+                    other_minimum = minimum - (term if term is not None else 0)
+                    exact = (sign * Fraction(float(bound)) - other_minimum) / exact_coeff[position]
+                    target_side = "upper" if coeff[position] > 0 else "lower"
                     if integral and data.integer[j]:
                         rounded = floor(exact) if target_side == "upper" else ceil(exact)
                         result.integer_roundings += rounded != exact
@@ -103,7 +115,16 @@ def propagate(
                         (hi if target_side == "upper" else lo)[j] = new
                         result.history.append(
                             BoundDerivation(
-                                int(j), target_side, i, side, 1 / abs(coeff[j]), tuple(others)
+                                int(j),
+                                target_side,
+                                i,
+                                side,
+                                1 / abs(coeff[position]),
+                                tuple(
+                                    (int(k), source_sides[p], abs(coeff[p] / coeff[position]))
+                                    for p, k in enumerate(indices)
+                                    if k != j
+                                ),
                             )
                         )
                         changed = True
@@ -114,23 +135,24 @@ def propagate(
         result.passes = pass_id + 1
         if not changed:
             break
-    for i, row in enumerate(data.a):
+    for i in range(len(data.row_names)):
         if perf_counter() >= deadline:
             result.timed_out = True
             return result
         minimum, maximum = Fraction(0), Fraction(0)
-        for j in np.flatnonzero(row):
+        indices, coefficients = row_support(data.a, i)
+        for j, coefficient in zip(indices, coefficients, strict=True):
             if perf_counter() >= deadline:
                 result.timed_out = True
                 return result
-            small, large = (lo[j], hi[j]) if row[j] > 0 else (hi[j], lo[j])
+            small, large = (lo[j], hi[j]) if coefficient > 0 else (hi[j], lo[j])
             minimum += (
-                Fraction(float(row[j])) * Fraction(float(small))
+                Fraction(float(coefficient)) * Fraction(float(small))
                 if isfinite(small)
                 else -float("inf")
             )
             maximum += (
-                Fraction(float(row[j])) * Fraction(float(large))
+                Fraction(float(coefficient)) * Fraction(float(large))
                 if isfinite(large)
                 else float("inf")
             )

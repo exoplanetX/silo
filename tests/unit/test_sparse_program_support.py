@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -72,6 +73,18 @@ def test_warm_metric_pairs_repetitions_and_preserves_initial_cost(monkeypatch):
     assert all(r == pytest.approx(2 / 3) for r in measured["initial_inclusive_ratios"].values())
     with pytest.raises(AssertionError):
         aggregate(records[:-1] + [records[0]])
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows venv redirector accounting")
+def test_os_rss_includes_real_interpreter_and_nested_children(tmp_path):
+    guard = module("resources")
+    child = "import time; a=bytearray(40*1024*1024); a[:]=b'x'*len(a); time.sleep(.25)"
+    parent = f"import subprocess,sys; subprocess.run([sys.executable,'-c',{child!r}],check=True)"
+    result = guard.guarded([sys.executable, "-c", parent], tmp_path, tmp_path / "tree.log", 10)
+    assert result["exit_code"] == 0 and result["guard_reason"] is None
+    assert result["peak_rss_bytes"] >= 40 * 1024 * 1024
+    assert result["monitored_processes"] >= 2
+    assert result["process_scope"] == "root_and_descendants"
 
 
 @pytest.mark.parametrize("scenario", ["normal", "timeout", "rss"])

@@ -28,7 +28,19 @@ def solve(
         if not isinstance(extensions, ResearchExtensions):
             raise TypeError("extensions must be ResearchExtensions.")
     try:
-        data = linear_data(model, options.max_dense_cells)
+        data = linear_data(
+            model,
+            options.max_dense_cells,
+            engine=options.lp_engine,
+            max_sparse_nnz=options.max_sparse_nnz,
+        )
+    except ImportError as exc:
+        return SolveResult(
+            "unsupported",
+            "sparse_dependency_missing",
+            diagnostics={"message": str(exc)},
+            elapsed_seconds=perf_counter() - start,
+        )
     except (ValueError, TypeError, AttributeError) as exc:
         return SolveResult("invalid_model", str(exc), elapsed_seconds=perf_counter() - start)
     except MemoryError as exc:

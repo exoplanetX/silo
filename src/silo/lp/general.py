@@ -18,7 +18,7 @@ from silo.modeling.general import normalize
 from silo.presolve.activity import propagate
 
 
-def solve_lp_data(data, options, basis=None, deadline=inf):
+def solve_lp_data(data, options, basis=None, deadline=inf, *, factor_state=None):
     """One shared LP pipeline for direct calls, RMPs and MIP relaxations."""
     if perf_counter() >= deadline:
         return SolveResult("limit", "time_limit")
@@ -32,7 +32,15 @@ def solve_lp_data(data, options, basis=None, deadline=inf):
             norm = normalize(
                 data, activity.lower, activity.upper, options.scaling, activity.redundant
             )
-            native = solve_canonical(norm, options, basis, deadline)
+            if options.lp_engine == "sparse":
+                from silo.lp.sparse_kernel import solve_canonical as sparse_solve
+
+                native = sparse_solve(norm, options, basis, deadline, factor_state=factor_state)
+            else:
+                native = solve_canonical(norm, options, basis, deadline)
+        private_state = getattr(native, "_factor_state", None)
+        if hasattr(native, "_factor_state"):
+            del native._factor_state
         result = SolveResult(
             native.status,
             native.reason,
@@ -43,10 +51,13 @@ def solve_lp_data(data, options, basis=None, deadline=inf):
                 "bound_tightenings": len(activity.history),
                 "rows_removed": int(sum(activity.redundant)),
                 "scaling": options.scaling,
+                "lp_engine": options.lp_engine,
             },
             basis=native.snapshot,
         )
         result._lp = (norm, native, activity)
+        if factor_state is not None:
+            result._factor_state = private_state
         if native.status == "optimal":
             x = norm.point(native.point)
             multipliers = activity.recover_multipliers(
@@ -139,6 +150,16 @@ def solve_lp_data(data, options, basis=None, deadline=inf):
                 result.objective_value = float(data.constant + data.c @ x)
                 result.primal_bound = result.objective_value
         return result
+    except MemoryError as exc:
+        return SolveResult(
+            "limit",
+            "resource_limit",
+            diagnostics={"message": str(exc), "lp_engine": options.lp_engine},
+        )
+    except ImportError as exc:
+        return SolveResult(
+            "unsupported", "sparse_dependency_missing", diagnostics={"message": str(exc)}
+        )
     except (FloatingPointError, OverflowError, np.linalg.LinAlgError) as exc:
         return SolveResult(
             "numerical_failure", "nonfinite_or_singular", diagnostics={"message": str(exc)}

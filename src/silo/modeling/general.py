@@ -11,6 +11,7 @@ import numpy as np
 
 from silo.core.enums import OptimizationSense, VariableType
 from silo.core.model import Model
+from silo.modeling.matrix_ops import column_max_abs, is_sparse, row_max_abs, sparse_module
 
 
 @dataclass
@@ -26,9 +27,13 @@ class LinearData:
     row_lower: np.ndarray
     row_upper: np.ndarray
     integer: np.ndarray
+    engine: str = "dense"
+    max_sparse_nnz: int = 1_000_000
 
 
-def linear_data(model: Model, max_cells: int = 2_000_000) -> LinearData:
+def linear_data(
+    model: Model, max_cells: int = 2_000_000, *, engine="dense", max_sparse_nnz=1_000_000
+) -> LinearData:
     model.validate()
     for value in [
         model.objective.constant,
@@ -53,12 +58,30 @@ def linear_data(model: Model, max_cells: int = 2_000_000) -> LinearData:
                 "Integer bound/row side is not exactly representable in float64."
             )
     n, m = len(model.variables), len(model.constraints)
-    if (m + n) * (3 * n + 2 * m + 1) > max_cells:
+    if engine not in ("dense", "sparse"):
+        raise ValueError("engine must be dense or sparse.")
+    if engine == "dense" and (m + n) * (3 * n + 2 * m + 1) > max_cells:
         raise MemoryError("Dense reference workspace exceeds max_dense_cells.")
     names = tuple(model.variable_names())
-    a = np.array(
-        [[r.coefficients.get(k, 0.0) for k in names] for r in model.constraints], dtype=float
-    ).reshape(m, n)
+    if engine == "sparse":
+        count = sum(value != 0 for row in model.constraints for value in row.coefficients.values())
+        if count > max_sparse_nnz:
+            raise MemoryError("Sparse input exceeds max_sparse_nnz.")
+        sparse = sparse_module()
+        positions = {name: j for j, name in enumerate(names)}
+        rr, cc, values = [], [], []
+        for i, row in enumerate(model.constraints):
+            for name, value in row.coefficients.items():
+                if value:
+                    rr.append(i)
+                    cc.append(positions[name])
+                    values.append(value)
+        a = sparse.coo_matrix((values, (rr, cc)), shape=(m, n), dtype=float).tocsr()
+        a.sort_indices()
+    else:
+        a = np.array(
+            [[r.coefficients.get(k, 0.0) for k in names] for r in model.constraints], dtype=float
+        ).reshape(m, n)
     return LinearData(
         names,
         tuple(r.name for r in model.constraints),
@@ -71,6 +94,8 @@ def linear_data(model: Model, max_cells: int = 2_000_000) -> LinearData:
         np.array([r.row_bounds[0] for r in model.constraints], dtype=float),
         np.array([r.row_bounds[1] for r in model.constraints], dtype=float),
         np.array([v.var_type != VariableType.CONTINUOUS for v in model.variables], dtype=bool),
+        engine,
+        max_sparse_nnz,
     )
 
 
@@ -143,6 +168,8 @@ class Normalization:
 
 def normalize(data, lower, upper, scaling=True, redundant=None):
     """Affine coordinate map, original row sides and supplementary upper rows."""
+    if is_sparse(data.a):
+        return _normalize_sparse(data, lower, upper, scaling, redundant)
     n = len(data.names)
     offset = np.zeros(n)
     columns, col_origins, upper_rows = [], [], []
@@ -216,6 +243,131 @@ def normalize(data, lower, upper, scaling=True, redundant=None):
         c,
         tuple(origins),
         tuple(col_origins),
+        rscale,
+        cscale,
+        lower,
+        upper,
+    )
+
+
+@dataclass(frozen=True)
+class IndexedAffine:
+    """A signed index map, never an allocated original-by-canonical matrix."""
+
+    original_size: int
+    indices: tuple[int, ...]
+    directions: tuple[int, ...]
+
+    @property
+    def shape(self):
+        return self.original_size, len(self.indices)
+
+    def __matmul__(self, values):
+        values = np.asarray(values)
+        if values.shape != (len(self.indices),):
+            raise ValueError("Indexed affine vector shape mismatch.")
+        result = np.zeros(self.original_size)
+        np.add.at(result, list(self.indices), np.asarray(self.directions) * values)
+        return result
+
+    @property
+    def T(self):
+        return _IndexedTranspose(self)
+
+
+@dataclass(frozen=True)
+class _IndexedTranspose:
+    forward: IndexedAffine
+
+    def __matmul__(self, values):
+        values = np.asarray(values)
+        if values.shape != (self.forward.original_size,):
+            raise ValueError("Indexed affine transpose shape mismatch.")
+        return values[list(self.forward.indices)] * np.asarray(self.forward.directions)
+
+
+def _normalize_sparse(data, lower, upper, scaling, redundant):
+    sparse = sparse_module()
+    n = len(data.names)
+    offset = np.zeros(n)
+    indices, directions, upper_rows = [], [], []
+    for i in range(n):
+        if lower[i] == upper[i]:
+            offset[i] = lower[i]
+            continue
+        choices = (1,)
+        if isfinite(lower[i]):
+            offset[i] = lower[i]
+            if isfinite(upper[i]):
+                upper_rows.append((i, len(indices), upper[i] - lower[i]))
+        elif isfinite(upper[i]):
+            offset[i], choices = upper[i], (-1,)
+        else:
+            choices = (1, -1)
+        for direction in choices:
+            indices.append(i)
+            directions.append(direction)
+    transform = IndexedAffine(n, tuple(indices), tuple(directions))
+    csc = data.a.tocsc()
+    projected = sum(int(csc.indptr[i + 1] - csc.indptr[i]) for i in indices)
+    if projected > data.max_sparse_nnz:
+        raise MemoryError("Sparse affine expansion exceeds max_sparse_nnz.")
+    at = data.a[:, indices].multiply(np.asarray(directions)).tocsr()
+    shift = data.a @ offset
+    selected, rhs, senses, origins = [], [], [], []
+    for i in range(len(data.row_names)):
+        if redundant is not None and redundant[i]:
+            continue
+        lo, hi = data.row_lower[i], data.row_upper[i]
+        if lo == hi:
+            selected.append(i)
+            rhs.append(lo - shift[i])
+            senses.append("=")
+            origins.append(("row", i, "equal"))
+        else:
+            for bound, sense, side in ((lo, ">=", "lower"), (hi, "<=", "upper")):
+                if isfinite(bound):
+                    selected.append(i)
+                    rhs.append(bound - shift[i])
+                    senses.append(sense)
+                    origins.append(("row", i, side))
+    projected = sum(int(at.indptr[i + 1] - at.indptr[i]) for i in selected) + len(upper_rows)
+    if projected > data.max_sparse_nnz:
+        raise MemoryError("Sparse normalized rows exceed max_sparse_nnz.")
+    base = at[selected].tocsr()
+    extra = sparse.coo_matrix(
+        (np.ones(len(upper_rows)), (np.arange(len(upper_rows)), [r[1] for r in upper_rows])),
+        shape=(len(upper_rows), len(indices)),
+    ).tocsr()
+    a = sparse.vstack([base, extra], format="csr")
+    for i, _column, bound in upper_rows:
+        rhs.append(bound)
+        senses.append("<=")
+        origins.append(("bound", i, "upper"))
+    b = np.array(rhs, dtype=float)
+    c = -data.sign * (data.c[indices] * directions)
+    rscale, cscale = np.ones(a.shape[0]), np.ones(a.shape[1])
+    if scaling and a.nnz:
+        norms = row_max_abs(a)
+        rscale = 1.0 / np.where(norms > 0, norms, 1.0)
+        a = a.multiply(rscale[:, None]).tocsr()
+        b = rscale * b
+        norms = column_max_abs(a)
+        cscale = 1.0 / np.where(norms > 0, norms, 1.0)
+        a = a.multiply(cscale).tocsr()
+        c = c * cscale
+    if not all(np.isfinite(v).all() for v in (offset, a.data, b, c, rscale, cscale)):
+        raise FloatingPointError("Nonfinite affine normalization/scaling.")
+    return Normalization(
+        data,
+        offset,
+        transform,
+        a,
+        b,
+        tuple(senses),
+        c,
+        tuple(origins),
+        tuple(zip(indices, directions, strict=True)),
         rscale,
         cscale,
         lower,

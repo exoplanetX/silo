@@ -74,6 +74,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--absolute-gap", type=float, default=0.0)
     parser.add_argument("--node-strategy", choices=["best_bound", "dfs"], default="best_bound")
     parser.add_argument("--lp-method", choices=["auto", "primal", "dual"], default="auto")
+    parser.add_argument("--lp-engine", choices=["dense", "sparse"], default="dense")
     for option in ("presolve", "scaling", "cuts", "heuristics"):
         parser.add_argument(f"--no-{option}", action="store_true")
     return parser
@@ -87,6 +88,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "help":
         parser.print_help()
         return 0
+
+    if _option_used(raw_args, "--lp-engine") and args.command != "optimize":
+        parser.error("The --lp-engine option is supported by optimize.")
 
     if args.command == "optimize":
         if not args.path:
@@ -150,6 +154,7 @@ def _optimize(args):
             absolute_gap=args.absolute_gap,
             node_strategy=args.node_strategy,
             lp_method=args.lp_method,
+            lp_engine=args.lp_engine,
             presolve=not args.no_presolve,
             scaling=not args.no_scaling,
             cuts=not args.no_cuts,

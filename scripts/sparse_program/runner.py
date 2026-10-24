@@ -1,5 +1,6 @@
 """Frozen group dispatch and actual native case receipts."""
 
+import importlib
 import json
 import sys
 from fractions import Fraction
@@ -80,8 +81,38 @@ def native_one(request_path, response_path):
     from silo import SolveOptions, solve
     from silo.io import model_from_dict
 
+    counts = {"lp_started": 0, "lp_completed": 0}
+    general = importlib.import_module("silo.lp.general")
+    original_lp = general.solve_lp_data
+
+    def counted_lp(*args, **kwargs):
+        counts["lp_started"] += 1
+        number = counts["lp_started"]
+        path = response.with_suffix(".lp_calls.jsonl")
+        with path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps({"number": number, "event": "started"}) + "\n")
+        value = original_lp(*args, **kwargs)
+        counts["lp_completed"] += 1
+        with path.open("a", encoding="utf-8") as stream:
+            stream.write(
+                json.dumps(
+                    {
+                        "number": number,
+                        "event": "completed",
+                        "status": value.status,
+                        "engine": value.diagnostics.get("lp_engine"),
+                    }
+                )
+                + "\n"
+            )
+        return value
+
+    general.solve_lp_data = counted_lp
+    importlib.import_module("silo.solver").solve_lp_data = counted_lp
+    importlib.import_module("silo.lp.session").solve_lp_data = counted_lp
+
     options = dict(entry.get("options", {}))
-    options.update(time_limit=request["seconds"])
+    options["time_limit"] = min(options.get("time_limit", request["seconds"]), request["seconds"])
     if request["engine"] == "sparse":
         options["lp_engine"] = "sparse"
     response.with_suffix(".started.json").write_text(
@@ -111,6 +142,8 @@ def native_one(request_path, response_path):
         "options": options,
         "native_root_calls_started": 1,
         "native_root_calls_completed": 1,
+        "native_lp_calls_started": counts["lp_started"],
+        "native_lp_calls_completed": counts["lp_completed"],
         "native_seconds_including_import": perf_counter() - start,
         "result": result.to_dict(),
     }
@@ -200,6 +233,8 @@ def execute_group(args):
             assert monitor["exit_code"] == 0 and monitor["guard_reason"] is None
             packet = json.loads(output.read_text())
             result = packet["result"]
+            assert packet["native_lp_calls_started"] == packet["native_lp_calls_completed"]
+            record["native_lp_calls"] = packet["native_lp_calls_completed"]
             assert result["status"] in entry["expected_statuses"]
             if entry["group"] != "cg":
                 record["raw_check"] = checker.check(
@@ -226,6 +261,43 @@ def execute_group(args):
                     )
                 else:
                     assert result.get("dual_bound") is None or result.get("dual_bound_is_infinite")
+            if args.engine == "sparse":
+                metadata = entry.get("metadata", {})
+                if entry["group"] == "cg":
+                    trace = result["trace"]
+                    assert len(trace) == packet["native_lp_calls_completed"]
+                    assert all(
+                        step["lp_diagnostics"].get("lp_engine") == "sparse" for step in trace
+                    )
+                    if metadata.get("require_phase1_added_column"):
+                        assert any(
+                            step["phase"] == "phase1" and step["added_columns"] for step in trace
+                        )
+                    if metadata.get("require_phase2_cross_solve_reuse"):
+                        assert any(
+                            step["phase"] == "phase2"
+                            and step["lp_diagnostics"].get("cross_solve_reuses", 0) > 0
+                            for step in trace
+                        )
+                    if result["status"] == "optimal":
+                        checker.close(result["objective_value"], oracle(entry)["objective"])
+                else:
+                    counters = result["diagnostics"]
+                    if entry["group"] == "mip":
+                        assert counters["lp_engine_counts"]["sparse"] == counters["lp_calls"]
+                        assert counters["lp_engine_counts"]["dense"] == 0
+                        if metadata.get("require_branch"):
+                            assert counters["branches"] > 0
+                        if metadata.get("require_gmi"):
+                            assert counters["cuts_added"] > 0
+                            assert any(
+                                event["lp_engine"] == "sparse" and event["status"] == "optimal"
+                                for event in counters["cut_events"]
+                            )
+                    if metadata.get("minimum_pivots"):
+                        assert result["iterations"] >= metadata["minimum_pivots"]
+                    if metadata.get("stable_update_group"):
+                        assert counters["eta_updates"] / counters["basis_replacements"] >= 0.7
             record["status"] = result["status"]
             record["pass"] = True
         except (AssertionError, ValueError, OSError, KeyError, TypeError) as exc:

@@ -37,6 +37,23 @@ DOCS = (
 EXTERNAL_SOLVERS = {"scipy", "gurobipy", "cplex", "highspy", "pulp", "ortools", "cvxpy"}
 
 
+def sparse_numeric_import(node, module):
+    """Allow the contracted optional matrix/LU adapter, never SciPy optimizers."""
+    if not isinstance(node, ast.ImportFrom) or node.level:
+        return False
+    layer = module.split(".")[1] if "." in module else ""
+    if layer not in ("modeling", "lp"):
+        return False
+    names = {alias.name for alias in node.names}
+    if node.module == "scipy" and module == "silo.modeling.matrix_ops":
+        return names == {"sparse"}
+    allowed = {
+        "scipy.sparse": {"coo_matrix", "csr_matrix", "csc_matrix", "hstack", "vstack", "eye"},
+        "scipy.sparse.linalg": {"splu"},
+    }
+    return bool(names) and names <= allowed.get(node.module, set())
+
+
 def inventory(root: Path, errors: list[str]) -> tuple[list[Path], list[Path], dict]:
     tasks = sorted((root / "tasks/codex").glob("*.md"))
     reports = sorted((root / "tasks/reports").glob("*.md"))
@@ -165,7 +182,14 @@ def check_imports(root: Path, errors: list[str]) -> int:
                 if layer == "core" and dependency.startswith("silo."):
                     if dependency.split(".")[1] != "core":
                         errors.append(f"Core reverse dependency: {module} -> {dependency}")
-                if dependency.split(".")[0] in EXTERNAL_SOLVERS and layer != "interfaces":
+                numeric_scipy = dependency.split(".")[0] == "scipy" and sparse_numeric_import(
+                    node, module
+                )
+                if (
+                    dependency.split(".")[0] in EXTERNAL_SOLVERS
+                    and layer != "interfaces"
+                    and not numeric_scipy
+                ):
                     errors.append(f"External solver import outside interfaces: {module}")
     visited: set[str] = set()
     active: set[str] = set()

@@ -380,6 +380,16 @@ def _projected_point(model, result, options):
 
 
 def _full_pool_certificate(model, pool, result, options, budget):
+    # Raw and reconstructed point/dual maps survive while a basis candidate is
+    # built. Full-pool values and reduced costs add two pool-sized Fraction maps.
+    # Reserve this outer path before its first Fraction allocation; the nested
+    # basis helper adds its own conservative workspace to the same budget.
+    cells = 4 * len(result.primal_values) + 4 * len(result.dual_values) + 2 * len(pool) + 32
+    with budget.workspace(cells):
+        return _full_pool_certificate_pair(model, pool, result, options, budget)
+
+
+def _full_pool_certificate_pair(model, pool, result, options, budget):
     """Prove original-binary full-pool optimality by an exact feasible pair.
 
     Float and rational reconstructions propose candidates only. Every original

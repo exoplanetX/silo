@@ -2,13 +2,13 @@
 lesson_id: L0012
 title: 基分解、缩放与原始对偶重优化
 topic: lp.reoptimization-numerics
-version: 0.1.0
+version: 0.1.1
 status: checked
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-10-25
 verified_code: 8a07e4b211795c60bf77bfabda1b90a0b2f3f04c
 verified_on: 2026-10-24
-source_tasks: [20261023-02-01_teaching-prototype]
+source_tasks: [20261023-02-01_teaching-prototype, 20261024-02-01_sparse-lp-program]
 ---
 
 # L0012｜基分解、缩放与原始对偶重优化
@@ -79,3 +79,9 @@ primal、dual、integrality、pivot、互补、目标容差各管自己的判据
 来源[总合同](../../../tasks/codex/20261023-02-01_teaching-prototype.md)、
 [总报告](../../../tasks/reports/20261023-02-01_teaching-prototype_report.md)、
 [数值说明](../../../docs/numeric_engine.md)。2026-10-24初稿。
+
+2026-10-25补充（尚未验收）：显式sparse路径增加LU/eta及私有数值缓存，
+详见[L0015草稿](../L0015-sparse-basis-updates/README.md)。元信息的verified_code继续
+指原dense正文基线；本段增补未取得稀疏阶段GO。当前容量预检失败说明：
+一次三角解复用、一次eta换基和跨调用加速是不同主张；因子在选择离基行后重构时，
+还必须撤销旧比值检验并重算。此提交一致性义务尚未关闭，不能把接口存在当作可用性验收。

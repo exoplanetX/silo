@@ -5,6 +5,8 @@ from math import isfinite, lcm
 
 import numpy as np
 
+from silo.modeling.matrix_ops import row_support
+
 
 def primal_check(data, point, tolerance=1e-7, integer=False, integrality_tolerance=None):
     x = np.asarray(point)
@@ -117,9 +119,14 @@ def exact_ray(data, point, ray, integer=False, proof_limit=1000000):
             return None
         if isfinite(data.upper[j]) and (x[j] > _fraction(data.upper[j]) or h[j] > 0):
             return None
-    for i, row in enumerate(data.a):
-        value = sum(_fraction(a) * v for a, v in zip(row, x, strict=True))
-        direction = sum(_fraction(a) * v for a, v in zip(row, h, strict=True))
+    for i in range(len(data.row_names)):
+        indices, coefficients = row_support(data.a, i)
+        value = sum(
+            (_fraction(a) * x[j] for j, a in zip(indices, coefficients, strict=True)), Fraction(0)
+        )
+        direction = sum(
+            (_fraction(a) * h[j] for j, a in zip(indices, coefficients, strict=True)), Fraction(0)
+        )
         if isfinite(data.row_lower[i]) and (value < _fraction(data.row_lower[i]) or direction < 0):
             return None
         if isfinite(data.row_upper[i]) and (value > _fraction(data.row_upper[i]) or direction > 0):
@@ -151,11 +158,22 @@ def witness_float_point(data, witness):
 
 
 def exact_farkas(data, multipliers):
-    yl, yu, zl, zu = [list(map(_candidate, side)) for side in multipliers]
-    normal = [
-        sum(_fraction(data.a[i, j]) * (yu[i] - yl[i]) for i in range(len(yl))) - zl[j] + zu[j]
-        for j in range(len(zl))
+    # Already exact proof sides stay in their owning workspace. Recopying their
+    # containers here would defeat the path's simultaneously-live cell bound.
+    yl, yu, zl, zu = [
+        side
+        if isinstance(side, list | tuple) and all(isinstance(v, Fraction) for v in side)
+        else list(map(_candidate, side))
+        for side in multipliers
     ]
+    normal = [-a + b for a, b in zip(zl, zu, strict=True)]
+    for i in range(len(data.row_names)):
+        weight = yu[i] - yl[i]
+        if not weight:
+            continue
+        indices, coefficients = row_support(data.a, i)
+        for j, coefficient in zip(indices, coefficients, strict=True):
+            normal[j] += _fraction(coefficient) * weight
     if any(normal) or any(v < 0 for side in (yl, yu, zl, zu) for v in side):
         return None
     contradiction = Fraction(0)

@@ -1,5 +1,6 @@
 """Bounded exact sparse-row elimination for proof objects, never an LP solver."""
 
+from contextlib import contextmanager
 from fractions import Fraction
 from math import inf
 from time import perf_counter
@@ -14,6 +15,27 @@ class ProofBudget:
         self.remaining = operations
         self.deadline = deadline
         self.clock = perf_counter if clock is None else clock
+        self.live_cells = 0
+        self.peak_cells = 0
+
+    @contextmanager
+    def workspace(self, cells):
+        """Reserve simultaneous rational slots before conversion/allocation.
+
+        An outer reservation remains live throughout any nested proof. The
+        ceiling is a fixed policy, independent of basis/operation/bit budgets.
+        """
+        if type(cells) is not int or cells < 0:
+            raise ValueError("Exact proof workspace must be a nonnegative integer.")
+        self.charge()
+        if self.live_cells + cells > 65536:
+            raise ProofLimitError("Exact proof workspace exceeds 65536 rational cells.")
+        self.live_cells += cells
+        self.peak_cells = max(self.peak_cells, self.live_cells)
+        try:
+            yield
+        finally:
+            self.live_cells -= cells
 
     def charge(self, count=1):
         self.remaining -= count

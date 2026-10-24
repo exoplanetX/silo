@@ -29,6 +29,10 @@ class SolveOptions:
     cut_depth_limit: int = 2
     integer_ray_proof_limit: int = 1000000
     proof_operation_limit: int = 2000000
+    lp_engine: str = "dense"
+    max_sparse_nnz: int = 1000000
+    max_factor_nnz: int = 5000000
+    max_factor_updates: int = 20
 
     def __post_init__(self):
         for name in ("time_limit", "relative_gap", "absolute_gap"):
@@ -46,6 +50,9 @@ class SolveOptions:
             "cut_depth_limit",
             "integer_ray_proof_limit",
             "proof_operation_limit",
+            "max_sparse_nnz",
+            "max_factor_nnz",
+            "max_factor_updates",
         ):
             value = getattr(self, name)
             if type(value) is not int or value < 0:
@@ -68,6 +75,10 @@ class SolveOptions:
             raise ValueError("node_strategy must be best_bound or dfs.")
         if self.lp_method not in ("auto", "primal", "dual"):
             raise ValueError("lp_method must be auto, primal or dual.")
+        if self.lp_engine not in ("dense", "sparse"):
+            raise ValueError("lp_engine must be dense or sparse.")
+        if self.max_factor_updates > 20:
+            raise ValueError("max_factor_updates must be in 0..20.")
 
 
 @dataclass
