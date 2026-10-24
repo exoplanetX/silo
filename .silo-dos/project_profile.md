@@ -2,10 +2,13 @@
 
 ## Proposed Next Program — 2026-10-24
 
-已按用户要求整理[稀疏LP与连续重优化总体规划v0.1](../tasks/phases/sparse_lp_reoptimization_program_20261024.md)。
-这是待确认的工程提案：同一SILO内核、一个总合同、SP1–SP4四检查点，目标为受控中等规模
-LP/重复求解研究工具；规模、收益和8小时验证上限均为拟定目标，未运行新性能实验。
-当前未签发执行合同、未派发、未创建目标或批准依赖变更；0.2.0a2验收继续有效。
+已按用户进一步要求准备[总体规划v0.2](../tasks/phases/sparse_lp_reoptimization_program_20261024.md)、
+[详细实施计划](../tasks/phases/sparse_lp_implementation_20261024.md)和
+[待启动总合同20261024-02-01](../tasks/codex/20261024-02-01_sparse-lp-program.md)。
+同一SILO内核，一个整体任务、SP1–SP4检查点；目标为受控中等规模LP/重复求解工具。
+目标/阈值/8小时预算保持原规划；新性能实验尚未运行。
+用户将在开发对话另行明确启动，届时由开发对话拥有唯一Goal并连续自检/独立复核/推进；
+讨论对话负责规划及后续审查。当前仅准备文件，无派发、Goal、依赖变更或产品实现；a2验收保持。
 原C HOLD/D/E未启动、native延期及远端CI pending保持，不添加研究前置。
 
 ## Current Revision — 2026-10-24

@@ -314,6 +314,31 @@ read-only; implementation agents require explicit file ownership. Keep the fixed
 240-minute verification budget, five-module exit table and honest incomplete handoff
 at a genuine blocker or exhausted budget. Do not push/publish or silently expand scope.
 
+### 6.11 Prepared Goal Program — SILO-SPARSE-LP-20261024
+
+The human requested a detailed execution package and said they will later start it
+in the development conversation using Goal mode. The
+[prepared total contract](codex/20261024-02-01_sparse-lp-program.md),
+[overall target](phases/sparse_lp_reoptimization_program_20261024.md) and
+[implementation plan](phases/sparse_lp_implementation_20261024.md) do not start execution
+merely by existing. A direct human instruction to execute this package is required.
+
+Once explicitly activated, this is one bounded task with SP1–SP4 internal checkpoints.
+The executing development conversation owns its single Goal, performs self-checks and
+necessary independent read-only reviews, and continues after checkpoint PASS without
+renewed permission or waiting for another chat. The discussion chat owns planning and
+later project review. The ordinary stop-after-one-task rule applies after the whole
+contract, not after an internal patch, lesson or checkpoint. Do not inherit the old
+prototype program's separate Goal-owner arrangement.
+
+Record the activating human instruction and program state before product edits. Freeze
+designs, inputs and truth before the implementation intended to pass them. Preserve the
+fixed effects, eight exit criteria, 480-minute verification ceiling and group/retry caps
+across continuations; do not reset the ledger or create duplicate Goals. Missing targets
+remain unmet. Genuine scope changes require a new human decision. Old C/D/E, native
+deferral, existing immutable contracts, user governance files and publication rules stay
+unchanged. No automatic push or next task follows. All unrelated tasks keep prior rules.
+
 ## 7. Current Entry, History Index and Baselines
 
 - `.silo-dos/project_profile.md` is the single current-status summary: completed items,

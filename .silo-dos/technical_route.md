@@ -1,5 +1,18 @@
 # SILO Technical Route
 
+## Prepared sparse LP program — execution not started
+
+The human asked for a detailed staged package they will later start in the development
+chat using Goal mode. [20261024-02-01](../tasks/codex/20261024-02-01_sparse-lp-program.md)
+is prepared, with its linked overall and implementation plans. Only a direct human
+start instruction activates its scoped L2/L3 changes and continuous SP1–SP4 execution.
+The development chat then owns the unique Goal and internal independent review gates;
+no routine waiting for another conversation. The discussion chat later reviews delivery.
+See tasks/README6.11. No product changes, dependency installation, benchmark run, Goal
+creation, dispatch, new research or publication are authorized by file presence alone.
+The fixed numerical targets and 480-minute/group limits remain. Original C/D/E and
+native deferral are separate and unchanged.
+
 ## Authorized corrective task — 2026-10-24
 
 The human requested a five-module audit followed by a repair plan dispatched for execution.

@@ -1,5 +1,18 @@
 # SILO Decision Log
 
+## DEC-20261024-SPARSE-LP-EXECUTION-PACKAGE-PREPARED
+
+- The human explicitly requested detailed staged tasks and said the development chat
+  will later read them and continuously pursue the whole program in Goal mode.
+- Prepare [one conditional contract](../tasks/codex/20261024-02-01_sparse-lp-program.md)
+  and [detailed work packages](../tasks/phases/sparse_lp_implementation_20261024.md).
+  Overall planv0.2 keeps all numerical targets and budget; it changes Goal ownership to
+  the executing development chat as directly requested. Discussion retains planning/review.
+- Basis/transpose/caching mathematics and eight implementation coupling groups were
+  checked read-only; no new solver experiments, product changes or external-data downloads.
+- tasks/README6.11 and mirror record a prepared activation rule. No execution, Goal,
+  dispatch, dependency change or push occurs until the human starts the package there.
+
 ## DEC-20261024-SPARSE-LP-PLANNING-ONLY
 
 - The human requested next-stage objectives, expected effects/maturity and an overall
