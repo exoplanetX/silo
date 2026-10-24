@@ -17,18 +17,37 @@ from silo.lp import sparse_factor as sf  # noqa: E402
 from silo.lp import sparse_kernel as sk  # noqa: E402
 from silo.lp.kernel import BasisSnapshot  # noqa: E402
 
-CALLS = {"kernel_started": 0, "kernel_completed": 0, "native_roots": 0, "splu_calls": 0}
+CALLS = {
+    "kernel_started": 0,
+    "kernel_completed": 0,
+    "native_roots": 0,
+    "splu_calls": 0,
+    "candidate_state_started": 0,
+    "candidate_state_completed": 0,
+}
 
 
 @pytest.fixture(autouse=True)
 def observed_lu(monkeypatch):
     original = sf.splu
+    original_state = sk._candidate_state
 
     def observed(*args, **kwargs):
         CALLS["splu_calls"] += 1
         return original(*args, **kwargs)
 
     monkeypatch.setattr(sf, "splu", observed)
+
+    def candidate(*args, **kwargs):
+        CALLS["candidate_state_started"] += 1
+        result = original_state(*args, **kwargs)
+        CALLS["candidate_state_completed"] += 1
+        return result
+
+    monkeypatch.setattr(sk, "_candidate_state", candidate)
+    yield
+    if path := os.environ.get("SILO_KERNEL_TEST_COUNTS"):
+        Path(path).write_text(json.dumps(CALLS), encoding="utf-8")
 
 
 def call(*args, **kwargs):
@@ -404,6 +423,7 @@ def test_rejected_history_survives_rebase_when_new_reduced_costs_disappear(monke
 @pytest.mark.parametrize("kind", ["eta", "growth"])
 def test_one_current_basis_recheck_recovers_and_observes_last_pivot(monkeypatch, kind):
     original = sf.SparseFactor.solve
+    original_take = sk._PendingState.take
     original_step, original_reset = sk.Devex.step, sk.Devex.reset
     fired, reset_seen = False, []
     rhs = [1, 1] if kind == "eta" else [1, 1e9]
@@ -412,11 +432,27 @@ def test_one_current_basis_recheck_recovers_and_observes_last_pivot(monkeypatch,
     def injected(self, values, transpose=False):
         nonlocal fired
         answer = original(self, values, transpose)
-        if not fired and not transpose and self.matrix.nnz == 3 and np.array_equal(values, rhs):
+        if (
+            not self._staged
+            and not fired
+            and not transpose
+            and self.matrix.nnz == 3
+            and np.array_equal(values, rhs)
+        ):
             fired = True
             answer = answer.copy()
             answer[0] = -1
         return answer
+
+    def corrupted_after_publication(self, identity):
+        nonlocal fired
+        values = original_take(self, identity)
+        if values is not None and not fired:
+            fired = True
+            xb = values[0].copy()
+            xb[0] = -1
+            return (xb, *values[1:])
+        return values
 
     def sticky(self, *args):
         original_step(self, *args)
@@ -435,6 +471,7 @@ def test_one_current_basis_recheck_recovers_and_observes_last_pivot(monkeypatch,
             reset_seen.append(reason)
 
     monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    monkeypatch.setattr(sk._PendingState, "take", corrupted_after_publication)
     monkeypatch.setattr(sk.Devex, "step", sticky)
     monkeypatch.setattr(sk.Devex, "reset", observe_reset)
     result = call(norm(matrix, rhs, [1]), SolveOptions())
@@ -470,15 +507,30 @@ def test_one_current_basis_recheck_recovers_and_observes_last_pivot(monkeypatch,
 
 def test_persistent_primal_failure_rebuilds_current_basis_once_and_retains_trace(monkeypatch):
     original = sf.SparseFactor.solve
+    original_take = sk._PendingState.take
 
     def injected(self, rhs, transpose=False):
         answer = original(self, rhs, transpose)
-        if not transpose and self.matrix.nnz == 3 and np.array_equal(rhs, [1, 1]):
+        if (
+            not self._staged
+            and not transpose
+            and self.matrix.nnz == 3
+            and np.array_equal(rhs, [1, 1])
+        ):
             answer = answer.copy()
             answer[0] = -1
         return answer
 
+    def corrupted_after_publication(self, identity):
+        values = original_take(self, identity)
+        if values is not None:
+            xb = values[0].copy()
+            xb[0] = -1
+            return (xb, *values[1:])
+        return values
+
     monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    monkeypatch.setattr(sk._PendingState, "take", corrupted_after_publication)
     result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
     assert result.status == "numerical_failure" and result.iterations == 1
     assert result.diagnostics["primal_feasibility_rechecks"] == 1
@@ -792,3 +844,363 @@ def test_raw_primal_gate_is_not_applied_to_dual_or_cleanup(monkeypatch, phase):
         result = call(norm([[-1, -1]], [0], [-1, -2], ["="]), SolveOptions())
         assert result.diagnostics["artificial_cleanup_pivots"] == 1
     assert result.status == "optimal"
+
+
+def test_staged_state_can_pass_backward_error_but_fail_primal_without_publishing(monkeypatch):
+    owner = sf.SparseFactor(sk.canonical(np.eye(2)), SolveOptions(), {})
+    old_lu, old_matrix, old_etas, old_generation = (
+        owner.lu,
+        owner.matrix,
+        owner.etas,
+        owner.generation,
+    )
+    rhs = np.array([1.001, 1e-8])
+    direction = np.array([1, 1e-8])
+    assert sk._raw_primal_candidate(rhs, direction, 1, 1e-7)["valid"]
+    original = sf.SparseFactor.solve
+
+    def injected(self, values, transpose=False):
+        answer = original(self, values, transpose)
+        if self._staged and not transpose:
+            answer = np.array([-0.001, 1.002])
+            assert self._residual(values, answer, False)[0]
+        return answer
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    staged = owner.stage_column(1, direction, direction, expected_generation=owner.generation)
+    matrix = sk.canonical([[1, 1, 0], [1e-8, 0, 1]])
+    values = sk._candidate_state(staged.factor, matrix, rhs, np.array([1.0, 0.0, 0.0]), [1, 0])
+    assert np.min(values[0]) < -1e-7 * (1 + max(abs(values[0])))
+    staged.close()
+    assert owner.lu is old_lu and owner.matrix is old_matrix and owner.etas is old_etas
+    assert owner.generation == old_generation
+    assert owner.counters.get("basis_replacements", 0) == owner.counters.get("eta_updates", 0) == 0
+    assert owner.counters["rejected_trial_eta_updates"] == 1
+
+
+@pytest.mark.parametrize("kind", ["eta", "growth"])
+def test_staged_primal_rejections_keep_authoritative_state_and_all_real_cost(monkeypatch, kind):
+    original_solve, original_stage, original_phase = (
+        sf.SparseFactor.solve,
+        sf.SparseFactor.stage_column,
+        sk.Devex.fresh_phase,
+    )
+    original_close, original_update = sf.StagedBasis.close, sk.Devex.update
+    owners, pricing_objects = [], []
+    snapshots = {}
+
+    def staged(self, *args, **kwargs):
+        snapshots[id(self)] = self.lu, self.matrix, self.etas, self.generation
+        owners.append(self)
+        return original_stage(self, *args, **kwargs)
+
+    def closed(self, accepted=False):
+        original_close(self, accepted)
+        if not accepted:
+            lu, matrix, etas, generation = snapshots[id(self.owner)]
+            assert self.owner.lu is lu and self.owner.matrix is matrix and self.owner.etas is etas
+            assert self.owner.generation == generation
+
+    def solve(self, rhs, transpose=False):
+        value = original_solve(self, rhs, transpose)
+        if self._staged and not transpose:
+            value = value.copy()
+            value[0] = -1
+        return value
+
+    def phase(self, *args, **kwargs):
+        original_phase(self, *args, **kwargs)
+        self.bland, self.degenerate = True, 2
+        self.visited.add(("staged rejection retains history",))
+        pricing_objects.append(self)
+
+    def update(self, *args):
+        original_update(self, *args)
+        return dict.fromkeys(self.keys, 777.0)
+
+    def no_step(*args):
+        raise AssertionError("A rejected candidate performed a successful pivot step")
+
+    monkeypatch.setattr(sf.SparseFactor, "stage_column", staged)
+    monkeypatch.setattr(sf.StagedBasis, "close", closed)
+    monkeypatch.setattr(sf.SparseFactor, "solve", solve)
+    monkeypatch.setattr(sk.Devex, "fresh_phase", phase)
+    monkeypatch.setattr(sk.Devex, "update", update)
+    monkeypatch.setattr(sk.Devex, "step", no_step)
+    model = (
+        norm([[1], [1e-8]], [1.001, 1e-8], [1])
+        if kind == "eta"
+        else norm([[1], [1e9]], [1, 1e9], [1])
+    )
+    result = call(model, SolveOptions())
+    assert result.status == "numerical_failure" and result.iterations == 0
+    d = result.diagnostics
+    assert d["candidate_old_basis_refreshes"] == d["candidate_entering_rejections"] == 1
+    assert d["candidate_basis_attempts"] == d["candidate_basis_discards"] == 2
+    assert d["basis_replacements"] == d["eta_updates"] == 0
+    assert "pending_state_consumptions" not in d and "last_pivot_trace" not in d
+    assert d["triangular_solves"] > 0
+    assert pricing_objects[-1].bland and pricing_objects[-1].degenerate == 2
+    assert ("staged rejection retains history",) in pricing_objects[-1].visited
+    assert all(value == 1 for value in pricing_objects[-1].weights.values())
+    if kind == "eta":
+        assert d["rejected_trial_eta_updates"] == 2
+    else:
+        assert d["rejected_trial_refactorizations"] >= 2
+        assert d["base_factorizations"] >= 4
+
+
+@pytest.mark.parametrize("after_rebase", ["feasible", "infeasible", "never_stable"])
+def test_candidate_bt_rebase_requires_a_complete_final_generation_state(monkeypatch, after_rebase):
+    original_solve, original_update = sf.SparseFactor.solve, sk.Devex.update
+
+    def injected(self, rhs, transpose=False):
+        answer = original_solve(self, rhs, transpose)
+        if (
+            self._staged
+            and transpose
+            and (after_rebase == "never_stable" or not getattr(self, "_test_bt_rebased", False))
+        ):
+            self._test_bt_rebased = True
+            self.refactor(reason="injected_candidate_bt_rebase")
+            return original_solve(self, rhs, transpose)
+        if (
+            self._staged
+            and not transpose
+            and getattr(self, "_test_bt_rebased", False)
+            and after_rebase == "infeasible"
+        ):
+            return -np.ones_like(answer)
+        return answer
+
+    def update(self, *args):
+        original_update(self, *args)
+        return dict.fromkeys(self.keys, 777.0)
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    monkeypatch.setattr(sk.Devex, "update", update)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    d = result.diagnostics
+    if after_rebase == "feasible":
+        assert result.status == "optimal" and result.point[0] == 0.5
+        assert d["basis_replacements"] == d["eta_updates"] == result.iterations == 1
+        assert d["candidate_state_generation_restarts"] == d["pending_state_consumptions"] == 1
+        assert d["factor_generation"] == 2 and d["eta_chain_length"] == 0
+        assert d["refactorizations_by_reason"]["injected_candidate_bt_rebase"] == 1
+        assert all(value == 1 for value in result._factor_state["pricing"].weights.values())
+    else:
+        assert result.status == "numerical_failure" and result.iterations == 0
+        assert d["basis_replacements"] == d["eta_updates"] == 0
+        assert d["candidate_entering_rejections"] == 1 and d["rejected_trial_eta_updates"] == 2
+        assert d["candidate_state_generation_restarts"] == (
+            6 if after_rebase == "never_stable" else 2
+        )
+
+
+@pytest.mark.parametrize(
+    "error,reason",
+    [
+        (sf.FactorDeadline("injected"), "time_limit"),
+        (sf.FactorResourceError("injected"), "resource_limit"),
+        (MemoryError("injected"), "resource_limit"),
+    ],
+)
+def test_candidate_deadline_and_resources_are_not_normal_rejections(monkeypatch, error, reason):
+    def failed(*args):
+        raise error
+
+    monkeypatch.setattr(sk, "_candidate_state", failed)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert (result.status, result.reason) == ("limit", reason)
+    assert (
+        result.iterations
+        == result.diagnostics["basis_replacements"]
+        == result.diagnostics["eta_updates"]
+        == 0
+    )
+    assert result.diagnostics["candidate_basis_discards"] == 1
+    assert result.diagnostics["rejected_trial_eta_updates"] == 1
+    assert "candidate_entering_rejections" not in result.diagnostics
+
+
+def test_candidate_singular_rebuild_preserves_owner_and_counts_failed_lu(monkeypatch):
+    original = sf.splu
+
+    def singular(matrix, **kwargs):
+        if matrix.nnz == 3:
+            return original(sk.canonical(np.zeros(matrix.shape)), **kwargs)
+        return original(matrix, **kwargs)
+
+    monkeypatch.setattr(sf, "splu", singular)
+    result = call(norm([[1], [2]], [1, 1], [1]), replace(SolveOptions(), max_factor_updates=0))
+    d = result.diagnostics
+    assert result.status == "numerical_failure" and result.iterations == 0
+    assert d["basis_replacements"] == d["eta_updates"] == 0
+    assert d["base_factorizations"] == 4
+    assert d["refactorizations_by_reason"]["updates_disabled"] == 2
+    assert d["candidate_entering_rejections"] == 1
+
+
+@pytest.mark.parametrize(
+    "changed", ["public", "run", "phase", "matrix", "basis", "generation", "rhs", "cost"]
+)
+def test_pending_full_state_identity_changes_discard_it_once(changed):
+    context = (object(), (1, "phase_two", "primal"), object())
+    basis, generation = (("variable", "x", 1),), 1
+    rhs, cost = np.array([1.0]), np.array([2.0])
+    initial = sk._pending_identity(context, basis, generation, rhs, cost)
+    values = (np.array([1.0]), np.array([2.0]), np.array([0.0]), generation)
+    pending = sk._PendingState(initial, values)
+    if changed == "public":
+        context = object(), context[1], context[2]
+    elif changed == "run":
+        context = context[0], (2, "phase_two", "primal"), context[2]
+    elif changed == "phase":
+        context = context[0], (1, "phase_one", "primal"), context[2]
+    elif changed == "matrix":
+        context = context[0], context[1], object()
+    elif changed == "basis":
+        basis = (("slack", "r"),)
+    elif changed == "generation":
+        generation += 1
+    elif changed == "rhs":
+        rhs[0] += 1  # Same mutable ndarray identity, changed actual content.
+    else:
+        cost[0] += 1
+    assert pending.take(sk._pending_identity(context, basis, generation, rhs, cost)) is None
+    assert pending.take(initial) is None
+    valid = sk._PendingState(initial, values)
+    assert valid.take(initial) is values and valid.take(initial) is None
+
+
+def test_pending_mismatch_runs_ordinary_complete_state_and_valid_path_adds_no_solves(monkeypatch):
+    normal = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert normal.diagnostics["pending_state_consumptions"] == 1
+    assert normal.diagnostics["triangular_solves"] == 6
+    original = sk._PendingState.take
+
+    def invalidated(self, identity):
+        return original(self, None)
+
+    monkeypatch.setattr(sk._PendingState, "take", invalidated)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert result.status == "optimal" and result.point[0] == 0.5
+    assert result.diagnostics["pending_state_invalidations"] == 1
+    assert result.diagnostics["triangular_solves"] == 8
+
+
+@pytest.mark.parametrize("mode", ["dual", "cleanup"])
+def test_nonprimal_paths_neither_stage_nor_consume_primal_pending(monkeypatch, mode):
+    if mode == "dual":
+        first = call(ordinary(), SolveOptions())
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("A nonprimal path accessed staged primal state")
+
+    monkeypatch.setattr(sf.SparseFactor, "stage_column", forbidden)
+    monkeypatch.setattr(sk._PendingState, "take", forbidden)
+    if mode == "dual":
+        model = norm([[1, 1], [1, 0], [0, 1], [1, 0]], [4, 2, 3, 1.5], [3, 2])
+        result = call(model, SolveOptions(), first.snapshot, factor_state=first._factor_state)
+    else:
+        result = call(norm([[-1, -1]], [0], [-1, -2], ["="]), SolveOptions())
+    assert result.status == "optimal"
+
+
+def test_staged_rejection_allows_another_entering_and_clears_r_after_acceptance(monkeypatch):
+    original = sk._candidate_state
+
+    def rejected_first_basis(factor, matrix, rhs, cost, basis):
+        values = original(factor, matrix, rhs, cost, basis)
+        if basis == [0, 3]:
+            return (np.array([-1.0, 1.0]), *values[1:])
+        return values
+
+    monkeypatch.setattr(sk, "_candidate_state", rejected_first_basis)
+    result = call(norm([[1, 0], [0, 1]], [1, 1], [2, 1]), SolveOptions())
+    assert result.status == "optimal" and np.allclose(result.point, [1, 1])
+    d = result.diagnostics
+    assert d["candidate_entering_rejections"] == d["candidate_old_basis_refreshes"] == 1
+    assert d["candidate_basis_attempts"] == 4
+    assert d["basis_replacements"] == d["eta_updates"] == result.iterations == 2
+    assert d["rejected_trial_eta_updates"] == 2
+
+
+def test_rejected_later_candidate_does_not_overwrite_last_accepted_pivot(monkeypatch):
+    original_state, original_observation, original_step = (
+        sk._candidate_state,
+        sk._PivotObservation.__init__,
+        sk.Devex.step,
+    )
+    observations, steps = [], []
+
+    def reject_second_entering(factor, matrix, rhs, cost, basis):
+        values = original_state(factor, matrix, rhs, cost, basis)
+        return (np.array([1.0, -1.0]), *values[1:]) if basis == [0, 1] else values
+
+    def observe(self, *args, **kwargs):
+        original_observation(self, *args, **kwargs)
+        observations.append(self)
+
+    def step(self, *args):
+        original_step(self, *args)
+        steps.append(args)
+
+    monkeypatch.setattr(sk, "_candidate_state", reject_second_entering)
+    monkeypatch.setattr(sk._PivotObservation, "__init__", observe)
+    monkeypatch.setattr(sk.Devex, "step", step)
+    result = call(norm([[1, 0], [0, 1]], [1, 1], [2, 1]), SolveOptions())
+    assert result.status == "numerical_failure" and result.iterations == 1
+    assert result.basis == (0, 3)
+    assert len(observations) == len(steps) == 1
+    assert observations[0].new_keys == (("variable", "x0", 1), ("slack", ("row", "r1", "upper")))
+    assert result.diagnostics["basis_replacements"] == result.diagnostics["eta_updates"] == 1
+    assert result.diagnostics["last_candidate_rejection"]["entering_key"] == ("variable", "x1", 1)
+
+
+def test_candidate_residual_recovery_changes_only_trial_and_publishes_final_generation(monkeypatch):
+    original = sf.SparseFactor.stage_column
+    owners = []
+
+    def staged(self, *args, **kwargs):
+        result = original(self, *args, **kwargs)
+        owners.append((self, self.lu, self.matrix, self.generation))
+        actual = result.factor.lu
+
+        class BadLU:
+            L, U = actual.L, actual.U
+
+            def solve(self, rhs, trans="N"):
+                return np.zeros_like(rhs)
+
+        result.factor.lu = BadLU()
+        return result
+
+    monkeypatch.setattr(sf.SparseFactor, "stage_column", staged)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert result.status == "optimal" and result.point[0] == 0.5
+    d = result.diagnostics
+    assert d["candidate_state_generation_restarts"] == 1
+    assert d["refinement_steps"] == 2 and d["refactorizations_by_reason"]["residual"] == 1
+    assert d["basis_replacements"] == d["eta_updates"] == 1
+    assert d["eta_chain_length"] == 0 and d["factor_generation"] == 2
+    old_owner, old_lu, old_matrix, old_generation = owners[0]
+    assert (
+        old_owner.lu is old_lu
+        and old_owner.matrix is old_matrix
+        and old_owner.generation == old_generation
+    )
+    assert result._factor_state["factor"] is not old_owner
+
+
+def test_accepted_trial_without_rebuild_applies_precomputed_devex_weights(monkeypatch):
+    original = sk.Devex.update
+
+    def update(self, *args):
+        original(self, *args)
+        return dict.fromkeys(self.keys, 777.0)
+
+    monkeypatch.setattr(sk.Devex, "update", update)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert result.status == "optimal" and result.diagnostics["base_factorizations"] == 1
+    assert all(value == 777 for value in result._factor_state["pricing"].weights.values())

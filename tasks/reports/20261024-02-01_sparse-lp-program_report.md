@@ -6,8 +6,8 @@
 
 当前状态（2026-10-25）：**SP1 GO；人类已批准剩余SP2原预算内最多再3轮数值稳定性包。**
 原1–3轮保留，第4轮pivot观测/一次current-B复核已完成，smoke6仍为4/6；
-第5轮raw-candidate门关闭原失败换基，但smoke仍4/6；最后第6轮设计已GO，
-唯一writer正在实施私有候选因子完整状态验证，完整SP2仍未GO。
+第5轮raw-candidate门关闭原失败换基，但smoke仍4/6；最后第6轮完整状态事务
+已获源码GO，96组件/172当前源集成通过，接下来唯一smoke6，完整SP2仍未GO。
 
 直接授权答复：“授权剩余预算内最多3轮（推荐）”，对应问题call_c43d2b03430449b49ec2dd3a8a0bc91e。
 本单SP2修正上限从3扩至6；原时间预算、输入、阈值、Bland/Devex及八项目标不变。
@@ -67,6 +67,14 @@ reviews/numeric_round6_design_gate.json保存基础设计及补充A：候选完�
 basis、generation、RHS/cost不可变身份；不跨求解缓存状态，dual/cleanup不使用。
 候选数值拒绝可以共享原old-B刷新机会；deadline/resource保持limit，没有新重试门。
 SP4机械评价helper和8项纯逻辑测试已准备，0native/安装；SP1旧门来源绑定只读集成通过。
+
+第6轮最终factor f1d42a37/kernel7cf6d061；reviews/numeric_round6_code_gate.json为独立源码GO。
+14条组件检查累计7.2697574秒，最终96项通过；曾有空counter计量7KeyError的失败完整保留。
+累计kernel375开始/371返回、candidate state385开始/375返回，故不能把整个历史称为全部完成；
+注入失败与未返回事件保留在原收据。最后仅补post-SPLU deadline前的已生成LU单体/并存峰记账，
+未改变数值轨迹；对应toy的actual单体8/并存14，仍抛time_limit且旧owner不发布。
+root当前源公开集成172项通过，1.95134秒；此前峰值补丁前另一次1.9634991秒亦保留计费。
+正常通过toy仍6次B/BT求解、1次初始LU。正式smoke结果待实际运行，禁止增加第7修正轮。
 
 直接授权原文答复：“授权追加一次修复和复验（推荐）”，对应问题为仅追加1次
 “因子重建后状态与换基提交保持同一代次”的针对修复和1轮受影响固定组复验；

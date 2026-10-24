@@ -91,6 +91,53 @@ def _raw_primal_candidate(xb, direction, leaving, primal_tolerance):
     }
 
 
+class _CandidateRejected(RuntimeError):
+    def __init__(self, reason, summary=None):
+        super().__init__(reason)
+        self.summary = {"reason": reason, **(summary or {})}
+
+
+def _array_identity(value):
+    return value.shape, value.dtype.str, value.tobytes()
+
+
+def _pending_identity(context, basis_keys, generation, rhs, cost):
+    return context, basis_keys, generation, _array_identity(rhs), _array_identity(cost)
+
+
+class _PendingState:
+    """One-consumption full state, bound to private problem/run and actual data."""
+
+    def __init__(self, identity, values):
+        self.identity, self.values = identity, values
+
+    def take(self, identity):
+        values, self.values = self.values, None
+        return values if identity == self.identity else None
+
+
+def _candidate_state(factor, matrix, rhs, cost, basis):
+    """BOTH vectors restart if either trial solve changes its factor generation."""
+    for _ in range(3):
+        factor._deadline()
+        generation = factor.generation
+        xb = factor.solve_B(rhs)
+        if factor.generation != generation:
+            increment(factor.counters, "candidate_state_generation_restarts")
+            continue
+        dual = factor.solve_BT(cost[basis])
+        if factor.generation != generation:
+            increment(factor.counters, "candidate_state_generation_restarts")
+            continue
+        reduced = np.asarray(cost - matrix.T @ dual).reshape(-1)
+        reduced[basis] = 0
+        factor._deadline()
+        if not all(np.isfinite(v).all() for v in (xb, dual, reduced)):
+            raise np.linalg.LinAlgError("Nonfinite staged basis state.")
+        return xb, dual, reduced, generation
+    raise np.linalg.LinAlgError("Staged factor-generation retry limit.")
+
+
 class _PivotObservation:
     """Only the last committed pivot, holding sparse references and O(m) vectors.
 
@@ -553,6 +600,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
     counters["standard_storage_bytes"] = int(a.data.nbytes + a.indices.nbytes + a.indptr.nbytes)
     iterations, factor = 0, None
     last_pivot, feasibility_rechecked, run_number = None, False, 0
+    problem_token, pending_state = object(), None
     pricing = Devex(keys, basis, counters)
 
     def get_factor():
@@ -572,7 +620,22 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
             raise FactorRetry("basis_solve_rebased", current.generation)
         return answer
 
-    def state(cost):
+    def state(cost, context=None):
+        nonlocal pending_state
+        if pending_state is not None:
+            cached, pending_state = pending_state, None
+            identity = (
+                None
+                if context is None
+                else _pending_identity(
+                    context, tuple(keys[j] for j in basis), get_factor().generation, b, cost
+                )
+            )
+            values = cached.take(identity)
+            if context is not None and values is not None:
+                increment(counters, "pending_state_consumptions")
+                return values
+            increment(counters, "pending_state_invalidations")
         # Initial construction happens before selecting the token. A rebase in
         # either solve invalidates BOTH vectors, even if each residual is valid.
         for _ in range(3):
@@ -702,8 +765,10 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
         result._factor_state = cache
         return result
 
-    def pivot(entering, leaving, generation, direction=None, observation=None):
-        nonlocal iterations, last_pivot, feasibility_rechecked
+    def pivot(
+        entering, leaving, generation, direction=None, observation=None, cost=None, context=None
+    ):
+        nonlocal iterations, last_pivot, feasibility_rechecked, factor, pending_state
         column = _column(a, entering)
         direction = (
             basis_solve(column, expected_generation=generation) if direction is None else direction
@@ -712,13 +777,55 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
         old_matrix = get_factor().matrix
         old_metadata = factor_metadata()
         old_keys = tuple(keys[j] for j in basis) if observation is not None else None
-        try:
-            rebuilt = get_factor().replace_column(
-                leaving, column, direction, expected_generation=generation
-            )
-        except FactorRetry:
-            pricing.reset(basis, "commit_retry")
-            raise
+        if cost is not None and context is not None:
+            staged, cached = None, None
+            candidate_basis = basis.copy()
+            candidate_basis[leaving] = entering
+            try:
+                staged = get_factor().stage_column(
+                    leaving, column, direction, expected_generation=generation
+                )
+                values = _candidate_state(staged.factor, a, b, cost, candidate_basis)
+                candidate_xb = values[0]
+                tolerance = options.primal_tolerance * (1 + _infinity_norm(candidate_xb))
+                minimum = float(np.min(candidate_xb, initial=0))
+                if not isfinite(tolerance) or minimum < -tolerance:
+                    raise _CandidateRejected(
+                        "staged_primal_infeasible",
+                        {
+                            "minimum_basic": minimum,
+                            "primal_threshold": tolerance,
+                            "candidate_generation": values[3],
+                        },
+                    )
+                same_generation(generation)
+                cached = _PendingState(
+                    _pending_identity(
+                        context, tuple(keys[j] for j in candidate_basis), values[3], b, cost
+                    ),
+                    values,
+                )
+                rebuilt = staged.rebuilt
+                staged.close(accepted=True)
+                factor = staged.factor
+            except FactorRetry:
+                pricing.reset(basis, "commit_retry")
+                raise
+            except (np.linalg.LinAlgError, FloatingPointError, OverflowError) as exc:
+                raise _CandidateRejected(str(exc)) from exc
+            finally:
+                if staged is not None:
+                    staged.close()
+            pending_state = cached
+        else:
+            pending_state = None
+            try:
+                rebuilt = get_factor().replace_column(
+                    leaving, column, direction, expected_generation=generation
+                )
+            except FactorRetry:
+                pricing.reset(basis, "commit_retry")
+                raise
         basis[leaving] = entering
         iterations += 1
         feasibility_rechecked = False
@@ -751,9 +858,13 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
         return rebuilt
 
     def run(cost, mode="primal", phase="phase_two"):
-        nonlocal last_pivot, run_number
+        nonlocal last_pivot, run_number, pending_state
         run_number += 1
         run_identity = (run_number, phase, mode)
+        # A is private and never modified inside this run. Structural changes
+        # occur only outside run(), which obtains a fresh token and clears cache.
+        context = (problem_token, run_identity, object())
+        pending_state = None
         last_pivot = None
         counters.pop("last_pivot_trace", None)
         counters.pop("last_raw_candidate_rejection", None)
@@ -768,7 +879,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                 selected_basis = tuple(basis)
                 rejected, refreshed, retries = set(), False, 0
                 pricing.basis_seen(basis)
-            xb, lam, rc, generation = state(cost)
+            xb, lam, rc, generation = state(cost, context if mode == "primal" else None)
             if mode == "primal":
                 xb, lam, rc, generation = primal_state(
                     cost, (xb, lam, rc, generation), run_identity, rejected
@@ -863,9 +974,42 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
 
                     weights = pricing.update(a, basis, entering, leaving, direction, checked_solve)
                     same_generation(generation)
-                    rebuilt = pivot(
-                        entering, leaving, generation, direction, (xb, theta, run_identity, mode)
-                    )
+                    try:
+                        rebuilt = pivot(
+                            entering,
+                            leaving,
+                            generation,
+                            direction,
+                            (xb, theta, run_identity, mode),
+                            cost=cost,
+                            context=context,
+                        )
+                    except _CandidateRejected as exc:
+                        increment(counters, "candidate_state_failures")
+                        counters["last_candidate_rejection"] = {
+                            **exc.summary,
+                            "entering_key": keys[entering],
+                            "leaving_key": keys[basis[leaving]],
+                            "run_identity": run_identity,
+                            "authoritative_generation": get_factor().generation,
+                        }
+                        if not refreshed:
+                            refreshed = True
+                            increment(counters, "candidate_old_basis_refreshes")
+                            get_factor().refactor(reason="candidate_validation")
+                            pricing.reset(basis, "candidate_validation")
+                            raise FactorRetry(
+                                "candidate_validation", get_factor().generation
+                            ) from exc
+                        rejected.add(entering)
+                        increment(counters, "rejected_entering_columns")
+                        increment(counters, "candidate_entering_rejections")
+                        increment(
+                            counters.setdefault("pivot_rejection_reasons", {}),
+                            "staged_basis_validation",
+                        )
+                        pricing.reset(basis, "rejected_pivot")
+                        continue
                     if rebuilt or weights is None:
                         pricing.reset(basis, "factor_rebuild" if rebuilt else "nonfinite_weight")
                     else:
@@ -978,6 +1122,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
             if phase[basis] @ xb < -options.primal_tolerance:
                 return finish("infeasible", "phase_one_farkas", xb, lam, rc, proof=True)
             last_pivot = None
+            pending_state = None
             counters.pop("last_pivot_trace", None)
             for art in sorted(arts):
                 if perf_counter() >= deadline or iterations >= options.lp_iteration_limit:

@@ -86,6 +86,104 @@ class FactorRetry(RuntimeError):
         self.reason, self.generation = reason, generation
 
 
+_ACTUAL_COUNTERS = (
+    "base_factorizations",
+    "factorizations",
+    "triangular_solves",
+    "factor_reuses",
+    "within_solve_reuses",
+    "refactorizations",
+    "refinement_steps",
+    "residual_checks",
+    "candidate_state_generation_restarts",
+)
+_PEAK_COUNTERS = (
+    "factor_nnz_peak",
+    "eta_chain_peak",
+    "eta_storage_peak_bytes",
+    "maximum_basis_residual",
+    "simultaneous_factor_nnz_peak",
+)
+
+
+class StagedBasis:
+    """One bounded private trial; the authoritative factor is never rolled back.
+
+    SuperLU, canonical CSC and stored eta directions are shared read-only. Only
+    the <=20-element eta container is copied. Every rebase replaces the trial's
+    own objects. The counter overlay owns its only nested mutable reason map.
+    """
+
+    def __init__(self, owner):
+        self.owner, self.target, self.closed = owner, owner.counters, False
+        self.baseline = {
+            key: owner.counters.get(key, 0)
+            for key in (*_ACTUAL_COUNTERS, *_PEAK_COUNTERS, "basis_replacements", "eta_updates")
+        }
+        self.reasons = owner.counters.get("refactorizations_by_reason", {}).copy()
+        overlay = {**self.baseline, "refactorizations_by_reason": self.reasons.copy()}
+        trial = object.__new__(SparseFactor)
+        for name in (
+            "options",
+            "deadline",
+            "matrix",
+            "lu",
+            "scope_calls",
+            "generation",
+            "last_refactor_reason",
+            "_lu_nnz",
+        ):
+            setattr(trial, name, getattr(owner, name))
+        trial.etas, trial.counters, trial._staged = list(owner.etas), overlay, True
+        trial._retained_lu, trial._retained_lu_nnz = owner.lu, owner._lu_nnz
+        self.factor = trial
+        increment(self.target, "candidate_basis_attempts")
+
+    @property
+    def rebuilt(self):
+        return (
+            self.factor.counters.get("base_factorizations", 0)
+            > self.baseline["base_factorizations"]
+        )
+
+    def close(self, accepted=False):
+        """Merge all real work exactly once; accepted actions publish only on GO."""
+        if self.closed:
+            return
+        self.closed = True
+        work = self.factor.counters
+        for key in _ACTUAL_COUNTERS:
+            increment(self.target, key, work.get(key, 0) - self.baseline[key])
+        for key in _PEAK_COUNTERS:
+            self.target[key] = max(self.target.get(key, 0), work.get(key, 0))
+        if "rejected_factor_nnz" in work:
+            rejected_fill = work["rejected_factor_nnz"]
+            self.target["rejected_factor_nnz"] = max(
+                self.target.get("rejected_factor_nnz", 0), rejected_fill
+            )
+            self.target["factor_nnz_peak"] = max(self.target["factor_nnz_peak"], rejected_fill)
+        reasons = self.target.setdefault("refactorizations_by_reason", {})
+        for key, value in work.get("refactorizations_by_reason", {}).items():
+            increment(reasons, key, value - self.reasons.get(key, 0))
+        eta = work.get("eta_updates", 0) - self.baseline["eta_updates"]
+        replacements = work.get("basis_replacements", 0) - self.baseline["basis_replacements"]
+        rebuilds = work.get("refactorizations", 0) - self.baseline["refactorizations"]
+        increment(self.target, "trial_eta_updates", eta)
+        increment(self.target, "trial_refactorizations", rebuilds)
+        if accepted:
+            increment(self.target, "eta_updates", eta)
+            increment(self.target, "basis_replacements", replacements)
+            increment(self.target, "candidate_basis_acceptances")
+            self.factor.counters, self.factor._staged = self.target, False
+            self.factor._retained_lu, self.factor._retained_lu_nnz = None, 0
+            self.factor._statistics()
+        else:
+            increment(self.target, "rejected_trial_eta_updates", eta)
+            increment(self.target, "rejected_trial_refactorizations", rebuilds)
+            increment(self.target, "candidate_basis_discards")
+            self.owner._statistics()
+
+
 class SparseFactor:
     """Owned B=B0 E1...Ek; apply inverse etas in the mathematically required order."""
 
@@ -96,9 +194,12 @@ class SparseFactor:
         self.matrix = canonical(matrix)
         self.etas = []
         self.lu = None
+        self._lu_nnz = 0
         self.scope_calls = 0
         self.generation = 0
         self.last_refactor_reason = None
+        self._staged = False
+        self._retained_lu, self._retained_lu_nnz = None, 0
         self.refactor(self.matrix, "initial")
 
     @property
@@ -118,6 +219,7 @@ class SparseFactor:
 
     def _statistics(self):
         n = 0 if self.lu is None else self.lu.L.nnz + self.lu.U.nnz
+        self._record_lu_peak(self.lu)
         self.counters.update(
             basis_nnz=int(self.matrix.nnz),
             factor_nnz=int(n),
@@ -134,6 +236,24 @@ class SparseFactor:
         )
         self.counters["eta_storage_peak_bytes"] = max(
             self.counters.get("eta_storage_peak_bytes", 0), self.counters["eta_storage_bytes"]
+        )
+
+    def _record_lu_peak(self, lu):
+        n = 0 if lu is None else lu.L.nnz + lu.U.nnz
+        self.counters["factor_nnz_peak"] = max(self.counters.get("factor_nnz_peak", 0), n)
+        # Count distinct live LU objects in this authoritative/trial/rebase
+        # operation. Process RSS remains the measure of wider user retention.
+        if self.lu is not None and self.lu is not lu:
+            n += self._lu_nnz
+        if (
+            self._staged
+            and self._retained_lu is not None
+            and self._retained_lu is not lu
+            and self._retained_lu is not self.lu
+        ):
+            n += self._retained_lu_nnz
+        self.counters["simultaneous_factor_nnz_peak"] = max(
+            self.counters.get("simultaneous_factor_nnz_peak", 0), n
         )
 
     def refactor(self, current_B=None, reason="structure"):
@@ -153,11 +273,13 @@ class SparseFactor:
             lu = splu(matrix, permc_spec="COLAMD") if matrix.shape[0] else None
         except RuntimeError as exc:
             raise np.linalg.LinAlgError(str(exc)) from exc
+        self._record_lu_peak(lu)
         self._deadline()
         if lu is not None and lu.L.nnz + lu.U.nnz > self.options.max_factor_nnz:
             self.counters["rejected_factor_nnz"] = int(lu.L.nnz + lu.U.nnz)
             raise FactorResourceError("Sparse LU fill exceeds max_factor_nnz.")
         self.matrix, self.lu, self.etas, self.scope_calls = matrix, lu, [], 0
+        self._lu_nnz = 0 if lu is None else int(lu.L.nnz + lu.U.nnz)
         self.generation += 1
         self.last_refactor_reason = reason
         self._statistics()
@@ -256,6 +378,21 @@ class SparseFactor:
 
     def solve_BT(self, rhs):
         return self.solve(rhs, transpose=True)
+
+    def stage_column(self, position, column, direction, *, expected_generation):
+        if self._staged:
+            raise ValueError("Nested staged basis objects are unsupported.")
+        if self.generation != expected_generation:
+            raise FactorRetry("stale_stage_generation", self.generation)
+        staged = StagedBasis(self)
+        try:
+            staged.factor.replace_column(
+                position, column, direction, expected_generation=expected_generation
+            )
+        except BaseException:
+            staged.close()
+            raise
+        return staged
 
     def replace_column(self, position, column, direction=None, *, expected_generation=None):
         """Commit a verified same-size replacement, then eta or a real rebuild.
