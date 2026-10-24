@@ -1,14 +1,15 @@
 # SILO Standing Approval Profile
 
-## Prepared activation boundary — SILO-SPARSE-LP-20261024
+## Explicit human activation — SILO-SPARSE-LP-20261024
 
-[20261024-02-01](../tasks/codex/20261024-02-01_sparse-lp-program.md) was prepared at the
-human's request for a package they will later execute in the development chat. It is
-not active standing approval. Only that later direct human start activates the listed
-solver/dependency/API/local packaging work and SP1–SP4 continuity. The executing chat
-owns one Goal and records the actual activation; no duplicate Goal or routine cross-chat
-approval is required. Preserve fixed scope, thresholds, budget and final stop. No push,
-native or C/D/E execution is included. Other tasks retain all prior gates.
+The human directly started the prepared contract20261024-02-01 in the development
+chat using Goal mode on2026-10-24. This exact program now has its listed L2/L3
+solver/dependency/API/local packaging authority and SP1–SP4 continuity; it does not
+enlarge general standing approval. The development chat owns the existing unique Goal.
+Actual activation and issuancea480985 are in its matching execution report.
+Freeze before implementation, preserve numerical targets and480-minute/group limits,
+perform independent internal reviews and stop at full delivery. No push/native/C/D/E.
+Other tasks keep their prior gates; existing governance differences remain unstaged.
 
 ## Explicit program exception — SILO-PROTOTYPE-20261023
 

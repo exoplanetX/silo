@@ -1,15 +1,20 @@
 # SILO Project Profile
 
-## Proposed Next Program — 2026-10-24
+## Active Sparse LP Program — 2026-10-24
 
-已按用户进一步要求准备[总体规划v0.2](../tasks/phases/sparse_lp_reoptimization_program_20261024.md)、
-[详细实施计划](../tasks/phases/sparse_lp_implementation_20261024.md)和
-[待启动总合同20261024-02-01](../tasks/codex/20261024-02-01_sparse-lp-program.md)。
-同一SILO内核，一个整体任务、SP1–SP4检查点；目标为受控中等规模LP/重复求解工具。
-目标/阈值/8小时预算保持原规划；新性能实验尚未运行。
-用户将在开发对话另行明确启动，届时由开发对话拥有唯一Goal并连续自检/独立复核/推进；
-讨论对话负责规划及后续审查。当前仅准备文件，无派发、Goal、依赖变更或产品实现；a2验收保持。
-原C HOLD/D/E未启动、native延期及远端CI pending保持，不添加研究前置。
+用户已在silo-solver开发直接以Goal模式启动整体执行。沿用唯一active Goal，完整执行
+[总合同20261024-02-01](../tasks/codex/20261024-02-01_sparse-lp-program.md)、
+[总体规划](../tasks/phases/sparse_lp_reoptimization_program_20261024.md)及
+[实施计划](../tasks/phases/sparse_lp_implementation_20261024.md)。
+发行a480985，实施分支codex/sparse-lp-reoptimization；
+[唯一执行报告](../tasks/reports/20261024-02-01_sparse-lp-program_report.md)。
+
+当前SP1设计/输入/来源/依赖冻结进行中，产品尚未修改。目标保持端到端稀疏、真实LU/eta、
+跨调用复用及四类修改、MIP/CG、固定规模/收益门和8安装；八项及独立GO齐备才完成。
+SP1→SP4在同一合同内连续，自检/独立复核由执行对话安排，常规推进不等待另一对话。
+新账本outputs/sparse_lp_program_20261024，480分钟验证上限及各组/重试限制跨续接保持。
+旧输出/工件/账本只读；两治理文件原哈希保留、不暂存。local-commit，无push/发布。
+原C HOLD/D/E未启动、native延期和远端CI pending保持，本平台不改变原研究完成线。
 
 ## Current Revision — 2026-10-24
 

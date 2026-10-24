@@ -1,5 +1,18 @@
 # SILO Decision Log
 
+## DEC-20261024-SPARSE-PROGRAM-ACTIVATED
+
+- Human directly activated the latest sparse LP staged plan in this development chat
+  using Goal mode. Existing single Goal remains active; no duplicate was created.
+- Execute contract20261024-02-01 (issuancea480985) and its two plans as one bounded
+  program. SP1–SP4 internal GO continues without renewed patch/phase permission.
+- Branchcodex/sparse-lp-reoptimization starts at the verified issuance; productf488189.
+  Freeze SP1 design/data/truth/baseline before product edits. Current stateSP1 in progress.
+- Scope/targets and480-minute/group/retry caps stay fixed. Unique execution report
+  owns checkpoint state. Preserve old evidence, governance hashes and research identity.
+- No GitHub push/publication/native or C/D/E follows; full eight-criterion independent GO
+  is required before marking this Goal complete.
+
 ## DEC-20261024-SPARSE-LP-EXECUTION-PACKAGE-PREPARED
 
 - The human explicitly requested detailed staged tasks and said the development chat

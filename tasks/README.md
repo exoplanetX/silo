@@ -314,7 +314,7 @@ read-only; implementation agents require explicit file ownership. Keep the fixed
 240-minute verification budget, five-module exit table and honest incomplete handoff
 at a genuine blocker or exhausted budget. Do not push/publish or silently expand scope.
 
-### 6.11 Prepared Goal Program — SILO-SPARSE-LP-20261024
+### 6.11 Activated Goal Program — SILO-SPARSE-LP-20261024
 
 The human requested a detailed execution package and said they will later start it
 in the development conversation using Goal mode. The
@@ -330,6 +330,11 @@ renewed permission or waiting for another chat. The discussion chat owns plannin
 later project review. The ordinary stop-after-one-task rule applies after the whole
 contract, not after an internal patch, lesson or checkpoint. Do not inherit the old
 prototype program's separate Goal-owner arrangement.
+
+Human activation recorded2026-10-24: the development chat was directly instructed to read
+the latest discussion plan and continuously complete its full design in Goal mode.
+The existing unique Goal is active; report20261024-02-01 records the actual instruction,
+issuancea480985 and branchcodex/sparse-lp-reoptimization. SP1 is now in progress.
 
 Record the activating human instruction and program state before product edits. Freeze
 designs, inputs and truth before the implementation intended to pass them. Preserve the
