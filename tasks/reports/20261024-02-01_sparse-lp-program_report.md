@@ -4,9 +4,10 @@
 依据：[总体规划](../phases/sparse_lp_reoptimization_program_20261024.md)、
 [实施计划](../phases/sparse_lp_implementation_20261024.md)。
 
-当前状态（2026-10-25）：**SP1 GO；SP2第7轮针对修复已获直接人类授权，完整目标未完成。**
-产品a4eccb17704b04cc939d97ac39461156358fbeb7；最后96组件、172当前源公开集成及源码门通过，
-smoke仍4/6，两容量LP数值失败。SP3及SP4正式验收未开始，0.3.0a1和8安装未交付。
+当前状态（2026-10-25）：**SP1 GO；SP2 HOLD/STOP，第7轮修复及唯一固定复验已完成，完整目标未完成。**
+产品fc33014575b72b7d85a6751c975dd25ee841e449；118组件、172公开集成及独立源码门通过，
+固定48tiny/24pressure通过、smoke仍4/6，两容量LP全部改善列被安全门拒绝后保守退出。
+SP3及SP4正式验收未开始，0.3.0a1和8安装未交付。第7轮额度已用满，新增修复/求解已停止。
 人类现明确答复：“同意你要求的追加1次针对修复及1轮固定复验”。本次只追加第7轮，
 针对可信旧owner的同基主动刷新改为完整state验证后发布，并运行一轮固定48tiny/24pressure/6smoke。
 修正总上限7，原SP2共3600秒预算及输入、阈值、Bland/Devex和八项目标保持；不重置旧轮次。
@@ -22,8 +23,69 @@ smoke仍4/6，两容量LP数值失败。SP3及SP4正式验收未开始，0.3.0a1
 
 直接人类授权时间为本次2026-10-25续接；此前第4–6轮停止有效，以下终止包作为历史证据原样保留。
 本次不新增Goal、不修订不可变合同、不提高原时间预算，不改变总体完成线。
+本次直接授权后get_goal实核同一thread的状态为active，无新建或状态强制切换；
+启动前SP2累计506.1507549秒，原预算剩3093.8492451秒。
 同基刷新失败可保留可信旧owner并拒绝触发entering；残差已失效的强制恢复失败仍保守退出。
-推荐GPT-6 Sol/high；实现、组件、源码门及唯一固定复验的实际收据随后写入本报告。
+推荐GPT-6 Sol/high；以下保存本次实际实现与唯一固定复验，不扩大次数或改变完成线。
+
+### 第7轮实现与组件快照
+
+三处主动同基刷新raw_candidate_feasibility、pivot_selection、candidate_validation现共用
+私有stage_refactor和完整state验收。三路径共享原refreshed一次额度；成功才发布因子与
+一次消费pending，失败保留可信旧owner并拒绝触发entering，全部改善列拒绝仍为数值失败。
+强制residual/primal_feasibility保持直接恢复，旧状态失信时不可回退后继续。
+独立same_basis_refresh计数与真实换基分母分开，失败试算的LU/求解/峰值照实保留。
+
+第7轮组件最终118项通过，Ruff format/check通过；6条检查、2次pytest实际共3.5301658秒，
+新收据components/numeric_round7_receipts.json已冻结。首次116通过/2失败原样保留：旧toy禁止
+任何pending消费的断言收窄为已验证同基刷新恰一次消费，失败候选换基仍不得发布pending/trace。
+累计kernel190次启动/188返回（两次故意ValueError传播），candidate_state252/246，
+same_basis_refresh70/70，factor测试46次、factor侧实际splu86及kernel侧344；没有正式固定组调用。
+根线程另运行受影响公开集成172项通过，实际2.0873999秒；收据
+components/root_numeric_round7_integration_receipt.json记录父进程LP315/315、root118/118，
+另一个隔离NumPy探针2次root单列，不混称全部发生在父进程。
+独立theory_architect源码门GO，四文件SHA全部一致；三条路径与旧toy断言收窄均获独立检查，
+普通无refresh路径仍6次三角求解/1次初始LU。见reviews/numeric_round7_code_gate.json。
+该GO只针对发布机制，不能代替下方固定矩阵结果。
+
+### 第7轮唯一固定复验与终止
+
+源提交fc33014575b72b7d85a6751c975dd25ee841e449，生产source SHA
+fd1309ca5aeb30dce75f288eabff5dc60060cf2e69f8cf007e9409800fb410ac，三组全程一致。
+tiny组65618713-f7d8-40cd-9955-fab1ae94432c为48/48通过，27.7327058秒；
+pressure组ad8f05c7-e1dd-4890-9e96-2fc8bff39852为24/24按冻结状态分类通过，13.8871292秒。
+smoke组e3c1cd91-0e7a-41dd-ab01-63220658ed74为4/6，77.6461958秒；四小Netlib仍optimal。
+三组固定复验合计119.2660308秒。严格SP2保存输出重评exit1，未新运行solver。
+
+| 必过预检 | 状态及原因 | pivot | 完整进程树耗时 | 保守OS峰值RSS |
+|---|---|---:|---:|---:|
+| CAP-FLOW-01 | numerical_failure；全部改善列被拒绝 | 4326 | 8.2811720秒 | 119513088字节 |
+| CAP-TRANS-01 | numerical_failure；全部改善列被拒绝 | 21816 | 66.0673706秒 | 249511936字节 |
+
+两例进程exit0表示正常返回数值失败，未触120秒/1GiB资源保护；不是求解成功。
+与第6轮的发布后失可行原因不同，本轮终止为
+Unsafe blocking pivot: all improving columns were rejected.，primal_feasibility_rechecks为0。
+FLOW主动刷新405次=393接受+12丢弃；TRANS5045=4792+253。它们跨多个基，未扩展单基共享一次额度。
+末次被拒绝的同基trial：FLOW最低基本值−2.49181972e−7，原门2.00000026e−7，
+authoritative generation530、trial531；TRANS分别−4.16752197e−6、4.85714286e−7，代次3059/3060。
+失败trial未发布，仍未找到可安全接受的改善列或得到原问题最优解。
+这是原数值策略下的安全推进未达；没有证明唯一底层误差来源，不能直接承诺某个新补丁会成功。
+
+原始summary/result/request哈希、真实root/LP启动返回数、状态和8项完成线已冻结到
+reviews/numeric_round7_fixed_result.json；旧984文件及完整清单、两治理哈希均再核保持。
+初次只读显示误取公共reason键的KeyError已更正为termination_reason，并连同本次小型只读提取
+保守计2秒，0新增求解。所有自动复核仍用原append-only账本。
+截至终止登记SP2累计634.1291859/3600秒，原预算余2965.8708141秒；总1007.1329957秒。
+停止依据是已用满7/7修正及1/1追加固定复验，余额不扩大权限。
+SP2 HOLD；不得进入SP3。八项仍只有SP1完整GO，其他义务保持原范围，唯一Goal仍未完成。
+独立red_team_reviewer已从原始三组/result/source/ledger确认STOP_AT_HUMAN_7_OF_7_CEILING、
+SP2 HOLD、整体未完成，0 solver/pytest/实验/写入；见reviews/numeric_round7_terminal_red_team.json。
+实际分母为78 root启动/完成、77 LP启动/完成；pressure少1次LP对应已冻结的预LP资源门，未漏跑。
+审查确认源码局部GO与容量失败不冲突，当前STOP证据充分，无补跑必要。
+索引生成、项目结构及diff静态检查通过；停止后只做证据保存和文档闭合。
+收尾前fc33014的cached origin/main...HEAD=0/70，未查询即时远端；
+分支/状态/last5/no-push完整记录见reviews/numeric_round7_git_proof.json。
+local-commit，未push/发布；两项治理文件保持且不暂存。最终文档提交从本报告Git history定位。
 
 ## 第4–6轮数值包的终止快照（历史）
 

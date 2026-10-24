@@ -1,5 +1,27 @@
 # SILO Decision Log
 
+## DEC-20261025-SPARSE-SP2-ROUND7-CLOSED-HOLD
+
+- Sourcefc33014 closes the trusted-owner same-B voluntary-publication invariant;
+  118 components,172 integration tests and independent source GO pass.
+- The single authorized fixed recheck returns48/48 tiny,24/24 pressure and4/6 smoke.
+  FLOW4326/TRANS21816 pivots end with all improving columns rejected, not optimal.
+- SP2 HOLD; no SP3. Seven corrections and the sole added cohort are used. Preserve
+  original time, inputs, thresholds, unfinished Goal and all eight obligations.
+- Stop new repairs and solves. Preserve raw failures and independent STOP evidence
+  in the single report; remaining verification time does not grant another round.
+
+## DEC-20261025-SPARSE-SP2-ONE-SAME-B-REFRESH-CORRECTION
+
+- Direct human statement authorizes exactly one round7 targeted same-B publication
+  correction and one fixed48tiny/24pressure/6smoke recheck; prior rounds1-6 remain used.
+- This uses the original remaining SP2 verification budget; inputs, numerical policies,
+  full eight targets and the existing Goal are unchanged. No round8 is authorized.
+- Stage voluntary refresh privately while the old full state remains trusted. Publish
+  only after full same-generation verification; forced residual recovery cannot restore
+  an untrusted old owner and continue. Independent SP2 GO precedes original SP3-SP4.
+- Exact authority, implementation and actual receipts belong in the single total report.
+
 ## DEC-20261025-SPARSE-SP2-THREE-NUMERIC-ROUNDS-AUTHORIZED
 
 - Direct human question reply authorizes the saved numeric-stability package within

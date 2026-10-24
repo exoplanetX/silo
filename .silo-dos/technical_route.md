@@ -7,11 +7,16 @@ complete the overall design in Goal mode. Contract20261024-02-01 is now activate
 issuancea480985; the existing single Goal is owned by this development chat.
 The [execution report](../tasks/reports/20261024-02-01_sparse-lp-program_report.md)
 records SP1 GO (inputsa3cff29, truth3c27324) before product edits.
-SP2 is HOLD on2026-10-25: the original two corrections and the directly authorized
-single generation correction/recheck are used. Generation coherence is independently
-GO in4fc79d4; both required capacity prechecks still lose primal feasibility.
-No fourth correction/diagnostic is authorized. A bounded numeric-package proposal
-is in the total report; it does not change the fixed targets or tolerances.
+SP2 remains unaccepted on2026-10-25; rounds1-6 and their failed capacity evidence are
+preserved. The human directly authorized exactly one round7 same-B voluntary-refresh
+publication correction and one fixed48tiny/24pressure/6smoke recheck. The original
+SP2 time budget, inputs, thresholds and full targets remain unchanged. Source and
+fixed evidence must pass independent SP2 GO before continuing original SP3-SP4.
+No round8 or automatic tolerance/input/budget relaxation is authorized. Current
+receipts, remaining budget and the exact human authority are in the total report.
+Round7 is now completed at sourcefc33014: tiny48/48 and pressure24/24 pass, smoke4/6.
+Both CAP cases conservatively reject all improving entering columns; SP2 remains
+HOLD and all new repairs/solves STOP at the human7/7 ceiling. Do not enter SP3.
 The Goal and all eight completion targets remain unmet; no0.3.0a1 artifact was built.
 ContinueSP1–SP4 after internal checks and independent review; no routine cross-chat wait.
 Keep the fixed numerical targets,480-minute/group caps, original C/D/E/native deferral,
