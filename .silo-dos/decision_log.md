@@ -1,5 +1,20 @@
 # SILO Decision Log
 
+## DEC-20261024-SPARSE-LP-PLANNING-ONLY
+
+- The human requested next-stage objectives, expected effects/maturity and an overall
+  plan for task division, review, tests and evaluation. This authorizes planning only.
+- [SILO-SPARSE-LP-20261024 v0.1](../tasks/phases/sparse_lp_reoptimization_program_20261024.md)
+  proposes one future total contract with SP1–SP4 checkpoints: freeze, sparse cold
+  pipeline, real basis/session updates, then upper-layer integration and acceptance.
+- Proposed2000-variable/5000-row/100000-nonzero capacity and1.5 median cold/warm ratio
+  are untested targets. Mandatory scale/external cases must solve correctly; a limit
+  does not satisfy capacity. The proposed verification cap is480 minutes with bounded
+  groups/repeats. SP3 arithmetic is explicit:160+8+12=180 minutes.
+- Dense NumPy remains the reference; optional sparse numerical linear algebra is a
+  proposed dependency decision, not an external optimizer or approval to change runtime.
+  No contract/goal/implementation/dispatch/push/native/researchC/D/E is started.
+
 ## DEC-20261024-PROTOTYPE-REVISION-COORDINATOR-GO
 
 - Discussion-chat final review accepts the bounded local0.2.0a2 revision: GO, eight

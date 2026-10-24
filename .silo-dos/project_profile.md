@@ -1,5 +1,13 @@
 # SILO Project Profile
 
+## Proposed Next Program — 2026-10-24
+
+已按用户要求整理[稀疏LP与连续重优化总体规划v0.1](../tasks/phases/sparse_lp_reoptimization_program_20261024.md)。
+这是待确认的工程提案：同一SILO内核、一个总合同、SP1–SP4四检查点，目标为受控中等规模
+LP/重复求解研究工具；规模、收益和8小时验证上限均为拟定目标，未运行新性能实验。
+当前未签发执行合同、未派发、未创建目标或批准依赖变更；0.2.0a2验收继续有效。
+原C HOLD/D/E未启动、native延期及远端CI pending保持，不添加研究前置。
+
 ## Current Revision — 2026-10-24
 
 正确性修订候选0.2.0a2已完成，代码f488189bd5835d9b1b4c7d0319b847a1671da1d1。
