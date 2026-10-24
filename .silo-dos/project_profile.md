@@ -9,7 +9,8 @@
 发行a480985，实施分支codex/sparse-lp-reoptimization；
 [唯一执行报告](../tasks/reports/20261024-02-01_sparse-lp-program_report.md)。
 
-当前SP1设计/输入/来源/依赖冻结进行中，产品尚未修改。目标保持端到端稀疏、真实LU/eta、
+SP1已独立GO：输入a3cff29，真值/基线3c27324，GO先于产品修改。当前进入SP2。
+目标保持端到端稀疏、真实LU/eta、
 跨调用复用及四类修改、MIP/CG、固定规模/收益门和8安装；八项及独立GO齐备才完成。
 SP1→SP4在同一合同内连续，自检/独立复核由执行对话安排，常规推进不等待另一对话。
 新账本outputs/sparse_lp_program_20261024，480分钟验证上限及各组/重试限制跨续接保持。
