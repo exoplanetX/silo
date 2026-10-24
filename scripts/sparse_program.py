@@ -114,6 +114,8 @@ def main():
             "baseline": 980,
             "warm": 4800,
             "install-checks": 1200,
+            "evaluate": 300,
+            "summary": 300,
             "run": {
                 "tiny": 500,
                 "pressure": 260,

@@ -6,8 +6,8 @@
 
 当前状态（2026-10-25）：**SP1 GO；人类已批准剩余SP2原预算内最多再3轮数值稳定性包。**
 原1–3轮保留，第4轮pivot观测/一次current-B复核已完成，smoke6仍为4/6；
-第5轮raw-candidate提交前门已获独立设计与代码GO，66组件/172集成通过，
-接下来执行唯一smoke6，完整SP2仍未GO。
+第5轮raw-candidate门关闭原失败换基，但smoke仍4/6；最后第6轮设计已GO，
+唯一writer正在实施私有候选因子完整状态验证，完整SP2仍未GO。
 
 直接授权答复：“授权剩余预算内最多3轮（推荐）”，对应问题call_c43d2b03430449b49ec2dd3a8a0bc91e。
 本单SP2修正上限从3扩至6；原时间预算、输入、阈值、Bland/Devex及八项目标不变。
@@ -49,6 +49,24 @@ root受影响公开集成172项通过，1.9758299秒。独立代码门
 reviews/numeric_round5_code_gate.json关闭公式/有限性/调用顺序/共享刷新/R及Bland义务。
 公开SolveResult/CGResult既有递归清洗支持内部非有限诊断，审查中的序列化疑点已据代码撤回。
 普通通过路径仍为原6次triangular solve/1次LU，raw门只增加O(m)向量运算。
+
+第5轮唯一smoke groups/a927ebb8-0b97-4e77-9966-2267adfdcb22，source11bd272，
+6root/6LP完成，总52.6593221秒，四Netlib通过。FLOW4308pivot/7.6409656秒失败，
+raw失败25/刷新13/拒绝12；TRANS14493pivot/41.8732892秒失败，raw失败6/刷新3/拒绝3。
+原失败提交被raw门拦截，沿新路径的末次候选raw门通过，actual新B仍失可行，
+一次同基重构后保持失败；这关闭了“仅raw坐标门足够”的假设。
+FLOW预测在原约2e−7门内而fresh min约−4.81318e−7；TRANS预测min约−5.28e−15、
+fresh min约−9.63290e−7超过原约4.85714e−7门。
+原始与提取reviews/numeric_round5_trace_extract.json保留，未触120秒/1GiB外guard。
+第6轮是人类允许的最后修正轮：私有候选因子在实际新B验证后才发布，失败保留旧owner，
+所有实际cost与峰值仍计、成功basis/eta只在接受后计，不改input/threshold/ratio/Bland/Devex。
+候选状态与generation/缓存一致性经独立设计门后才实施；不能因剩余时间再开第7轮。
+reviews/numeric_round6_design_gate.json保存基础设计及补充A：候选完成XB与BT对偶的
+完整同代次state后检查原primal门；BT若触发重构，整组三元组作废并沿原3次state门重算。
+通过后一次性pending full state替代下一外层state，绑定public/run/phase/problem、
+basis、generation、RHS/cost不可变身份；不跨求解缓存状态，dual/cleanup不使用。
+候选数值拒绝可以共享原old-B刷新机会；deadline/resource保持limit，没有新重试门。
+SP4机械评价helper和8项纯逻辑测试已准备，0native/安装；SP1旧门来源绑定只读集成通过。
 
 直接授权原文答复：“授权追加一次修复和复验（推荐）”，对应问题为仅追加1次
 “因子重建后状态与换基提交保持同一代次”的针对修复和1轮受影响固定组复验；
