@@ -114,8 +114,9 @@ class StagedBasis:
     own objects. The counter overlay owns its only nested mutable reason map.
     """
 
-    def __init__(self, owner):
+    def __init__(self, owner, counter_prefix="candidate_basis"):
         self.owner, self.target, self.closed = owner, owner.counters, False
+        self.counter_prefix = counter_prefix
         self.baseline = {
             key: owner.counters.get(key, 0)
             for key in (*_ACTUAL_COUNTERS, *_PEAK_COUNTERS, "basis_replacements", "eta_updates")
@@ -137,7 +138,7 @@ class StagedBasis:
         trial.etas, trial.counters, trial._staged = list(owner.etas), overlay, True
         trial._retained_lu, trial._retained_lu_nnz = owner.lu, owner._lu_nnz
         self.factor = trial
-        increment(self.target, "candidate_basis_attempts")
+        increment(self.target, f"{self.counter_prefix}_attempts")
 
     @property
     def rebuilt(self):
@@ -173,14 +174,14 @@ class StagedBasis:
         if accepted:
             increment(self.target, "eta_updates", eta)
             increment(self.target, "basis_replacements", replacements)
-            increment(self.target, "candidate_basis_acceptances")
+            increment(self.target, f"{self.counter_prefix}_acceptances")
             self.factor.counters, self.factor._staged = self.target, False
             self.factor._retained_lu, self.factor._retained_lu_nnz = None, 0
             self.factor._statistics()
         else:
             increment(self.target, "rejected_trial_eta_updates", eta)
             increment(self.target, "rejected_trial_refactorizations", rebuilds)
-            increment(self.target, "candidate_basis_discards")
+            increment(self.target, f"{self.counter_prefix}_discards")
             self.owner._statistics()
 
 
@@ -389,6 +390,24 @@ class SparseFactor:
             staged.factor.replace_column(
                 position, column, direction, expected_generation=expected_generation
             )
+        except BaseException:
+            staged.close()
+            raise
+        return staged
+
+    def stage_refactor(self, reason, *, expected_generation):
+        """Privately rebuild trusted current B; the caller validates before GO.
+
+        Forced residual recovery uses refactor() directly. An invalidated owner
+        must never be restored as a way to continue after its residual failed.
+        """
+        if self._staged:
+            raise ValueError("Nested staged basis objects are unsupported.")
+        if self.generation != expected_generation:
+            raise FactorRetry("stale_refresh_generation", self.generation)
+        staged = StagedBasis(self, "same_basis_refresh")
+        try:
+            staged.factor.refactor(reason=reason)
         except BaseException:
             staged.close()
             raise

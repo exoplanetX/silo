@@ -316,3 +316,68 @@ def test_post_splu_deadline_keeps_actual_fill_peaks_without_publishing_candidate
     assert owner.counters["simultaneous_factor_nnz_peak"] == 14
     assert owner.counters.get("basis_replacements", 0) == owner.counters.get("eta_updates", 0) == 0
     assert "candidate_entering_rejections" not in owner.counters
+
+
+@pytest.mark.parametrize("accepted", [False, True])
+def test_same_basis_refresh_has_private_numerics_and_separate_semantic_counters(accepted):
+    owner = make(np.eye(3))
+    owner.replace_column(0, [1, 0.1, 0.2])
+    lu, matrix, etas, generation = owner.lu, owner.matrix, owner.etas, owner.generation
+    cache = {"factor": owner, "basis": (0, 1, 2)}
+    before = ACTUAL["splu_calls"]
+    staged = owner.stage_refactor("voluntary_test", expected_generation=generation)
+    trial = staged.factor
+    assert owner.lu is lu and owner.matrix is matrix and owner.etas is etas
+    assert owner.generation == generation and cache["factor"] is owner
+    assert trial.lu is not lu and trial.generation == generation + 1 and trial.etas == []
+    assert sf.same_matrix(trial.matrix, matrix) and trial._retained_lu is lu
+    assert trial.counters["refactorizations_by_reason"] is not owner.counters.get(
+        "refactorizations_by_reason"
+    )
+    assert np.allclose(trial.matrix @ trial.solve_B([1, 2, 3]), [1, 2, 3])
+    assert np.allclose(trial.matrix.T @ trial.solve_BT([2, 1, 0]), [2, 1, 0])
+    staged.close(accepted=accepted)
+    counts = owner.counters.copy()
+    staged.close()
+    assert owner.counters == counts  # Actual costs merge exactly once.
+    assert ACTUAL["splu_calls"] - before == 1
+    assert owner.counters["same_basis_refresh_attempts"] == 1
+    assert owner.counters.get("same_basis_refresh_acceptances", 0) == int(accepted)
+    assert owner.counters.get("same_basis_refresh_discards", 0) == int(not accepted)
+    assert owner.counters["basis_replacements"] == owner.counters["eta_updates"] == 1
+    assert owner.counters["base_factorizations"] == 2
+    assert owner.counters["trial_refactorizations"] == 1
+    assert owner.counters.get("rejected_trial_refactorizations", 0) == int(not accepted)
+    assert "candidate_basis_attempts" not in owner.counters
+    assert owner.counters["simultaneous_factor_nnz_peak"] >= lu.L.nnz + lu.U.nnz + trial._lu_nnz
+    assert owner.lu is lu and owner.matrix is matrix and owner.etas is etas
+    if accepted:
+        assert not trial._staged and trial.counters is owner.counters and trial._retained_lu is None
+
+
+def test_same_basis_refresh_post_splu_deadline_merges_cost_without_owner_changes(monkeypatch):
+    owner = make(np.eye(2))
+    lu, matrix, etas, generation = owner.lu, owner.matrix, owner.etas, owner.generation
+    original_splu, now = sf.splu, [0.0]
+    owner.deadline = 1
+    monkeypatch.setattr(sf, "perf_counter", lambda: now[0])
+
+    def late(*args, **kwargs):
+        value = original_splu(*args, **kwargs)
+        now[0] = 2
+        return value
+
+    monkeypatch.setattr(sf, "splu", late)
+    with pytest.raises(sf.FactorDeadline):
+        owner.stage_refactor("voluntary_deadline", expected_generation=generation)
+    assert owner.lu is lu and owner.matrix is matrix and owner.etas is etas
+    assert owner.generation == generation
+    assert owner.counters["base_factorizations"] == 2
+    assert (
+        owner.counters["same_basis_refresh_attempts"]
+        == owner.counters["same_basis_refresh_discards"]
+        == 1
+    )
+    assert owner.counters["factor_nnz_peak"] == 4
+    assert owner.counters["simultaneous_factor_nnz_peak"] == 8
+    assert owner.counters.get("basis_replacements", 0) == owner.counters.get("eta_updates", 0) == 0

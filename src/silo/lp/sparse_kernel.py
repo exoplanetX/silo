@@ -657,6 +657,56 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
         if get_factor().generation != generation:
             raise FactorRetry("uncommitted_generation_changed", get_factor().generation)
 
+    def voluntary_refresh(cost, context, generation, entering, reason):
+        """Publish same-B recovery only while the old full state is trusted.
+
+        The three voluntary primal paths share their existing one-refresh credit.
+        Residual failures and the lost-feasibility recheck remain forced recovery.
+        """
+        nonlocal factor, pending_state
+        staged = None
+        try:
+            staged = get_factor().stage_refactor(reason, expected_generation=generation)
+            values = _candidate_state(staged.factor, a, b, cost, basis)
+            tolerance = options.primal_tolerance * (1 + _infinity_norm(values[0]))
+            minimum = float(np.min(values[0], initial=0))
+            if not isfinite(tolerance) or minimum < -tolerance:
+                raise _CandidateRejected(
+                    "same_basis_refresh_primal_infeasible",
+                    {
+                        "minimum_basic": minimum,
+                        "primal_threshold": tolerance,
+                        "candidate_generation": values[3],
+                    },
+                )
+            same_generation(generation)
+            cached = _PendingState(
+                _pending_identity(context, tuple(keys[j] for j in basis), values[3], b, cost),
+                values,
+            )
+            staged.close(accepted=True)
+            factor, pending_state = staged.factor, cached
+        except (
+            _CandidateRejected,
+            np.linalg.LinAlgError,
+            FloatingPointError,
+            OverflowError,
+        ) as exc:
+            # Only numerical failures discard this optional refresh. A deadline,
+            # resource failure or programming error propagates through finally.
+            counters["last_same_basis_refresh_rejection"] = {
+                **(exc.summary if isinstance(exc, _CandidateRejected) else {"reason": str(exc)}),
+                "refresh_reason": reason,
+                "entering_key": keys[entering],
+                "authoritative_generation": get_factor().generation,
+            }
+            return False
+        finally:
+            if staged is not None:
+                staged.close()
+        pricing.reset(basis, reason)
+        raise FactorRetry(reason, get_factor().generation)
+
     def factor_metadata():
         current = get_factor()
         return {
@@ -933,10 +983,8 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                             if not refreshed:
                                 refreshed = True
                                 increment(counters, "raw_candidate_refreshes")
-                                get_factor().refactor(reason="raw_candidate_feasibility")
-                                pricing.reset(basis, "raw_candidate_feasibility")
-                                raise FactorRetry(
-                                    "raw_candidate_feasibility", get_factor().generation
+                                voluntary_refresh(
+                                    cost, context, generation, entering, "raw_candidate_feasibility"
                                 )
                             rejected.add(entering)
                             increment(counters, "rejected_entering_columns")
@@ -957,9 +1005,9 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                             continue
                         if not refreshed:
                             refreshed = True
-                            get_factor().refactor(reason="pivot_selection")
-                            pricing.reset(basis, "pivot_selection")
-                            raise FactorRetry("pivot_selection", get_factor().generation)
+                            voluntary_refresh(
+                                cost, context, generation, entering, "pivot_selection"
+                            )
                         rejected.add(entering)
                         increment(counters, "rejected_entering_columns")
                         increment(
@@ -996,11 +1044,9 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                         if not refreshed:
                             refreshed = True
                             increment(counters, "candidate_old_basis_refreshes")
-                            get_factor().refactor(reason="candidate_validation")
-                            pricing.reset(basis, "candidate_validation")
-                            raise FactorRetry(
-                                "candidate_validation", get_factor().generation
-                            ) from exc
+                            voluntary_refresh(
+                                cost, context, generation, entering, "candidate_validation"
+                            )
                         rejected.add(entering)
                         increment(counters, "rejected_entering_columns")
                         increment(counters, "candidate_entering_rejections")
