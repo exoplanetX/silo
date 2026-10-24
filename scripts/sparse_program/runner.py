@@ -206,6 +206,7 @@ def execute_group(args):
             e["kind"] == "stage_gate" and e.get("stage") == "SP1" and e.get("decision") == "GO"
             for e in ledger.history()
         ), "SP1 GO is required before product validation"
+    source = ledger.identity()
     frozen = manifest()
     if args.command == "baseline":
         ids = {
@@ -342,13 +343,14 @@ def execute_group(args):
         with (folder / "records.jsonl").open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(record) + "\n")
         print(json.dumps({"id": record["id"], "pass": record["pass"]}), flush=True)
+    assert ledger.identity()["source"] == source["source"], "Source changed during fixed group"
     summary = {
         "command": args.command,
         "group": getattr(args, "group", "overlap"),
         "engine": args.engine,
         "records": records,
         "all_pass": all(r["pass"] for r in records),
-        "source": ledger.identity(),
+        "source": source,
         "baseline_failures_retained": args.command == "baseline",
     }
     (folder / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")

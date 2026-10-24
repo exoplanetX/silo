@@ -619,3 +619,176 @@ def test_pivot_trace_keeps_both_pre_and_post_rebase_failure_coordinates():
     assert original_failure["predicted_new_basic"] == 0
     assert original_failure["fresh_before_rebase"] == -8
     assert original_failure["fresh_after_rebase"] == 107
+
+
+@pytest.mark.parametrize(
+    "xb,direction",
+    [
+        ([-3e-8, 1], [0.1, -1e8]),
+        ([-4.928232505779105e-14, 1], [2.788239580513479e-10, 1.0696428176597692]),
+    ],
+)
+def test_raw_gate_catches_negative_zero_step_and_tiny_safe_pivot_amplification(xb, direction):
+    xb, direction = np.array(xb), np.array(direction)
+    assert min(xb) >= -1e-7 * (1 + max(abs(xb)))
+    assert sf.pivot_safe(direction, 0, 1e-10)
+    assert max(xb[0], 0) / direction[0] == 0
+    checked = sk._raw_primal_candidate(xb, direction, 0, 1e-7)
+    assert checked["rho"] < 0 and not checked["valid"]
+    assert checked["reason"] == "raw_primal_infeasible"
+    assert checked["minimum_basic"] < -checked["primal_threshold"]
+
+
+@pytest.mark.parametrize(
+    "xb,direction,tolerance,reason",
+    [
+        ([1e308, 1], [1e-308, 1], 1e-7, "nonfinite_raw_step"),
+        ([1e308, 1], [1, 1e308], 1e-7, "nonfinite_raw_coordinates"),
+        ([1e308, 0], [1, 0], 1e308, "nonfinite_raw_threshold"),
+    ],
+)
+def test_raw_gate_conservatively_handles_nonfinite_intermediate_values(
+    xb, direction, tolerance, reason
+):
+    checked = sk._raw_primal_candidate(np.array(xb), np.array(direction), 0, tolerance)
+    assert not checked["valid"] and checked["reason"] == reason
+
+
+@pytest.mark.parametrize("bland", [False, True])
+def test_raw_failure_refreshes_old_basis_once_and_fully_recomputes_state(monkeypatch, bland):
+    original = sf.SparseFactor.solve
+    original_phase, original_reset = sk.Devex.fresh_phase, sk.Devex.reset
+    fired, old_state_generations, update_calls = False, [], []
+    original_update = sk.Devex.update
+
+    def injected(self, rhs, transpose=False):
+        nonlocal fired
+        answer = original(self, rhs, transpose)
+        if not transpose and np.array_equal(rhs, [0, 1]) and self.matrix.nnz == 2:
+            old_state_generations.append(self.generation)
+            if not fired:
+                fired = True
+                answer = answer.copy()
+                answer[0] = -3e-8
+        return answer
+
+    def history(self, *args, **kwargs):
+        original_phase(self, *args, **kwargs)
+        self.bland, self.degenerate = bland, 2
+        self.visited.add(("raw gate retains history",))
+
+    def reset(self, basis, reason):
+        if reason == "raw_candidate_feasibility":
+            previous = self.bland, self.visited.copy(), self.degenerate
+        original_reset(self, basis, reason)
+        if reason == "raw_candidate_feasibility":
+            assert previous == (self.bland, self.visited, self.degenerate)
+            assert all(v == 1 for v in self.weights.values())
+
+    def update(self, *args):
+        update_calls.append(True)
+        return original_update(self, *args)
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    monkeypatch.setattr(sk.Devex, "fresh_phase", history)
+    monkeypatch.setattr(sk.Devex, "reset", reset)
+    monkeypatch.setattr(sk.Devex, "update", update)
+    result = call(norm([[0.1], [-1e8]], [0, 1], [1]), SolveOptions())
+    assert fired and result.status == "optimal" and result.point[0] == 0
+    assert len(old_state_generations) == 2 and old_state_generations[0] < old_state_generations[1]
+    assert result.diagnostics["raw_candidate_failures"] == 1
+    assert result.diagnostics["raw_candidate_refreshes"] == 1
+    assert result.diagnostics["refactorizations_by_reason"]["raw_candidate_feasibility"] == 1
+    assert result.diagnostics["basis_replacements"] == result.iterations == 1
+    assert update_calls == [True]  # Failed raw candidate never reaches the Devex BTRAN.
+    assert result.diagnostics.get("raw_candidate_rejections", 0) == 0
+
+
+def test_all_raw_candidates_rejected_cannot_commit_or_declare_optimal(monkeypatch):
+    original = sf.SparseFactor.solve
+
+    def injected(self, rhs, transpose=False):
+        answer = original(self, rhs, transpose)
+        if not transpose and np.array_equal(rhs, [0, 1]):
+            answer = answer.copy()
+            answer[0] = -3e-8
+        return answer
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Rejected raw candidate reached an unapproved mutation")
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    monkeypatch.setattr(sf.SparseFactor, "replace_column", forbidden)
+    monkeypatch.setattr(sk.Devex, "update", forbidden)
+    monkeypatch.setattr(sk._PivotObservation, "__init__", forbidden)
+    result = call(norm([[0.1], [-1e8]], [0, 1], [1]), SolveOptions())
+    assert result.status == "numerical_failure" and result.iterations == 0
+    assert result.diagnostics["raw_candidate_refreshes"] == 1
+    assert result.diagnostics["raw_candidate_rejections"] == 1
+    assert result.diagnostics["raw_candidate_failures"] == 2
+    assert result.diagnostics["basis_replacements"] == result.diagnostics["eta_updates"] == 0
+    assert result.diagnostics["last_raw_candidate_rejection"]["entering_key"] == (
+        "variable",
+        "x0",
+        1,
+    )
+
+
+def test_raw_rejection_selects_another_entering_and_resets_after_accepted_pivot(monkeypatch):
+    original = sf.SparseFactor.solve
+    original_replace = sf.SparseFactor.replace_column
+    accepted_from_initial_basis = []
+
+    def injected(self, rhs, transpose=False):
+        answer = original(self, rhs, transpose)
+        if (
+            not transpose
+            and self.counters.get("basis_replacements", 0) == 0
+            and self.scope_calls == 1  # Corrupt state BTRAN's partner, never a direction RHS.
+            and np.array_equal(rhs, [0, 1, 1])
+        ):
+            answer = answer.copy()
+            answer[0] = -3e-8
+        return answer
+
+    def replaced(self, position, column, *args, **kwargs):
+        if self.counters.get("basis_replacements", 0) == 0:
+            accepted_from_initial_basis.append(tuple(column))
+        return original_replace(self, position, column, *args, **kwargs)
+
+    monkeypatch.setattr(sf.SparseFactor, "solve", injected)
+    monkeypatch.setattr(sf.SparseFactor, "replace_column", replaced)
+    result = call(norm([[0.1, 0], [-1e8, 1], [0, 1]], [0, 1, 1], [2, 1]), SolveOptions())
+    assert result.status == "optimal" and np.allclose(result.point, [0, 1])
+    assert result.diagnostics["raw_candidate_rejections"] == 1
+    assert accepted_from_initial_basis == [(0, 1, 1)]
+    assert result.diagnostics["basis_replacements"] == 2
+
+
+def test_passing_raw_gate_commits_once_without_extra_linear_equations():
+    before = CALLS["splu_calls"]
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    assert result.status == "optimal" and result.point[0] == 0.5
+    assert result.diagnostics["raw_candidate_checks"] == result.iterations == 1
+    assert result.diagnostics["basis_replacements"] == result.diagnostics["eta_updates"] == 1
+    assert result.diagnostics["triangular_solves"] == 6
+    assert CALLS["splu_calls"] - before == result.diagnostics["base_factorizations"] == 1
+
+
+@pytest.mark.parametrize("phase", ["dual", "cleanup"])
+def test_raw_primal_gate_is_not_applied_to_dual_or_cleanup(monkeypatch, phase):
+    if phase == "dual":
+        first = call(ordinary(), SolveOptions())
+
+    def forbidden(*args):
+        raise AssertionError("Primal raw gate was invoked outside the primal run")
+
+    monkeypatch.setattr(sk, "_raw_primal_candidate", forbidden)
+    if phase == "dual":
+        larger = norm([[1, 1], [1, 0], [0, 1], [1, 0]], [4, 2, 3, 1.5], [3, 2])
+        result = call(larger, SolveOptions(), first.snapshot, factor_state=first._factor_state)
+        assert result.diagnostics["dual_pivots"] == 1
+    else:
+        result = call(norm([[-1, -1]], [0], [-1, -2], ["="]), SolveOptions())
+        assert result.diagnostics["artificial_cleanup_pivots"] == 1
+    assert result.status == "optimal"

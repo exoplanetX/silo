@@ -56,6 +56,41 @@ def _matrix_observation(matrix):
     return {"shape": matrix.shape, "nnz": int(matrix.nnz), "csc_sha256": digest.hexdigest()}
 
 
+def _raw_primal_candidate(xb, direction, leaving, primal_tolerance):
+    """Check actual new-basis coordinates, independently of the clamped ratio step.
+
+    B_new=B*E implies y[r]=xb[r]/d[r]. A tiny negative xb[r] can therefore
+    produce a large negative entering coordinate or move other coordinates far
+    outside their original tolerance, even when the ratio step was clamped to 0.
+    This is only a vector calculation; it neither solves nor changes a basis.
+    """
+    with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+        rho = float(np.divide(xb[leaving], direction[leaving]))
+        candidate = xb - rho * direction
+        candidate[leaving] = rho
+        norm = _infinity_norm(candidate)
+        tolerance = float(np.float64(primal_tolerance) * (1 + np.float64(norm)))
+        minimum = float(np.min(candidate))
+    if not isfinite(rho):
+        reason = "nonfinite_raw_step"
+    elif not np.isfinite(candidate).all() or not isfinite(norm):
+        reason = "nonfinite_raw_coordinates"
+    elif not isfinite(tolerance):
+        reason = "nonfinite_raw_threshold"
+    elif minimum < -tolerance:
+        reason = "raw_primal_infeasible"
+    else:
+        reason = "valid"
+    return {
+        "rho": rho,
+        "minimum_basic": minimum,
+        "infinity_norm": norm,
+        "primal_threshold": tolerance,
+        "valid": reason == "valid",
+        "reason": reason,
+    }
+
+
 class _PivotObservation:
     """Only the last committed pivot, holding sparse references and O(m) vectors.
 
@@ -721,6 +756,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
         run_identity = (run_number, phase, mode)
         last_pivot = None
         counters.pop("last_pivot_trace", None)
+        counters.pop("last_raw_candidate_rejection", None)
         selected_basis = None
         rejected, refreshed, retries = set(), False, 0
         while True:
@@ -775,7 +811,39 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                             i for i in ties if pivot_safe(direction, i, options.pivot_tolerance)
                         ]
                         if safe:
-                            break
+                            leaving = min(safe, key=lambda i: keys[basis[i]])
+                            candidate = _raw_primal_candidate(
+                                xb, direction, leaving, options.primal_tolerance
+                            )
+                            increment(counters, "raw_candidate_checks")
+                            if candidate["valid"]:
+                                break
+                            increment(counters, "raw_candidate_failures")
+                            if not refreshed:
+                                refreshed = True
+                                increment(counters, "raw_candidate_refreshes")
+                                get_factor().refactor(reason="raw_candidate_feasibility")
+                                pricing.reset(basis, "raw_candidate_feasibility")
+                                raise FactorRetry(
+                                    "raw_candidate_feasibility", get_factor().generation
+                                )
+                            rejected.add(entering)
+                            increment(counters, "rejected_entering_columns")
+                            increment(counters, "raw_candidate_rejections")
+                            increment(
+                                counters.setdefault("pivot_rejection_reasons", {}),
+                                "raw_candidate_feasibility",
+                            )
+                            counters["last_raw_candidate_rejection"] = {
+                                **candidate,
+                                "entering_key": keys[entering],
+                                "leaving_key": keys[basis[leaving]],
+                                "leaving_position": leaving,
+                                "run_identity": run_identity,
+                                "generation": generation,
+                            }
+                            pricing.reset(basis, "rejected_pivot")
+                            continue
                         if not refreshed:
                             refreshed = True
                             get_factor().refactor(reason="pivot_selection")

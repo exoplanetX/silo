@@ -6,7 +6,8 @@
 
 当前状态（2026-10-25）：**SP1 GO；人类已批准剩余SP2原预算内最多再3轮数值稳定性包。**
 原1–3轮保留，第4轮pivot观测/一次current-B复核已完成，smoke6仍为4/6；
-当前进入获准第5轮的事务化候选核验设计门，完整SP2仍未GO。
+第5轮raw-candidate提交前门已获独立设计与代码GO，66组件/172集成通过，
+接下来执行唯一smoke6，完整SP2仍未GO。
 
 直接授权答复：“授权剩余预算内最多3轮（推荐）”，对应问题call_c43d2b03430449b49ec2dd3a8a0bc91e。
 本单SP2修正上限从3扩至6；原时间预算、输入、阈值、Bland/Devex及八项目标不变。
@@ -33,8 +34,21 @@ FLOW原min−2.97146e−8/ptol2.00000e−7，fresh before−4.83789e−7/after�
 TRANS预测min0/ptol4.85714e−7，fresh最差−0.125178，重构前后相同。
 old/pred/fresh及方向的后向残差全部通过原门；ptol缩小与单纯eta恢复均不能解释修复。
 TRANS实际pivot2.78824e−10仅略高于冻结门2.06964e−10，growth3.58649e9。
-这支持第5轮先推导“候选新基核验、失败回滚并拒绝该进入列”的具体义务，
-尚未实施或声称此策略必使容量通过；不改ratio、阈值或跳过真实blocker。
+据此独立数学门推导出更小的第5轮修复：实际候选坐标rho=xb[r]/d[r]，
+y[r]=rho、其他y[i]=xb[i]−rho*d[i]，不能用clamped theta0替代。
+FLOW此公式给出的失败值与fresh吻合；TRANS的rho自身已违反原primal门。
+在pricing.update与factor mutation之前按候选自身原ptol核验，仅O(m)，不新增LU/solve。
+首次失败共享old-B一次刷新，完整重算后仍失败则拒绝整个entering并保留同基R；
+全改善列被拒绝仍numerical_failure。ratio、阈值、Bland/Devex、dual和cleanup保持。
+reviews/numeric_round5_design_gate.json记录独立设计GO；实现/容量结果仍待实际检查。
+完整private-factor事务暂不实施，只有raw门通过仍fresh失可行时才由后续获准轮次评估。
+
+第5轮实现kernel SHA1db2593c，66组件最终通过，检查总3.7525939秒；
+原toy hook误把direction同步污染的一次失败完整保留，只修测试hook后两次全过，未因此改产品。
+root受影响公开集成172项通过，1.9758299秒。独立代码门
+reviews/numeric_round5_code_gate.json关闭公式/有限性/调用顺序/共享刷新/R及Bland义务。
+公开SolveResult/CGResult既有递归清洗支持内部非有限诊断，审查中的序列化疑点已据代码撤回。
+普通通过路径仍为原6次triangular solve/1次LU，raw门只增加O(m)向量运算。
 
 直接授权原文答复：“授权追加一次修复和复验（推荐）”，对应问题为仅追加1次
 “因子重建后状态与换基提交保持同一代次”的针对修复和1轮受影响固定组复验；
