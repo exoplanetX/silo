@@ -168,6 +168,7 @@ def execute(args):
         e["kind"] == "stage_gate" and e.get("stage") == "SP2" and e.get("decision") == "GO"
         for e in ledger.history()
     )
+    source = ledger.identity()
     folder = ledger.OUT / "warm" / f"round{args.round}_{uuid4()}"
     folder.mkdir(parents=True)
     records = []
@@ -201,8 +202,11 @@ def execute(args):
                     "mode": mode,
                     "monitor": monitor,
                     "result_path": str(response.relative_to(ledger.ROOT)),
+                    "request_sha256": ledger.sha(request),
                     "pass": False,
                 }
+                if response.exists():
+                    record["result_sha256"] = ledger.sha(response)
                 try:
                     assert monitor["exit_code"] == 0 and monitor["guard_reason"] is None
                     packet = json.loads(response.read_text())
@@ -221,10 +225,16 @@ def execute(args):
                     json.dumps({k: record[k] for k in ("id", "mode", "repetition", "pass")}),
                     flush=True,
                 )
+    assert ledger.identity()["source"] == source["source"], "Source changed during warm group"
     summary = {
         "records": records,
-        "source": ledger.identity(),
+        "source": source,
         "all_correct": all(r["pass"] for r in records),
+        "bound_files": {
+            str(path.relative_to(ledger.ROOT)): ledger.sha(path)
+            for path in sorted(folder.rglob("*"))
+            if path.is_file()
+        },
     }
     if summary["all_correct"]:
         summary.update(aggregate(records))

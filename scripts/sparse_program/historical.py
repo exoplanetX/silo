@@ -8,6 +8,7 @@ from . import checker, ledger
 
 
 def run():
+    source = ledger.identity()
     # Import functions only. Do not invoke either old CLI or old accounting API.
     sys.path.insert(0, str(ledger.ROOT / "scripts/prototype"))
     sys.path.insert(0, str(ledger.ROOT / "src"))
@@ -83,6 +84,7 @@ def run():
             )
     assert len(runner.records) == 288 + 1 + 64 + 384
     check_pins()
+    assert ledger.identity()["source"] == source["source"], "Source changed during historical group"
     summary = {
         "records": runner.records,
         "all_pass": all(r["pass"] for r in runner.records),
@@ -96,7 +98,12 @@ def run():
         "new_reference_calls": 0,
         "old_evidence_unchanged": True,
         "old_ledger_written": False,
-        "source": ledger.identity(),
+        "source": source,
+        "bound_files": {
+            str(path.relative_to(ledger.ROOT)): ledger.sha(path)
+            for path in sorted(folder.rglob("*"))
+            if path.is_file()
+        },
     }
     write_json(folder / "summary.json", summary)
     return 0 if summary["all_pass"] else 1
