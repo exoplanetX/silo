@@ -346,8 +346,9 @@ def sp2():
     return {g: group_check(g, n) for g, n in (("tiny", 48), ("pressure", 24), ("sp2-smoke", 6))}
 
 
-def sp3():
-    mechanisms, warm = mechanism_check(), warm_check()
+def sp3(rr08_receipt=None):
+    mechanisms = mechanism_check()
+    warm = warm_check() if rr08_receipt is None else warm_check(rr08_receipt)
     return {
         "mechanism": mechanisms,
         "warm": warm,
@@ -390,10 +391,182 @@ def _tree_bound(path, summary):
     require(bound == actual, "New-run file inventory differs from bound_files")
 
 
-def warm_check():
+RR08_DISCLOSURES = {
+    "warm3": "outputs/sparse_lp_program_20261024/warm/"
+    "round3_b5c09c12-3b0d-42f9-9532-1001ad42693a/summary.json",
+    "warm5": "outputs/sparse_lp_program_20261024/warm/"
+    "round5_b59ae4fa-438a-4091-a3aa-94285ea59517/summary.json",
+    "warm4_observer": "outputs/sparse_lp_program_20261024/host/"
+    "supervision_rr04_b2abbbda-864f-46a5-a5f5-aa9f62a4fa24/supervision.json",
+    "rr07_frequency": "outputs/sparse_lp_program_20261024/reviews/"
+    "rr07_probe_pair_qualification.json",
+    "rr07_stop": "outputs/sparse_lp_program_20261024/reviews/rr07_final_hold.json",
+}
+
+
+def validate_rr08_selection(selection, events, source_sha256):
+    """Pure authorization/schema gate; it never searches for a successful run."""
+    grant = ledger.closure_grant(events)
+    require(grant is not None, "RR08 lacks its unique direct human authority")
+    require(
+        selection.get("schema_version") == 1 and selection.get("program") == ledger.PROGRAM,
+        "RR08 receipt schema/program differs",
+    )
+    require(selection.get("active_revision") == "RR08", "RR08 revision differs")
+    require(selection.get("authority_sha256") == grant["sha256"], "RR08 authority differs")
+    require(
+        selection.get("source_sha256") == source_sha256 == grant["source_sha256"],
+        "RR08 source differs",
+    )
+    require(
+        selection.get("accepted_evidence") == ledger.RR08_WARM_REF,
+        "RR08 only authorizes its exact warm4 path and hash",
+    )
+    require(
+        selection.get("claim_scope") == "fixed_warm4_run_only"
+        and selection.get("auxiliary_status") == "HOLD",
+        "RR08 claim/auxiliary scope differs",
+    )
+    pins = [e for e in events if e["kind"] == "rr08_c0_disclosures_pinned"]
+    require(
+        len(pins) == 1 and pins[0].get("authority_sha256") == grant["sha256"],
+        "RR08 disclosure pin missing or duplicated",
+    )
+    refs = selection.get("disclosures", {})
+    require(
+        set(refs) == set(RR08_DISCLOSURES) and refs == pins[0]["references"],
+        "RR08 failure/auxiliary disclosures missing or changed",
+    )
+    require(
+        all(refs[k]["path"] == path for k, path in RR08_DISCLOSURES.items()),
+        "RR08 disclosure path differs",
+    )
+    return grant
+
+
+def validate_rr08_observer(observer, events, report_path):
+    """Bind the original RR04 schema through its real accounting parent."""
+    require(
+        observer["sample_count"] == 0
+        and observer["errors"]
+        and observer["decision"]["accepted"] is False,
+        "RR08 must preserve the auxiliary observer gap",
+    )
+    parents = [
+        e
+        for e in events
+        if e["kind"] == "command_started" and e.get("run") == observer["parent_run"]
+    ]
+    require(len(parents) == 1, "RR08 observer accounting parent missing or duplicated")
+    parent = parents[0]
+    require(
+        parent.get("group") == "warm"
+        and parent.get("stage") == "SP3"
+        and parent.get("warm_round") == 4
+        and parent.get("rounds") == {"warm": 1},
+        "RR08 observer belongs to another warm parent",
+    )
+    argv = parent["argv"]
+    require(argv[argv.index("--round") + 1] == "4", "RR08 observer parent round differs")
+    require(
+        _path(argv[argv.index("--host-output") + 1]).resolve()
+        == _path(report_path).parent.resolve(),
+        "RR08 observer output binding differs",
+    )
+
+
+def rr08_selected_materials(receipt_path):
+    path = _path(receipt_path)
+    require(
+        path.resolve() == (ledger.OUT / "closure_rr08/evidence_selection.json").resolve(),
+        "RR08 selection must use its explicit pinned receipt",
+    )
+    events, selection, current = ledger.history(), _read(path), ledger.identity()
+    grant = validate_rr08_selection(selection, events, current["source_sha256"])
+    _bound(grant["revision_contract"], grant["revision_contract_sha256"])
+    selected = [e for e in events if e["kind"] == "rr08_evidence_selected"]
+    require(
+        len(selected) == 1 and selected[0].get("authority_sha256") == grant["sha256"],
+        "RR08 selection pin missing or duplicated",
+    )
+    require(selected[0]["path"] == _ref(path)["path"], "RR08 selection event path differs")
+    _bound(path, selected[0]["file_sha256"])
+    c0 = [e for e in events if e["kind"] == "rr08_c0_materials_checked"]
+    require(
+        len(c0) == 1 and c0[0].get("authority_sha256") == grant["sha256"],
+        "RR08 initial raw-material check missing or duplicated",
+    )
+    _bound(c0[0]["path"], c0[0]["file_sha256"])
+    refs = selection["disclosures"]
+    raw = {key: _read(_bound(ref["path"], ref["sha256"])) for key, ref in refs.items()}
+    failed_runs = {}
+    for key in ("warm3", "warm5"):
+        packet = raw[key]
+        source_match(packet["source"])
+        _drivers_unchanged(
+            packet["source"], ("cases", "oracles", "runner", "checker", "resources", "warm")
+        )
+        _tree_bound(_path(refs[key]["path"]), packet)
+        records = packet["records"]
+        failed = [r for r in records if r["pass"] is not True]
+        require(
+            len(records) == 80 and len(failed) == 5 and packet["all_correct"] is False,
+            "RR08 failed-run denominator differs",
+        )
+        require(
+            {(r["id"], r["mode"], r["repetition"]) for r in failed}
+            == {("WARM-BOUND-02", "cold", i) for i in range(5)},
+            "RR08 failed-run identities differ",
+        )
+        require(
+            all(r["monitor"]["guard_reason"] == "harness_timeout" for r in failed),
+            "RR08 failed-run reason differs",
+        )
+        failed_runs[key] = {"evidence": refs[key], "passed": 75, "total": 80, "failures": failed}
+    observer = raw["warm4_observer"]
+    validate_rr08_observer(observer, events, refs["warm4_observer"]["path"])
+    source_match(observer["source"])
+    frequency, stopped = raw["rr07_frequency"], raw["rr07_stop"]
+    require(
+        frequency["qualified"] is False
+        and frequency["frequency_relative_difference"] > 0.1
+        and stopped["warm6_started"] is False
+        and stopped["decision"] == "HOLD",
+        "RR08 must preserve RR07 rejection and unstarted warm6",
+    )
+    accepted = selection["accepted_evidence"]
+    chosen = _bound(accepted["path"], accepted["sha256"])
+    metadata = {
+        "accepted_evidence": accepted,
+        "claim_scope": selection["claim_scope"],
+        "prior_failed_runs": [failed_runs["warm3"]],
+        "subsequent_failed_runs": [failed_runs["warm5"]],
+        "auxiliary_observation_gap": {
+            "status": "HOLD",
+            "evidence": refs["warm4_observer"],
+            "sample_count": 0,
+            "errors": observer["errors"],
+        },
+        "rr07_auxiliary_rejection": {
+            "status": "HOLD",
+            "evidence": refs["rr07_frequency"],
+            "relative_difference": frequency["frequency_relative_difference"],
+            "warm6_started": False,
+            "stop_evidence": refs["rr07_stop"],
+        },
+        "selection_receipt": _ref(path),
+    }
+    return chosen, _read(chosen), metadata, [_ref(path), *refs.values()]
+
+
+def warm_check(rr08_receipt=None):
     from .warm import aggregate
 
-    path, summary = _latest_folder("warm")
+    disclosure, additional_refs = {}, []
+    if rr08_receipt is None:
+        path, summary = _latest_folder("warm")
+    else:
+        path, summary, disclosure, additional_refs = rr08_selected_materials(rr08_receipt)
     source_match(summary["source"])
     _drivers_unchanged(
         summary["source"], ("cases", "oracles", "runner", "checker", "resources", "warm")
@@ -508,7 +681,8 @@ def warm_check():
         "cross_solve_reuses": reuse,
         "state_solves": 1600,
         "initial_solves": 80,
-        "evidence_refs": [_ref(path)],
+        "evidence_refs": [_ref(path), *additional_refs],
+        **disclosure,
     }
 
 
@@ -666,9 +840,7 @@ def mip_cg_check():
 def _historical_reference_inventory(models, references):
     """Old audit stores one record per model/configuration, not one per model."""
     names = [model["name"] for model in models]
-    expected = {
-        (name, config) for name in names for config in ("default", "reference_controls")
-    }
+    expected = {(name, config) for name in names for config in ("default", "reference_controls")}
     actual = [(record["id"], record["config"]) for record in references]
     require(
         len(names) == len(set(names)) == 192
@@ -761,9 +933,7 @@ def historical_check():
             "Saved diagnostic was re-solved",
         )
         original_path = (
-            ledger.ROOT
-            / "outputs/prototype/validation/diagnostics"
-            / (identifier + "_output.json")
+            ledger.ROOT / "outputs/prototype/validation/diagnostics" / (identifier + "_output.json")
         )
         require(
             record["source_sha256"] == ledger.sha(original_path), "Saved diagnostic source differs"
@@ -1096,7 +1266,7 @@ def _item(identifier, name, function):
         }
 
 
-def sp4():
+def sp4(rr08_receipt=None):
     def historical_and_quality():
         historical, quality = historical_check(), quality_check()
         return {
@@ -1111,7 +1281,11 @@ def sp4():
             (1, "preimplementation_freeze", frozen_sp1_gate),
             (2, "end_to_end_sparse_lp", capacity_check),
             (3, "real_basis_updates", mechanism_check),
-            (4, "four_edit_correctness_and_speed", warm_check),
+            (
+                4,
+                "four_edit_correctness_and_speed",
+                warm_check if rr08_receipt is None else lambda: warm_check(rr08_receipt),
+            ),
             (5, "sparse_mip_and_cg", mip_cg_check),
             (6, "old_behavior_and_identity", historical_and_quality),
             (7, "candidate_and_eight_installs", delivery_check),
@@ -1179,8 +1353,8 @@ def validate_final_review(review, items, current=None):
     return {"reviewer": reviewer["id"], "criteria": 8, "decision": "GO"}
 
 
-def final():
-    checks = sp4()
+def final(rr08_receipt=None):
+    checks = sp4() if rr08_receipt is None else sp4(rr08_receipt)
     report = {"schema_version": 1, "source": ledger.identity(), **checks, "overall_complete": False}
     try:
         require(
@@ -1197,7 +1371,8 @@ def final():
     folder = ledger.OUT / "evaluation"
     folder.mkdir(exist_ok=True)
     path = folder / f"final_{ledger.utc().replace(':', '-')}.json"
-    path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    with path.open("x", encoding="utf-8") as stream:
+        json.dump(report, stream, indent=2)
     print(
         json.dumps(
             {
@@ -1210,10 +1385,12 @@ def final():
     return 0 if report["overall_complete"] else 1
 
 
-def evaluate(stage):
+def evaluate(stage, rr08_receipt=None):
     try:
         function = {"SP1": sp1, "SP2": sp2, "SP3": sp3, "SP4": sp4}[stage]
-        checks = function()
+        if rr08_receipt is not None:
+            require(stage in ("SP3", "SP4"), "RR08 selection is only for SP3/SP4")
+        checks = function() if rr08_receipt is None else function(rr08_receipt)
         passed = checks["mechanical_checks_pass"] if stage == "SP4" else True
         value = {
             "stage": stage,
@@ -1240,7 +1417,8 @@ def evaluate(stage):
     folder = ledger.OUT / "evaluation"
     folder.mkdir(exist_ok=True)
     path = folder / f"{stage}_{ledger.utc().replace(':', '-')}.json"
-    path.write_text(json.dumps(value, indent=2), encoding="utf-8")
+    with path.open("x", encoding="utf-8") as stream:
+        json.dump(value, stream, indent=2)
     print(
         json.dumps(
             {

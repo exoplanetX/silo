@@ -55,6 +55,7 @@ def main():
     )
     evaluate = sub.add_parser("evaluate")
     evaluate.add_argument("--stage", choices=("SP1", "SP2", "SP3", "SP4"), required=True)
+    evaluate.add_argument("--rr08-receipt", help="Explicit contract-pinned RR08 evidence receipt")
     warm = sub.add_parser("warm")
     warm.add_argument("--round", type=int, choices=(1, 2, 3, 4, 5, 6), required=True)
     warm.add_argument("--repetitions", type=int, choices=(5,), required=True)
@@ -65,6 +66,7 @@ def main():
     install.add_argument("--reuse-delivery", help="Authorized recheck of unchanged archives")
     summary = sub.add_parser("summary")
     summary.add_argument("--final", action="store_true")
+    summary.add_argument("--rr08-receipt", help="Explicit contract-pinned RR08 evidence receipt")
     args = parser.parse_args()
     if args.command == "warm" and args.round >= 4:
         from sparse_program.host_load import validate_baseline
@@ -136,6 +138,8 @@ def main():
                 "historical": 1200,
             }.get(group, 60),
         }.get(args.command, 60)
+        if getattr(args, "rr08_receipt", None):
+            stage, timeout = "SP4", 180
         return ledger.command(
             [sys.executable, str(Path(__file__).resolve()), "--internal", *sys.argv[1:]],
             stage=stage,
@@ -159,8 +163,12 @@ def main():
         if args.final:
             from sparse_program.evaluation import final
 
-            return final()
+            return final(args.rr08_receipt)
         return 0
+    if args.command == "evaluate" and args.rr08_receipt:
+        from sparse_program.evaluation import evaluate
+
+        return evaluate(args.stage, args.rr08_receipt)
     if args.command == "warm" and args.round >= 4:
         from sparse_program.host_load import execute_supervised_warm
 

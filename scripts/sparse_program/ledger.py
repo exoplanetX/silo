@@ -18,6 +18,14 @@ CONTRACT = "20261024-02-01_sparse-lp-program"
 STAGE_SECONDS = {"SP1": 1800, "SP2": 3600, "SP3": 10800, "SP4": 10800, "reserve": 1800}
 TOTAL_SECONDS = 28800
 GROUP_ROUNDS = {"capacity": 2, "netlib": 2, "warm": 3, "quality": 3, "diagnostic": 20}
+RR08_CONTRACT = "tasks/codex/20261024-02-08_sparse-lp-program.md"
+RR08_CONTRACT_SHA = "90bb81965ce5e9d23ffee1c5fe7fb5d900ee5f4de498e5ce7bf24e856aa96216"
+RR08_SOURCE_SHA = "889d191b05736d36de4cd935aecf15e77900d6e7c0f2c5bb8d6bef5914439669"
+RR08_WARM_REF = {
+    "path": "outputs/sparse_lp_program_20261024/warm/"
+    "round4_f8279cbc-be58-4599-b0c4-bf1321e01bc2/summary.json",
+    "sha256": "67075757acf4802a8ad040deeffa82d2f3ee80c91c9d60bf685e39825c452088",
+}
 
 
 def warm4_grant(events):
@@ -180,6 +188,7 @@ def await_runtime_parent_ready(parent_run, timeout=5):
 
 
 def validate_runtime_probe_request(events, source_sha256, *, stage, used, argv, timeout, calls):
+    assert closure_grant(events) is None, "RR08 closes unused probe permissions"
     grant = runtime_stability_grant(events)
     assert grant is not None and source_sha256 == grant["source_sha256"]
     assert stage == "SP3" and used in (20, 21), "Only the two fixed probes are authorized"
@@ -196,6 +205,7 @@ def validate_runtime_probe_request(events, source_sha256, *, stage, used, argv, 
 
 
 def validate_runtime_host_request(events, source_sha256, *, stage, argv):
+    assert closure_grant(events) is None, "RR08 closes unused host permissions"
     grant = runtime_stability_grant(events)
     assert grant is not None and grant["source_sha256"] == source_sha256
     assert stage == "SP4" and len(argv) == 5 and argv[2] == "--preflight"
@@ -211,6 +221,44 @@ def validate_runtime_host_request(events, source_sha256, *, stage, argv):
     return grant["sha256"]
 
 
+def closure_grant(events):
+    grants = [e for e in events if e["kind"] == "human_original_goal_closure"]
+    if not grants:
+        return None
+    assert len(grants) == 1, "RR08 requires one unique direct human authority"
+    grant = grants[0]
+    expected = {
+        "active_revision": "RR08",
+        "source_thread": "01a1254a-b349-77d0-8c66-d4b711cd511f",
+        "source_user_message": "01a172de-5ccd-74e1-b085-089b9b7d2ee9",
+        "revision_contract": RR08_CONTRACT,
+        "revision_contract_sha256": RR08_CONTRACT_SHA,
+        "source_sha256": RR08_SOURCE_SHA,
+        "accepted_evidence": RR08_WARM_REF,
+        "previous_quality_ceiling": 5,
+        "new_quality_ceiling": 7,
+        "additional_quality_rounds": 2,
+        "quality_batch_seconds": 180,
+        "evidence_batches": 2,
+        "evidence_batch_seconds": 180,
+        "independent_review_seconds": 180,
+        "maximum_added_validation_seconds": 900,
+        "warm6_closed": True,
+        "host_permissions_closed": True,
+        "new_formal_solver_runs": 0,
+        "new_installations": 0,
+        "original_eight_criteria_unchanged": True,
+        "goal_thread": "01a15208-bea9-7030-aacc-95d785e8fa58",
+    }
+    assert all(grant.get(k) == v for k, v in expected.items()), "RR08 scope differs"
+    assert grant.get("human_instruction") and grant.get("baseline_seconds")
+    baseline = grant["baseline_seconds"]
+    assert set(baseline) == set(STAGE_SECONDS)
+    assert all(0 <= baseline[k] <= STAGE_SECONDS[k] for k in baseline)
+    assert sum(baseline.values()) == grant.get("baseline_total_seconds"), "RR08 baseline differs"
+    return grant
+
+
 def round_limits(events):
     limits = GROUP_ROUNDS.copy()
     if warm4_grant(events) is not None:
@@ -219,6 +267,8 @@ def round_limits(events):
         limits.update(warm=5, quality=4)
     if runtime_stability_grant(events) is not None:
         limits.update(warm=6, quality=5, diagnostic=22)
+    if closure_grant(events) is not None:
+        limits.update(warm=5, quality=7, diagnostic=22)
     return limits
 
 
@@ -238,6 +288,7 @@ def validate_warm4_request(events, source_sha256, *, group, stage, reserve_round
 def validate_supervised_request(
     events, source_sha256, *, round_number, group, stage, reserve_round, used, argv
 ):
+    assert closure_grant(events) is None, "RR08 closes unused warm permissions"
     assert round_number in (4, 5, 6), "Unsupported supervised warm round"
     grant = {4: warm4_grant, 5: supervision_recovery_grant, 6: runtime_stability_grant}[
         round_number
@@ -273,8 +324,13 @@ def validate_quality4_request(events, source_sha256, *, stage, used, argv):
 
 
 def validate_extended_quality_request(events, source_sha256, *, stage, used, argv, ordinal):
-    assert ordinal in (4, 5)
-    grant = (supervision_recovery_grant if ordinal == 4 else runtime_stability_grant)(events)
+    assert ordinal in (4, 5, 6, 7)
+    grant = {
+        4: supervision_recovery_grant,
+        5: runtime_stability_grant,
+        6: closure_grant,
+        7: closure_grant,
+    }[ordinal](events)
     assert grant is not None, "Extended quality lacks direct human authority"
     assert stage == "SP4" and used == ordinal - 1, "Quality requires its exact stage and ordinal"
     assert source_sha256 == grant["source_sha256"], "Quality source differs"
@@ -286,6 +342,20 @@ def validate_extended_quality_request(events, source_sha256, *, stage, used, arg
         and event.get(f"quality{ordinal}_authority_sha256") == grant["sha256"]
         for event in events
     ), "Extended quality authority already consumed"
+    if ordinal == 7:
+        starts = [
+            e
+            for e in events
+            if e["kind"] == "command_started"
+            and e.get("quality6_authority_sha256") == grant["sha256"]
+        ]
+        assert len(starts) == 1, "Quality7 requires its first attempt"
+        assert any(
+            e["kind"] == "command_finished"
+            and e.get("run") == starts[0]["run"]
+            and e.get("exit_code") != 0
+            for e in events
+        ), "Quality7 is only for a genuine failed quality6 correction"
     return grant["sha256"]
 
 
@@ -438,6 +508,30 @@ def command(
     )
     used = totals()
     ident = identity()
+    closure = closure_grant(history())
+    if closure is not None:
+        assert stage == "SP4", "RR08 verification must charge its original SP4 bucket"
+        assert group not in {
+            "warm",
+            "diagnostic",
+            "capacity",
+            "netlib",
+            "baseline",
+            "install-checks",
+            "tiny",
+            "pressure",
+            "mechanism",
+            "mip-cg",
+            "historical",
+            "sp2-smoke",
+            "runtime-host",
+            "preflight",
+        }, "RR08 closes formal solver, installation and host execution"
+        assert ident["source_sha256"] == closure["source_sha256"], "RR08 source changed"
+        added = used["total_seconds"] - closure["baseline_total_seconds"]
+        assert timeout is not None and timeout <= 900 - added, "RR08 verification budget exhausted"
+        if group == "quality":
+            assert timeout <= 180, "RR08 quality batch exceeds180s"
     warm_authority, quality_authority = None, None
     probe_authority, host_authority, quality_ordinal = None, None, None
     if warm_round in (4, 5, 6) or (
@@ -511,6 +605,9 @@ def command(
         warm6_authority_sha256=warm_authority if warm_round == 6 else None,
         quality4_authority_sha256=quality_authority if quality_ordinal == 4 else None,
         quality5_authority_sha256=quality_authority if quality_ordinal == 5 else None,
+        quality6_authority_sha256=quality_authority if quality_ordinal == 6 else None,
+        quality7_authority_sha256=quality_authority if quality_ordinal == 7 else None,
+        rr08_authority_sha256=closure["sha256"] if closure is not None else None,
         runtime_probe_authority_sha256=probe_authority,
         runtime_host_authority_sha256=host_authority,
     )
