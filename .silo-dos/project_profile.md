@@ -29,10 +29,13 @@ RR05已用2/3，第2窗quiet通过后执行warm4，剩余1窗；8环境及数值
 用户call_de30bd6eb2384ab388f2c29188b6049d已明确批准[RR06](../tasks/codex/20261024-02-06_sparse-lp-program.md)：
 记录器精确修补及一次性额度门、quality3→4/warm4→5各仅一次、host≤3窗包含RR05余1窗。
 提交2c09e90后完整质量6622通过，保护drivers与生产source不变；RR06 host第2窗quiet后执行warm5，现5/5及quality4/4用满，host余1窗。
-当前仅继续原始数据只读审查；post-run微软OneDrive同步服务CPU约1.04核是新线索，尚无因果证明。
-不改变原算法/阈值或扩大次数；先准备集中CPU/墙钟/I/O诊断方案，原Goal保持未完成。
-集中恢复提案已备妥；连续三轮复核仍缺直接人类授权，已启动作业全部结束。
-当前停止新增执行并按Goal规则申请blocked；批准该提案后续接同一完整目标，不新建Goal。
+用户call_8b0bb8cd29ae4555b6794390d2bc8466直接批准
+[RR07](../tasks/codex/20261024-02-07_sparse-lp-program.md)：临时暂停OneDrive并结束恢复原状态，
+两条原BOUND02 cold固定21调用、75秒批次/60秒child/1GiB；各正确且完整wall≤45秒、
+频率/供电/priority/affinity稳定后，才可运行唯一原80项warm6。quality仅追加5，host≤4窗（含RR06余1）。
+原算法/工件/输入/阈值及总预算保持。用户已手动暂停，原状态syncing；61组件和真实无SILO并发遥测canary通过。
+当前工具工程已GO，quality5/两诊断/warm6尚未执行；Goal按本次直接授权续接，阻断审计重新计数。
+本包任一诊断未达即停止新增求解并恢复同步；同步唯一因果尚未证明。
 后续真实预算、轮次及结果以原追加ledger为准；所有旧失败和费用继续保留。
 
 全部原八项及最终独立GO齐备才完成同一Goal；Goal工具旧blocked状态没有active设置，

@@ -371,6 +371,15 @@ algorithm/artifact/input/tolerance/resource/time identities and every failure. O
 caps stay fixed. No warm6, quality5 or fourth package window. Final continuous trace
 and independent eight-item GO are still mandatory; RR02 remains the total report.
 
+Human replycall_8b0bb8cd29ae4555b6794390d2bc8466 activates only
+[RR07](codex/20261024-02-07_sparse-lp-program.md): temporary OneDrive pause (exit if
+needed) and restoration, two fixed BOUND02 cold probes (75s batches, original60s/1GiB
+child), one quality5 and conditional single original80-child warm6. Both complete
+probes must be correct, <=45s child wall and meet the preregistered telemetry/stability
+conditions before the formal group. Up to4 zero-solver20s host windows include RR06's
+transferred remaining window. Numerical source, artifacts, inputs, original formal
+gates and all time budgets stay. No third probe, warm7, quality6 or fifth window.
+
 The human requested a detailed execution package and said they will later start it
 in the development conversation using Goal mode. The
 [prepared total contract](codex/20261024-02-01_sparse-lp-program.md),

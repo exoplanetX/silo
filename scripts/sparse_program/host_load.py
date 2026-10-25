@@ -24,6 +24,9 @@ COMPUTE = {
     "julia.exe",
     "matlab.exe",
     "kimi.exe",
+    "onedrive.exe",
+    "onedrive.sync.service.exe",
+    "nutstoreclient.exe",
 }
 
 
@@ -182,10 +185,12 @@ def validate_warm4_parent(events, parent_run, source_sha256):
 
 
 def validate_supervised_parent(events, parent_run, source_sha256, *, warm_round):
-    assert warm_round in (4, 5), "Unsupported supervised child round"
-    grant = (
-        ledger.warm4_grant(events) if warm_round == 4 else ledger.supervision_recovery_grant(events)
-    )
+    assert warm_round in (4, 5, 6), "Unsupported supervised child round"
+    grant = {
+        4: ledger.warm4_grant,
+        5: ledger.supervision_recovery_grant,
+        6: ledger.runtime_stability_grant,
+    }[warm_round](events)
     assert grant is not None, "Supervised child lacks direct human authority"
     assert grant["source_sha256"] == source_sha256, "Supervised child source differs"
     starts = [
@@ -232,9 +237,13 @@ def execute_supervised_warm(args):
     identity, environment = ledger.identity(), ledger.environment()
     parent_run = os.environ.get("SILO_SPARSE_ACCOUNT_PARENT")
     assert parent_run, "Warm4 requires its real public accounting parent"
+    if args.round == 6:
+        ledger.await_runtime_parent_ready(parent_run)
     parent = validate_supervised_parent(
         ledger.history(), parent_run, identity["source_sha256"], warm_round=args.round
     )
+    if args.round == 6:
+        ledger.check_runtime_freeze(ledger.history(), identity)
     parent_identity = json.loads((ledger.ROOT / parent_run / "identity.json").read_text())
     assert ledger.digest(parent_identity) == parent["identity_sha256"]
     assert all(parent_identity[key] == identity[key] for key in ("source", "scripts", "inputs"))

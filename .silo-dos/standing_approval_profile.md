@@ -35,6 +35,14 @@ including RR05's transferred remaining window. Original numerical source/artifac
 thresholds/budgets stay; all past failures persist. This supersedes the earlier code
 freeze and4/3 caps only for that package. No sixth warm or fifth quality authority.
 
+Human replycall_8b0bb8cd29ae4555b6794390d2bc8466 authorizes only
+[RR07](../tasks/codex/20261024-02-07_sparse-lp-program.md): pause/restore OneDrive,
+two fixed cold probes (each75s batch, original60s/1GiB child), quality5 and a single
+conditional warm6 after both <=45s correct stable probes; <=4 host windows include
+RR06's transferred unused window. Same Goal/source/artifacts/original formal gates/
+budgets. No automatic extra probe or seventh warm. New direct authority resumes the
+existing blocked Goal's execution; it does not create a new Goal or alter its objective.
+
 The human directly started the prepared contract20261024-02-01 in the development
 chat using Goal mode on2026-10-24. This exact program now has its listed L2/L3
 solver/dependency/API/local packaging authority and SP1–SP4 continuity; it does not
