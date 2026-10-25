@@ -17,7 +17,7 @@ PROGRAM = "SILO-SPARSE-LP-20261024"
 CONTRACT = "20261024-02-01_sparse-lp-program"
 STAGE_SECONDS = {"SP1": 1800, "SP2": 3600, "SP3": 10800, "SP4": 10800, "reserve": 1800}
 TOTAL_SECONDS = 28800
-GROUP_ROUNDS = {"capacity": 2, "netlib": 2, "warm": 2, "quality": 3, "diagnostic": 20}
+GROUP_ROUNDS = {"capacity": 2, "netlib": 2, "warm": 3, "quality": 3, "diagnostic": 20}
 
 
 def digest(value):

@@ -336,6 +336,15 @@ original SP3-SP4. Existing Goal and append-only ledger persist. RR02's matching 
 becomes the single current total report when execution starts;01 report retains history.
 No push/publication/native/original C/D/E. Other tasks keep their existing rules.
 
+Direct human narrow extension2026-10-25, replycall_554103221b16444996333aabfb6b2326:
+authorize exactly one additional fixed formal warm round on the repaired current source.
+[RR03](codex/20261024-02-03_sparse-lp-program.md) raises this program's warm ceiling2→3;
+round3 retains all80 children, five repeats,1600 modified/80 initial states, inputs,
+tolerances,60s/1GiB and original SP3/global budgets. Prior rounds and costs remain.
+No fourth warm, extra capacity/Netlib round, new Goal, algorithm bridge or broader
+authority follows. RR03's small matching report records the exception; RR02 remains
+the single current total report. This supersedes the two-round ceiling only as stated.
+
 The human requested a detailed execution package and said they will later start it
 in the development conversation using Goal mode. The
 [prepared total contract](codex/20261024-02-01_sparse-lp-program.md),

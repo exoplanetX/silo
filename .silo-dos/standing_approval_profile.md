@@ -10,6 +10,12 @@ remaining original time. Supported numerical strategy changes are explicitly sco
 fixed inputs/truth/tolerances/eight outcomes stay. Same Goal/ledger, SP2 GO then SP3-SP4,
 local-only commits. No generic standing approval expansion or renewed patch-by-patch ask.
 
+Human replycall_554103221b16444996333aabfb6b2326 directly authorizes
+[RR03](../tasks/codex/20261024-02-03_sparse-lp-program.md): only one further fixed formal
+warm round, raising this program's ceiling2→3 with all prior costs, original80-child
+denominator, inputs/tolerances/guards and SP3/global time budgets retained. No fourth
+round or wider standing authority. RR02 remains the sole current total report.
+
 The human directly started the prepared contract20261024-02-01 in the development
 chat using Goal mode on2026-10-24. This exact program now has its listed L2/L3
 solver/dependency/API/local packaging authority and SP1–SP4 continuity; it does not

@@ -2,11 +2,11 @@
 lesson_id: L0015
 title: 稀疏基、eta更新与重构后的状态一致性
 topic: lp.sparse-basis-updates
-version: 0.2.1
+version: 0.2.2
 status: checked
 created: 2026-10-25
 updated: 2026-10-25
-verified_code: c3fea18ca45740338bdc4d2a2add828a916e804a
+verified_code: a9f321374d4ca4758aa63d178f224c33b2a1eb0f
 verified_on: 2026-10-25
 source_tasks: [20261024-02-01_sparse-lp-program, 20261024-02-02_sparse-lp-program]
 ---
@@ -156,6 +156,30 @@ Phase I最大化\(-\sum a_i\)，而\(a_i\ge0\)，所以可行目标的上界为0
 Harris出基仍按稳定性排序，因此不援引经典完整Bland有限终止定理；迭代、时限和资源门保持。
 dual退出及pricing的独立policy版本加入私有frame，旧策略缓存不能静默复用。
 
+### 固定工作区中的精确删行依据
+
+人工变量清理遇到近相关行时，已有同代BTRAN只用于提出权重候选。
+设缩放基为\(B_s\)，目标基本人工列位于基位置p、物理行t，
+\(u=B_s^{-T}e_p\)。以\(R\)表示行尺度，先用\((R_i u_i)/(R_t u_t)\)
+恢复未缩放行权重，再按固定分母上限\(10^6\)提出有理候选\(w\)。
+接受条件直接针对原始二进制数据：\(w_t=1\)、全部非人工列上的
+\(w^T N=0\)及偏移后右端\(w^T h=0\)，全部用Fraction精确运算。
+实际RHS翻转、变量offset、补界行及slack支持均进入核验；其他基本人工列的支持须为零。
+
+例如\(x+y=2\)、\(2x+2y=4\)取\(w=(-2,1)\)，两列与RHS都精确抵消，
+第二行可由第一行恢复。把第二行y系数改成\(2+2^{-39}\)后，残留精确非零，
+同一候选必须失败。有限分母候选可以漏掉真实依赖，不能接受虚假依赖。
+
+实现只保留q个权重和n个结构列累计量，在Fraction容器分配前预约
+\(2q+2n+32\)格；976行、1列例仅需1986格。65536格、操作数、位数及时限
+继续由同一个ProofBudget管理，旧小基精确消去fallback使用其剩余额度。
+这避免为大基构造完整有理稠密矩阵。
+
+精确依赖说明删行保持非人工可行方程。删行后minor的精确非奇异结论另需旧B精确非奇异；
+数值LU本身不提供这个精确秩前提。实现先私有构造缩减矩阵、真实LU及完整B/BT清理状态，
+通过同代、有限性、原primal与正部人工量门后才发布行映射和新基。
+新因子失败时不登记已删行，也不产生最优或Farkas结论。
+
 ## 5. 算法到代码的映射
 
 | 对象 | 当前实现及职责 |
@@ -166,6 +190,7 @@ dual退出及pricing的独立policy版本加入私有frame，旧策略缓存不�
 | Phase I/II及Devex/Bland | `lp/sparse_kernel.py:solve_canonical` |
 | 行级两遍选择及实际两次试算 | `lp/sparse_ratio.py:leaving_order`、内核`full_trial` |
 | 清理的原始可行/正部人工量门 | 内核`cleanup_state`，逐次检查当前B |
+| 流式精确行依赖与暂存删行 | `lp/sparse_dependency.py:prove_dependency`；内核私有缩减因子通过后发布 |
 | 原空间映射dual退出 | `lp/sparse_dual.py:mapped_blockers`，潜在退出处检查 |
 | 被动语义基 | version3 `BasisSnapshot`，CSC系数为不可变tuple |
 | 私有可变LU/eta | `lp/session.py:LPSession`独占；结果领取后删除传递槽 |
@@ -236,8 +261,10 @@ assert result.diagnostics["mapped_dual_pivots"] == 1
 ```
 
 上列保存程序已原样运行，2次公开LP、2次真实LU全部返回，并独立核算一次2x2转置方程。
-收据为outputs/sparse_lp_program_20261024/reviews/learning_example_receipt.json。
-159组件覆盖正文边界；E01–E10的代数与反例按上述实际源码及独立数学门核对。
+当前算法复验收据为outputs/sparse_lp_program_20261024/reviews/learning_example_sp4_receipt.json；
+原SP3收据learning_example_receipt.json保留。
+174组件覆盖正文边界，包含976行线性工作区、65536格边界和删行发布失败；
+E01–E11的代数与反例按上述实际源码及独立数学门核对。
 
 ## 7. 研究意义与可扩展问题
 
@@ -299,7 +326,7 @@ TRANS的rho约−1.76751e−4，进入坐标自身就不满足原约4.85714e−7
 因此“换基提交前验证”只是局部不变量；继续primal选择前，任何新发布的同基generation
 也必须有完整、通过原门的状态。旧残差已经失败时，不能保留不可信旧因子继续运行。
 第7轮获得单独人类授权后，将三类主动同基刷新统一为私有试算，完整state通过后发布。
-118组件及172公开集成已通过；该轮唯一固定复验仍未达到容量目标，正文保持draft。
+118组件及172公开集成已通过；该轮唯一固定复验仍未达到容量目标，当时正文保持draft。
 该第7轮两例的终止原因已转为所有改善列均被安全门拒绝；未触资源保护，也没有获得最优性证明。
 保留可信状态解决了发布安全问题；其后RR02行级窗口补齐选择缺口并通过两固定CAP。
 这仍不保证所有病态模型都能安全推进，不能由拒绝集合推出最优。
@@ -324,3 +351,5 @@ SP2 GO与8机制通过分别登记，正式轨迹及最终交付未完成，继�
 同日第二包：补充原空间映射dual门、非零等式残差、仅重复基定价回退和可执行公共接口小例。
 同日v0.2.1：原样运行保存小例并核对当前提交、159组件及第二轮正式轨迹；教学内容改为checked，
 完整规模/外部组和候选安装继续保留实际未验边界。
+同日v0.2.2：补充固定分母候选、原始精确流式依赖、共享证明预算及删行前完整状态门；
+174组件与独立SOURCE/MATH核对通过。旧warm源身份与新增证明源码分开记录，正式最终门仍须当前源码结果。

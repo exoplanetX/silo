@@ -6,7 +6,7 @@ version: 0.2.0
 status: checked
 created: 2026-10-24
 updated: 2026-10-25
-verified_code: c3fea18ca45740338bdc4d2a2add828a916e804a
+verified_code: a9f321374d4ca4758aa63d178f224c33b2a1eb0f
 verified_on: 2026-10-25
 source_tasks: [20261023-02-01_teaching-prototype, 20261024-02-01_sparse-lp-program, 20261024-02-02_sparse-lp-program]
 ---

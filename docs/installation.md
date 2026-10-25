@@ -1,11 +1,15 @@
 # 安装与发行物验证
 
-本地0.2.0a1的wheel/sdist已经通过Windows Python3.11/3.13四个独立安装组合。
-实际命令、工件身份与失败重试见下文；远端CI四组合仍待运行。
+当前本地候选为0.3.0a1，目标为Windows Python3.11/3.13 × dense/sparse × wheel/sdist
+八个独立安装组合。实际完成状态、工件身份和失败重试以
+[当前总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)及其原始收据为准。
+下文0.2.0a1四组合属于保留的历史证据；远端CI保持pending。
 
 ## 运行环境
 
-包声明 Python 3.10 及以上，原生运行时依赖 NumPy。SciPy 只用于可选外部求解对照。
+包声明 Python 3.10 及以上，默认dense运行时依赖NumPy。
+显式sparse引擎要求Python>=3.11并安装`sparse` extra，固定SciPy1.16.3提供CSC和稀疏LU；
+原生算法不调用SciPy优化器。外部HiGHS比较由另一个可选extra启用。
 本轮本地验收目标为 Windows Python 3.11、3.13；CI 计划覆盖 Windows/Linux ×
 Python 3.10、3.12。尚未运行的组合保持 pending。
 
@@ -69,6 +73,25 @@ MILP 的 `backend_relative_gap` 保留外部口径；`relative_gap` 使用 SILO 
 无可行点或无有限 dual bound 时不生成有限 gap。
 接口映射参考 [SciPy linprog](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
 与 [SciPy milp](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.milp.html)。
+
+## 0.3.0a1的稀疏选择与八组合隔离检查
+
+明确安装当前本地工件和NumPy；sparse环境额外安装SciPy1.16.3，然后使用
+`SolveOptions(lp_engine="sparse")`或`python -m silo optimize model.json --lp-engine sparse`。
+dense环境中SciPy缺席；sparse环境中基础`import silo`仍延迟加载SciPy。
+缺少所需稀疏依赖时按公开结果报告不可用原因，不自动调用外部优化器。
+
+本程序通过`python scripts/sparse_program.py install-checks --candidate 0.3.0a1`，
+从干净已提交Git归档构建两份工件，逐项比较全部Python模块、版本和依赖元数据。
+构建目录与八个新环境位于源码导入路径以外，检查一律采用`python -I`及普通安装。
+本次固定NumPy2.3.5；sparse固定SciPy1.16.3，dense要求SciPy不存在。
+轮次、构建、下载、环境创建、每次失败和检查统一进入原SP4账本。
+只允许同SHA工件的一次纯环境失败重试，失败环境及日志保留。
+
+`scripts/sparse_program/check_installed.py`核对distribution/runtime、实际解释器、
+`direct_url.json`工件SHA及全部已载入模块的site-packages来源，并检查四类会话修改、
+LP/MILP的JSON/MPS CLI、公开研究例、全池精确终止及F1–F4回归。
+外部优化器入口受到禁止调用检查。八组合分别给出结果，有限本地验证不替代远端CI。
 
 ## M5 的独立安装检查
 

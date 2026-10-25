@@ -663,6 +663,42 @@ def mip_cg_check():
     }
 
 
+def _historical_reference_inventory(models, references):
+    """Old audit stores one record per model/configuration, not one per model."""
+    names = [model["name"] for model in models]
+    expected = {
+        (name, config) for name in names for config in ("default", "reference_controls")
+    }
+    actual = [(record["id"], record["config"]) for record in references]
+    require(
+        len(names) == len(set(names)) == 192
+        and len(actual) == len(set(actual)) == 384
+        and set(actual) == expected,
+        "Old192-model/two-configuration audit inventory differs",
+    )
+    truth = {}
+    for record in references:
+        value = (record["reference_status"], record["reference_objective"])
+        name = record["id"]
+        require(
+            name not in truth or truth[name] == value,
+            "Old audit paired reference truths disagree",
+        )
+        truth[name] = value
+    return truth
+
+
+def _historical_diagnostic_ids(frozen):
+    bases = frozen["ids"]
+    require(
+        len(bases) == len(set(bases)) == 8
+        and len(frozen["LP_variants"]) == 8
+        and frozen["calls_max"] == 64,
+        "Old saved-diagnostic recipe inventory differs",
+    )
+    return {f"D-{name}-{variant}" for name in bases for variant in range(8)}
+
+
 def historical_check():
     path, summary = _latest_folder("historical")
     source_match(summary["source"])
@@ -677,9 +713,9 @@ def historical_check():
     models_path = ledger.ROOT / "outputs/audit_20261024/probe_models.json"
     references_path = ledger.ROOT / "outputs/audit_20261024/probe_records.json"
     models, references = _read(models_path), _read(references_path)
-    require(len(models) == len(references) == 192, "Old192-model audit inventory differs")
+    _historical_reference_inventory(models, references)
     original = {e["id"] for e in [*old["cases"], *old["boundaries"]]}
-    diagnostics = {e["id"] for e in old["diagnostics"]}
+    diagnostics = _historical_diagnostic_ids(old["diagnostics"])
     audit_ids = {
         p["name"] + "_" + config for p in models for config in ("default", "reference_controls")
     }
@@ -718,8 +754,8 @@ def historical_check():
             records[entry["id"]]["input_sha256"] == entry["input_sha256"],
             "Historical boundary identity changed",
         )
-    for entry in old["diagnostics"]:
-        record = records[entry["id"]]
+    for identifier in diagnostics:
+        record = records[identifier]
         require(
             record["new_native_calls"] == 0 and record["native_calls"] == 0,
             "Saved diagnostic was re-solved",
@@ -727,7 +763,7 @@ def historical_check():
         original_path = (
             ledger.ROOT
             / "outputs/prototype/validation/diagnostics"
-            / (entry["id"] + "_output.json")
+            / (identifier + "_output.json")
         )
         require(
             record["source_sha256"] == ledger.sha(original_path), "Saved diagnostic source differs"

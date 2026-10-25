@@ -38,6 +38,9 @@ results expose tree bounds rather than LP shadow prices.
 | primal/dual/integrality tolerances | 1e-7 each | Separate original feasibility, stationarity and integer checks |
 | pivot/complementarity/objective tolerances | 1e-10,1e-7,1e-7 | Separate numerical decisions |
 | `max_dense_cells` | 2000000 | Conservative preallocation size gate |
+| `lp_engine` | dense | Explicit dense NumPy QR or optional sparse CSC/LU engine |
+| `max_sparse_nnz`, `max_factor_nnz` | 1000000,5000000 | Sparse matrix and factor-fill allocation gates |
+| `max_factor_updates` | 20 | Maximum eta chain before current-basis refactorization |
 | `cut_round_limit`, `cuts_per_round`, `cut_depth_limit` | 2,3,2 | Bounded local GMI loop |
 | `proof_operation_limit`, `integer_ray_proof_limit` | 2000000,1000000 | Exact proof work and integer-ray multiplier caps |
 
@@ -50,10 +53,12 @@ and [research interfaces](research_api.md) document the algorithm boundaries.
 CLI: `silo optimize model.json` or `python -m silo optimize model.mps`.
 Flags include `--time-limit`, `--node-limit`, `--lp-iteration-limit`,
 `--relative-gap`, `--absolute-gap`, `--node-strategy`, `--lp-method`,
-`--no-presolve`, `--no-scaling`, `--no-cuts`, `--no-heuristics`, `--output`.
+`--no-presolve`, `--no-scaling`, `--no-cuts`, `--no-heuristics`, `--lp-engine`, `--output`.
 Exit codes: optimal0, infeasible2, unbounded3, limit4, numerical_failure5,
 invalid_model6, unsupported7, file-output error1.
 
-The prototype uses dense NumPy QR and Python reference algorithms. Frozen inputs
-bound the measured domain; they give no arbitrary-instance time guarantee or
-industrial-performance claim. Native code never calls SciPy or another solver.
+Dense NumPy QR is the default. Explicit sparse mode lazily imports SciPy for CSC
+storage and sparse LU; SILO owns pricing, pivots, Phase I/II and termination.
+Sparse mode requires the `sparse` extra on Python 3.11 or newer. Native algorithms
+never invoke an external optimizer. Frozen inputs bound the measured domain;
+they give no arbitrary-instance time guarantee or industrial-performance claim.

@@ -8,8 +8,10 @@
 当前入口为[RR02合同](../tasks/codex/20261024-02-02_sparse-lp-program.md)、
 [集中恢复计划](../tasks/phases/sparse_lp_recovery_20261025.md)，依据
 [实施审查](../docs/sparse_execution_review_20261025.md)。
-仍是原SILO-SPARSE-LP-20261024及开发对话现有唯一Goal，当前SP1/SP2/SP3 GO，整体未完成。
-RR02产品c3fea18ca45740338bdc4d2a2add828a916e804a，沿用codex/sparse-lp-reoptimization；原七轮证据保留。
+仍是原SILO-SPARSE-LP-20261024及开发对话现有唯一Goal，SP1/SP2及旧源SP3 GO，整体未完成。
+当前算法a9f321374d4ca4758aa63d178f224c33b2a1eb0f，候选元数据0.3.0a1；沿用codex/sparse-lp-reoptimization。
+新增稀疏精确依赖通过174组件/独立SOURCE/MATH，最终48/24/12容量/12Netlib、8机制、12MIP/4CG及737历史全过。
+旧SP3正式结果不能桥接为新算法结果；用户已直接批准RR03唯一新增固定warm轮，第三轮尚未运行。
 SP3门实账1490.0927953/10800秒、SP2 785.8677913/3600秒，总2648.9643964/28800秒；后续以原ledger为准。
 授权一套联合数值恢复包，最多3新增60秒诊断（包含在原20批）和2次完整SP2联合验收
 （初包+最多1次有证据的修订），全部在原剩余时间内，不按内部补丁重复请求授权。
@@ -19,8 +21,8 @@ Devex/Bland控制调整须有独立证据；不扰动原问题，不改变输入
 RR02的R0/R1已完成，首轮48/24/6全过且两CAP真实optimal/KKT通过，独立审核SP2 GO。
 SP3两次修订后8机制及正式80/80、1600修改/80初始全部通过，独立联合GO；中位配对收益3.4547，8/8不回退。
 真实因子跨调用复用600次；ROW两轨迹按行增维重建因子，保留语义基warm。首轮70/80失败完整保留。
-当前连续执行原SP4的最终tiny/pressure、12容量、12Netlib、MIP/CG、历史/质量、候选与8安装。
-正式warm2/2已用满，不启动第三轮；13/20全局诊断含包装故障和超时均计账。
+当前连续执行原SP4的质量、候选与8安装准备；最终独立八项门仍待完成。
+正式warm2/3；capacity2/2、Netlib2/2已用满；14/20全局诊断含包装故障和超时均计账。
 RR02已用2/3新增诊断（原总4/20）、1/2联合轮；当前唯一[RR02总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)。
 01报告保留恢复前历史；现有Goal身份不变，启动工具状态仍blocked但本次明确授权允许本包执行。
 不创建替代Goal；新授权的诊断/联合轮及原实账继续累计。local-commit，无push。

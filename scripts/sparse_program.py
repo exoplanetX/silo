@@ -56,7 +56,7 @@ def main():
     evaluate = sub.add_parser("evaluate")
     evaluate.add_argument("--stage", choices=("SP1", "SP2", "SP3", "SP4"), required=True)
     warm = sub.add_parser("warm")
-    warm.add_argument("--round", type=int, choices=(1, 2), required=True)
+    warm.add_argument("--round", type=int, choices=(1, 2, 3), required=True)
     warm.add_argument("--repetitions", type=int, choices=(5,), required=True)
     install = sub.add_parser("install-checks")
     install.add_argument("--candidate", choices=("0.3.0a1",), required=True)

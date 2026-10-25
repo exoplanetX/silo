@@ -232,3 +232,65 @@ def test_sp4_missing_evidence_reports_all_eight_obligations(monkeypatch, tmp_pat
     checked = m.sp4()
     assert not checked["mechanical_checks_pass"] and checked["unmet_ids"] == list(range(1, 9))
     assert checked["technical_review_required"]
+
+
+def old_audit_inventory():
+    models = [{"name": f"audit_{i:03d}"} for i in range(192)]
+    records = [
+        {
+            "id": model["name"],
+            "config": config,
+            "reference_status": "optimal",
+            "reference_objective": i,
+        }
+        for i, model in enumerate(models)
+        for config in ("default", "reference_controls")
+    ]
+    return models, records
+
+
+def test_old_audit_uses_all_192_models_and_384_distinct_configuration_records(
+    monkeypatch, tmp_path
+):
+    m = module(monkeypatch, tmp_path)
+    models, records = old_audit_inventory()
+    truths = m._historical_reference_inventory(models, records)
+    assert len(truths) == 192 and truths["audit_191"] == ("optimal", 191)
+
+
+@pytest.mark.parametrize(
+    "mutation", ["one_config", "duplicate", "wrong_id", "wrong_config", "status", "objective"]
+)
+def test_old_audit_inventory_rejects_missing_duplicate_or_conflicting_truths(
+    monkeypatch, tmp_path, mutation
+):
+    m = module(monkeypatch, tmp_path)
+    models, records = old_audit_inventory()
+    if mutation == "one_config":
+        records = records[::2]
+    elif mutation == "duplicate":
+        records[-1] = copy.deepcopy(records[0])
+    elif mutation == "wrong_id":
+        records[-1]["id"] = "unknown"
+    elif mutation == "wrong_config":
+        records[-1]["config"] = "unknown"
+    elif mutation == "status":
+        records[-1]["reference_status"] = "infeasible"
+    else:
+        records[-1]["reference_objective"] += 1
+    with pytest.raises(m.EvidenceError):
+        m._historical_reference_inventory(models, records)
+
+
+def test_old_diagnostic_recipe_expands_all_64_saved_ids(monkeypatch, tmp_path):
+    m = module(monkeypatch, tmp_path)
+    frozen = {
+        "ids": [f"LP{i}" for i in range(4)] + [f"MI{i}" for i in range(4)],
+        "LP_variants": [f"variant{i}" for i in range(8)],
+        "calls_max": 64,
+    }
+    identifiers = m._historical_diagnostic_ids(frozen)
+    assert len(identifiers) == 64 and {"D-LP0-0", "D-MI3-7"} <= identifiers
+    for key, value in (("ids", frozen["ids"][:-1]), ("calls_max", 63)):
+        with pytest.raises(m.EvidenceError):
+            m._historical_diagnostic_ids({**frozen, key: value})

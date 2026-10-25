@@ -1,9 +1,11 @@
 # SILO: Simplex and Integer Linear Optimization
 
-SILO is a Python/NumPy teaching and research prototype for dense, small-scale,
-general-form LP and MILP. The local candidate is **0.2.0a2**. Use `silo.solve()` or
+SILO is a Python/NumPy teaching and research prototype for general-form LP and
+MILP, with a dense reference engine and an optional sparse LP engine. The local
+candidate is **0.3.0a1**. Use `silo.solve()` or
 `silo optimize` for the general model pipeline. Local validation and artifact
-identities are recorded in the [prototype report](tasks/reports/20261023-02-01_teaching-prototype_report.md).
+identities and remaining acceptance checks are recorded in the
+[sparse program report](tasks/reports/20261024-02-02_sparse-lp-program_report.md).
 
 ## Project Philosophy
 
@@ -24,11 +26,13 @@ integer or binary domains. It includes:
 
 - Strict JSON and documented free-MPS input/output.
 - Reversible normalization, activity propagation, integer bound rounding and real scaling.
-- Native Phase I/II revised primal/dual simplex, cached QR factors and public LP reoptimization.
+- Native Phase I/II revised primal/dual simplex, dense QR or sparse LU/eta factors,
+  and public LP reoptimization with RHS, bounds, row and column edits.
 - Original-space primal/KKT checks and exact binary-rational infeasibility/ray evidence.
 - Deterministic branch-and-cut, global bounds/gaps, limits, heuristics and verified local GMI cuts.
 - Read-only research callbacks and general finite-pool CG with explicit feasibility recovery.
-- Optional SciPy/HiGHS comparisons isolated in `interfaces/`.
+- Optional sparse CSC/LU support through SciPy; optional SciPy/HiGHS optimizer
+  comparisons remain isolated in `interfaces/`.
 
 The older tableau/revised classes and `solve`/`mip-solve` CLI commands retain their
 documented standard-form domains. Their limits do not define `optimize`'s domain.
@@ -37,9 +41,14 @@ The native solver path does not call external solvers.
 
 ## Current Limitations
 
-- Dense reference arithmetic and a conservative memory gate; this is a small-model prototype.
-- Frozen validation sizes are capped at 200 LP variables/400 rows and 30 integer variables;
-  actual solved sizes and timings must be read from the benchmark report.
+- Dense is the default engine and retains its conservative allocation gate.
+  Select sparse explicitly with `SolveOptions(lp_engine="sparse")` or
+  `silo optimize model.json --lp-engine sparse`.
+- The fixed sparse validation includes up to 2000 variables, 5000 rows and 100000
+  nonzeros, plus 12 Netlib LPs. These finite cohorts establish the measured scope;
+  actual outcomes and timings belong to the program report. MILP remains a small-instance prototype.
+- Sparse factor fill, eta updates, exact proof work, iterations and wall time have
+  explicit limits. An unresolved numerical case can return `numerical_failure`.
 - Finite pricing pools only for the general CG reference; arbitrary external cut expressions,
   full branch-and-price/Benders, QP/conic/nonlinear models and parallel search remain outside this candidate.
 - Exact proof budgets can conservatively skip cuts or retain an unresolved result.
@@ -71,7 +80,15 @@ pip install -e ".[dev]"
 ```
 
 For a normal installation, install a specific locally built wheel with
-`python -m pip install dist/silo_solver-0.2.0a2-py3-none-any.whl`.
+`python -m pip install /absolute/path/to/silo_solver-0.3.0a1-py3-none-any.whl`.
+The dense engine requires NumPy only. Sparse support requires Python 3.11 or newer
+and the `sparse` extra, which pins SciPy 1.16.3:
+
+```bash
+pip install "silo-solver[sparse] @ file:///absolute/path/to/silo_solver-0.3.0a1-py3-none-any.whl"
+```
+
+Use an actual artifact path and the platform's file-URL syntax.
 Build, isolated wheel/sdist checks and actual platform status are documented in
 [installation](docs/installation.md). No public package upload is implied.
 
@@ -81,6 +98,7 @@ Run the general pipeline and public research examples:
 
 ```bash
 silo optimize examples/json/production.json
+python -m silo optimize examples/json/production.json --lp-engine sparse
 python -m silo optimize model.mps --time-limit 20 --node-limit 100000
 python -c "from silo.mip.research_example import run_example; print(run_example())"
 python -c "from silo.decomposition.general_master import covering_example; print(covering_example().to_dict())"

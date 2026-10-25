@@ -31,6 +31,9 @@
 
 | 功能 | 实现入口 | 阅读提示 |
 |---|---|---|
+| 统一一般模型LP/MILP | [solver.py](../src/silo/solver.py)、[general.py](../src/silo/lp/general.py) | `silo.solve`与`optimize`选择dense或显式sparse，原始模型核验共用 |
+| 当前稀疏LP与真实基更新 | [sparse_kernel.py](../src/silo/lp/sparse_kernel.py)、[sparse_factor.py](../src/silo/lp/sparse_factor.py) | SILO Phase I/II、Devex、primal/dual；SciPy仅CSC/LU |
+| 当前持久LP会话 | [session.py](../src/silo/lp/session.py) | 语义快照与会话独占数值因子，四类公开编辑 |
 | CLI 和后端选择 | [main.py](../src/silo/cli/main.py)、[solvers.py](../src/silo/cli/solvers.py) | --solver 与 --lp-solver 的适用命令分别管理 |
 | Tableau Phase I/II | [tableau.py](../src/silo/lp/simplex/tableau.py) 的 TableauSimplexSolver.solve | 两阶段实际流程位于本模块 |
 | Revised Phase I/II | [revised.py](../src/silo/lp/simplex/revised.py) 的 RevisedSimplexSolver.solve | 来源行/基位置清理已修正；有限精度边界仍保留 |

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "silo-solver"
-version = "0.2.0a2"
-description = "A dense general-form LP/MILP teaching and research prototype."
+version = "0.3.0a1"
+description = "A general-form LP/MILP prototype with native dense and sparse simplex engines."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"

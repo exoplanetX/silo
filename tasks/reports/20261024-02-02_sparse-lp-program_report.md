@@ -1,6 +1,7 @@
 # 稀疏LP整体目标集中恢复与续接执行报告
 
-当前状态（2026-10-25）：SP1/SP2/SP3 GO；第二轮warm80/80及独立联合门通过，进入原SP4，整体八项未完成。
+当前状态（2026-10-25）：SP1/SP2及旧源SP3已GO；SP4修复后的当前源固定LP组、MIP/CG及历史组通过。
+新增精确依赖源码须有匹配的warm结果；用户已直接授权RR03唯一新增一轮，第三轮待运行，整体八项未完成。
 当前合同：[20261024-02-02](../codex/20261024-02-02_sparse-lp-program.md)，签发78cc75de0197c58b95bd80b4d313c3306ab39f94。
 原目标：[总体规划](../phases/sparse_lp_reoptimization_program_20261024.md)第11节八项，
 [原实施计划](../phases/sparse_lp_implementation_20261024.md)、
@@ -37,13 +38,13 @@ cached origin/main...HEAD=0/73，未查即时远端，无push/发布；仅两项
 | 项 | 当前证据与状态 |
 |---|---|
 | 1 实现前冻结与设计 | SP1 GO，a3cff29输入、3c27324真值/基线，独立GO先于生产修改 |
-| 2 端到端sparse cold | RR02首轮48/24/6全过，两CAP真实optimal且原空间KKT通过；完整12容量/12外部待验 |
-| 3 LU/eta/数值与8机制 | 当前源8/8、最少64pivot、eta比例全1.0；独立数学/源码及SP3联合GO |
-| 4 会话四修改与收益 | 当前源1600修改+80初始、80/80；中位比3.4547、8/8不回退，SP3联合GO |
-| 5 MIP/CG真实稀疏接入 | 现有适配及小集成，固定12MIP/4CG与原全池精确P=D待验 |
-| 6 旧行为与质量 | 旧验收保持；新源码全质量、288/192及保存64复核待完成 |
-| 7 0.3.0a1与8安装 | helper准备保留，仍0.2.0a2实验分支，未构建/安装新候选 |
-| 8 伴学、报告、独立终验 | L0012/L0015已按c3fea18和原样小例checked；最终报告及八项独立GO待取得 |
+| 2 端到端sparse cold | 当前算法a9f3213：48/48、24/24、12容量/12外部全过；两完整容量/Netlib额度已用满 |
+| 3 LU/eta/数值与8机制 | 当前源8/8；既定pivot/eta机制通过，新增精确依赖SOURCE/MATH GO |
+| 4 会话四修改与收益 | 旧源be654正式1600修改+80初始、80/80、中位3.4547；新增证明源不能借用，已授权第三轮待运行 |
+| 5 MIP/CG真实稀疏接入 | 固定12MIP/4CG全部通过；精确全池及真实分支/局部GMI/复用由结果门继续核对 |
+| 6 旧行为与质量 | 737/737历史记录通过：288固定、192双配置、64只读诊断及公开例；完整质量待验 |
+| 7 0.3.0a1与8安装 | 已准备候选元数据和仅version/description的原始字节桥，构建/8安装待验 |
+| 8 伴学、报告、独立终验 | L0012/L0015按a9f3213及原样小例checked；最终报告及八项独立GO待取得 |
 
 原研究A/B、C HOLD、D/E未启动、native延期及远端CI pending保持。本包不改变研究身份或完成线。
 
@@ -256,3 +257,75 @@ DEGEN2在1235pivot后以Unproved near-dependent row in artificial cleanup保守�
 本修订仍待DEGEN2单次、独立源码及完整最终矩阵。新source使旧SP3全源指纹失配；
 原warm2/2已满，禁止未授权第三轮或桥接旧算法结果。先完成已授权修复及可核对结果，
 再就唯一必须追加的正式重验提交具体额度，整体Goal保持未完成。
+
+## 10. SP4当前源码完整固定复验
+
+算法提交a9f321374d4ca4758aa63d178f224c33b2a1eb0f，source SHA
+56992375ac4eda6b16cf0e8b1add6f76abff683a503a19523d6632369ee0770e。
+DEGEN2定向复验5.646617秒，optimal=-1435.1779999999994，1631pivot；
+2次精确稀疏依赖成立并实际删2行、最终基974行，证明工作区峰值3052格、11783操作，
+无dense model allocation，原始objective/KKT通过。该诊断保留在14/20全局批次中，不冒充正式整组。
+
+theory_architect独立SOURCE/MATH GO，无必须修项；0solver/test/write，9只读命令4.1秒计入SP4。
+回传记录reviews/sp4_dependency_source_math_go.json。固定分母、原始精确等式、全部slack/人工支持、
+共享ProofBudget、reduced factor/full state先于发布均通过。minor的精确非奇异仍明确依赖旧B精确非奇异；
+数值LU未被提升成精确秩证明。该门不等于SP4或八项GO。
+
+| 当前固定组 | 成功分母 | 实际秒 | summary目录 |
+|---|---:|---:|---|
+| Netlib第2/2轮 | 12/12 | 16.4665136 | groups/1824c8d5-d4b7-4daf-85f5-99079666e859 |
+| capacity第2/2轮 | 12/12 | 46.0118034 | groups/06a2e016-5543-4f0d-a634-c7f650d773fe |
+| tiny | 48/48 | 27.5128873 | groups/b7a9acc2-bb9d-4dfb-8b7a-91335f1fd0dd |
+| pressure | 24/24 | 13.7805478 | groups/c786e60b-e36c-4679-853b-6507864d4425 |
+| 机制 | 8/8 | 6.2533391 | groups/2b11a694-a702-4cb2-bb22-24ee467bc9de |
+| MIP/CG | 16/16 | 10.3672937 | 由最新mip-cg summary定位 |
+| 历史兼容 | 737/737 | 35.7949653 | 由最新historical summary定位 |
+
+全部位于原outputs/sparse_lp_program_20261024根，冻结输入/原阈值/子进程资源门保持。
+Netlib首轮11/12和旧warm失败仍在原分母，未覆写或改算轮次。
+历史组保存288旧固定项、192模型×2配置、64保存诊断及两个公开研究例的一条联合记录；
+保存诊断0新增求解、0新外部参考，旧984文件前后哈希不变，旧账本未写入。
+
+已向用户提交仅追加1轮原固定warm的窄请求：8轨迹×cold/warm×5重复、每条20修改，
+原输入、阈值、60秒/1GiB、SP3及全局预算不变。原RR02第5节明确2轮，已用满；
+新源码不能用旧正式结果桥接。等待明确答复期间继续已授权的文档/质量准备和候选交付，未启动第三轮。
+
+候选仅将pyproject version/description、包__version__与CITATION改为0.3.0a1。
+前后原始字节及严格literal-mask等价检查保存在metadata_source_bridge.json，SHA
+f18e9b8e5caf1b24fe6180b78ef9ee5e71f4490e2059dee8efb84d0ce3d7525f；
+新source SHA889d191b05736d36de4cd935aecf15e77900d6e7c0f2c5bb8d6bef5914439669。
+这只桥接元数据，不桥接be654旧算法。L0015 v0.2.2增补线性工作区精确依赖与E11；
+公开Python小例在新算法再次原样执行通过，2公开LP/2真实LU、1次独立2x2转置求解，0.5707956秒。
+实际新收据reviews/learning_example_sp4_receipt.json，旧收据保留。
+
+## 11. RR03窄授权与证据汇总修正
+
+用户直接回复call_554103221b16444996333aabfb6b2326：
+“授权追加1轮固定 warm 复验（推荐）”。[RR03](../codex/20261024-02-03_sparse-lp-program.md)
+仅将本程序正式warm上限2→3；原两轮及失败成本保留，无第四轮授权。
+README6.11、mirror、原账本human_warm_extension及RR03匹配小报告已登记；
+RR02继续为唯一整体总报告。原输入、1600修改/80初始、五重复、配对顺序、阈值、
+60秒/1GiB、SP3/全局预算及capacity/Netlib/quality/diagnostic上限全部保持。
+
+red_team_reviewer独立核对当前5组104/104，90 optimal原objective/primal/dual/KKT独立重算，
+4 Farkas及4射线用精确有理数核验，未调用项目checker或solver。最大primal残差2.8422e-13，
+最大stationarity9.8363e-15、互补5.2715e-10、P-D差2.3694e-8、冻结目标误差9.3133e-10。
+全部guard null，观测最大child5.2870652秒、RSS127598592字节；6耦合例pivot
+1413/80/2065/80/650/2147；8机制212/196/194/80/89/64/80/80，eta比例全1.0。
+104个请求均指定sparse，102个进入后给出sparse诊断且dense_model_allocations=0；
+PRESS-LIMIT-01/03分别在时间限制和预LP非零门退出，没有引擎诊断，不能声称102之外也实际进入内核。
+只读工具7.3599419秒已计SP4，0solver/test/write；reviews/sp4_fixed_lp_independent_go.json。
+该五组子门GO不扩大为当前warm或整体GO。
+
+首次upper/history/docs证据汇总为MIP/CG和docs通过、historical未通过：
+旧probe_records实际保存192模型×2配置=384记录，汇总器错误断言原始列表192条。
+实际历史driver按ID提取192个共同参考，737结果完整；旧输入/真值/384记录均未修改。
+修正汇总器为核验192唯一模型、384唯一(id,config)完整笛卡尔积及每模型两个参考status/objective一致；
+缺配置、重复、错ID/配置及参考冲突均拒绝。15项纯证据逻辑测试和Ruff通过，0新增solver。
+初始失败reviews/sp4_upper_history_readiness.json及1.7912314秒实账保留，不重跑已通过的历史求解组。
+
+继续核对发现同一汇总器把diagnostics recipe字典当作64条明细，第二次汇总因此TypeError；
+1.8144262秒与sp4_upper_history_readiness_fixed.json继续保留。按冻结recipe的8案例×8变体
+恢复64个D-案例-变体ID，仍逐一核对保存原文件SHA和0新增调用。
+该schema修正后16项纯证据测试/Ruff通过，mip_cg/historical/docs_budget全部机械通过，
+收据sp4_upper_history_readiness_complete.json。未修改历史driver、输入、保存结果或求解器。
