@@ -12,12 +12,17 @@ let rawReader = false;
 let selection = null;
 let contextEvidence = '';
 const documentCache = new Map();
+const lessonView = {tab:'body',unit:null,scenario:0,transpose:false,wrong:false};
+let reliabilityData = null;
+let reliabilityLoading = false;
+let reliabilityError = '';
 
 function esc(value) {return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function clean(value) {return String(value ?? '').replace(/\[([^\]]+)\]\([^)]+\)/g,'$1').replace(/[*`]/g,'');}
 function shortHash(value) {return value ? String(value).slice(0,7) : '未登记';}
 function when(value) {return value ? new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(value)) : '未登记';}
-function route() {return Object.hasOwn(names,location.hash.slice(1)) ? location.hash.slice(1) : 'overview';}
+function reliabilityRoute() {return /^#learning\/L0016(?:\/R0[1-8])?$/.test(location.hash);}
+function route() {return reliabilityRoute()?'learning':Object.hasOwn(names,location.hash.slice(1)) ? location.hash.slice(1) : 'overview';}
 function chip(text,tone='muted') {return '<span class="chip '+esc(tone)+'">'+esc(text)+'</span>';}
 function reviewed(item) {return item.needs_review ? chip('来源变化 · 待复核','stale') : '';}
 function sourceButton(path,label) {return '<button class="source-link" data-doc="'+esc(path)+'">'+esc(label || path)+' ↗</button>';}
@@ -31,21 +36,21 @@ function notice() {
   return '<div class="notice">有 '+state.warnings.length+' 项已登记来源发生变化或缺失。相关初始判断需重新核对，详情可在版本页查看。'+sourceChips(state.warnings.map(x=>x.path))+'</div>';
 }
 function unitFlow() {
-  return '<div class="panel flow">'+state.units.map(unit=>'<div class="flow-step '+esc(unit.tone)+'"><span class="step-letter">'+unit.id+'</span><h3>'+esc(unit.title)+'</h3>'+chip(unit.status,unit.tone)+'<p>'+esc(unit.milestone)+' · '+(unit.needs_review?'来源待复核':'按已记录边界')+'</p>'+askButton('unit',unit.id,'查看依据与缺口','link-button')+'</div>').join('')+'</div>';
+  return '<div class="panel flow">'+state.units.filter(unit=>/^[A-E]$/.test(unit.id)).map(unit=>'<div class="flow-step '+esc(unit.tone)+'"><span class="step-letter">'+unit.id+'</span><h3>'+esc(unit.title)+'</h3>'+chip(unit.status,unit.tone)+'<p>'+esc(unit.milestone)+' · '+(unit.needs_review?'来源待复核':'按已记录边界')+'</p>'+askButton('unit',unit.id,'查看依据与缺口','link-button')+'</div>').join('')+'</div>';
 }
 function pageOverview() {
   const unitC = state.units.find(x=>x.id==='C');
-  const stage = clean(state.profile['Phase 9']) || '状态未读取';
   const hold = unitC.needs_review;
   const lessonCount=state.lessons.length;
   return header('overview','在一个地方看清当前能力、目标覆盖与下一道证据门槛。')+notice()+
-    '<div class="grid four">'+metric('当前项目定位','教学型参考求解器','代码 '+state.version+' · 科研能力逐项评价')+metric('工程阶段','Phase 9',stage)+metric('研究推进',hold?'C · 待复核':'C · HOLD','A / B 已验收；D / E 未启动 · '+state.snapshot_date+' 整理')+metric('开发伴学',lessonCount+' 篇资料','按实际代码基线核对，支持主题学习')+'</div>'+
-    '<div class="hold-panel"><div class="hold-main">'+chip(hold?'来源变化 · 请核对原记录':'当前研究门槛 · HOLD','hold')+'<h2>先补齐应用证据，再讨论增量机制。</h2><p>'+esc(unitC.description)+' 当前记录是签发前就绪性判断，真实应用假设与原研究问题保持开放。</p></div><div class="hold-side"><strong>尚缺的联合证据</strong><ul><li>同域、完整且可核验的应用精确定价</li><li>真实 root-CG 对偶与状态轨迹</li><li>强冷 / 直接动态对照及完整成本依据</li></ul><button class="link-button" data-doc="docs/bounded_goal_outcome_20261020.md">阅读停止记录与门槛依据 ↗</button></div></div>'+
-    section('有界推进 · A — E','最多五项；当前到达预设停止点')+unitFlow()+
+    '<div class="grid four">'+metric('当前项目定位',state.project_position.title || '待核对定位','代码 '+state.version+' · 科研能力逐项评价')+metric('已签收工程基线','稀疏 LP / 连续重优化','最大固定例 2000 变量 / 5000 行 / 100000 非零')+metric('原研究推进',hold?'C · 待复核':'C · HOLD','A / B 已验收；D / E 未启动')+metric('开发伴学',lessonCount+' 篇资料','按实际代码基线核对，支持主题学习')+'</div>'+
+    '<div class="notice fresh">'+esc(state.project_position.summary || '')+sourceChips(state.project_position.sources)+'</div>'+
+    '<div class="hold-panel"><div class="hold-main">'+chip(hold?'来源变化 · 请核对原记录':'原研究门槛 · HOLD','hold')+'<h2>原研究 C 保持 HOLD，后续推进另行定界。</h2><p>'+esc(unitC.description)+' 当前记录是签发前就绪性判断，真实应用假设与原研究问题保持开放。</p></div><div class="hold-side"><strong>尚缺的联合证据</strong><ul><li>同域、完整且可核验的应用精确定价</li><li>真实 root-CG 对偶与状态轨迹</li><li>强冷 / 直接动态对照及完整成本依据</li></ul><button class="link-button" data-doc="docs/bounded_goal_outcome_20261020.md">阅读停止记录与门槛依据 ↗</button></div></div>'+
+    section('原研究有界清单 · A — E','与已收口稀疏工程分别评价')+unitFlow()+
     '<div class="grid two">'+
       '<section class="panel pad">'+section('八维评价概览','','<a class="link-button" href="#evaluation">进入完整评价 →</a>')+state.dimensions.map(d=>'<div class="dimension-mini"><span>'+esc(d.name)+'</span>'+chip(d.needs_review?'待复核':d.status,d.needs_review?'stale':d.tone)+'</div>').join('')+'</section>'+
       '<section class="panel pad">'+section('最近变化与待决策')+(changes.length ? '<div class="notice fresh">'+changes.map(esc).join('<br>')+'</div>' : '<p class="subtle">本次读取未发现与上次浏览相比的新增变化。首次浏览从当前快照开始记录。</p>')+
-      '<div class="list-row"><strong>研究下一步</strong><small>原 5 联合证据仍缺；恢复执行须先明确有限核验方案及相应授权。</small></div><div class="list-row"><strong>已有记录与本轮运行分别展示</strong><small>历史测试结果见原报告；刷新工作台只读取资料，不运行测试。</small></div><div class="list-row"><strong>本地 Git</strong><small>'+esc(state.git.branch || '未知分支')+' · '+shortHash(state.git.head)+' · 缓存远端 ahead '+esc(state.git.ahead ?? '未知')+' / behind '+esc(state.git.behind ?? '未知')+'</small></div>'+askButton('unit','C','解释当前门槛','button small')+'</section>'+
+      '<div class="list-row"><strong>工程与研究分别验收</strong><small>稀疏程序原八项目标已收口；后续优先级由用户确定。原研究C/D/E保留原状态。</small></div><div class="list-row"><strong>已有记录与本轮运行分别展示</strong><small>历史测试结果见原报告；刷新工作台只读取资料，不运行测试。</small></div><div class="list-row"><strong>本地 Git</strong><small>'+esc(state.git.branch || '未知分支')+' · '+shortHash(state.git.head)+' · 缓存远端 ahead '+esc(state.git.ahead ?? '未知')+' / behind '+esc(state.git.behind ?? '未知')+'</small></div>'+askButton('unit','C','解释当前门槛','button small')+'</section>'+
     '</div>'+
     section('原目标始终可见','目标完成依据验收条件，不按任务数量折算')+'<div class="panel pad"><ul class="boundary-list">'+state.boundaries.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'+sourceChips(['.silo-dos/project_profile.md','docs/seven_step_completion_plan_20261020.md'])+'</div>';
 }
@@ -65,7 +70,7 @@ function pageEvaluation() {
   const caps=state.capabilities.filter(c=>view.capability==='all'||view.capability===c.id);
   const rows=caps.map(c=>'<tr><td><span class="matrix-title">'+esc(c.name)+'</span><div class="maturity" aria-label="建议成熟度：'+esc(c.level)+'">'+[0,1,2,3].map(n=>'<span class="'+(n<=c.maturity?'on':'')+'"></span>').join('')+'</div><small>'+esc(c.needs_review?'来源变化，等级待复核':c.level)+'</small></td><td>'+esc(c.scope)+'</td><td>'+esc(c.limit)+sourceChips(c.sources)+'</td><td>'+reviewed(c)+askButton('capability',c.id,'查看档案','button small')+'</td></tr>').join('');
   const matrix='<div class="toolbar"><select id="capability-filter" aria-label="选择评价能力">'+options+'</select><span class="subtle">能力等级为初始整理，按支持域与原证据解读。</span></div><div class="panel table-wrap"><table><thead><tr><th>能力与建议定位</th><th>实际支持范围</th><th>局限与证据</th><th>操作</th></tr></thead><tbody>'+rows+'</tbody></table><div class="matrix-legend"><span>01 原理演示</span><span>02 经核验的参考实现</span><span>03 代表性问题验证</span><span>04 指定环境可靠使用</span></div></div>';
-  const performance='<div class="panel pad"><div class="panel-heading"><h2>规模与性能基准</h2>'+chip('尚无完整评价','muted')+'</div><p class="subtle">现有小实例核验与测试运行时间保留在报告中。规模、竞争力和端到端收益需要独立计算基准。</p><div class="table-wrap"><table><thead><tr><th>需要冻结</th><th>需要报告</th><th>当前证据</th></tr></thead><tbody><tr><td>实例身份、模型、硬件与环境</td><td>成功求解数量、失败、超时与输出核验</td><td>未形成完整规模基准</td></tr><tr><td>强基线、配置与同等预算</td><td>端到端耗时、峰值内存与最优性差距</td><td>未评价</td></tr><tr><td>维护机制、初始化与回退策略</td><td>建立、定位、核验、恢复、重建和 RMP 成本</td><td>E 未启动</td></tr></tbody></table></div>'+sourceChips(['docs/seven_step_completion_plan_20261020.md','.silo-dos/project_profile.md'])+'</div>';
+  const performance='<div class="panel pad"><div class="panel-heading"><h2>已签收的固定规模与性能范围</h2>'+chip('固定范围已验收','good')+'</div><div class="table-wrap"><table><thead><tr><th>对象</th><th>已有依据</th><th>结论边界</th></tr></thead><tbody><tr><td>稀疏 LP</td><td>最大固定例 2000 变量 / 5000 行 / 100000 非零</td><td>固定数据点，不保证任意同尺寸模型</td></tr><tr><td>连续重优化 warm4</td><td>指定源与输入、本机该轮五重复；8轨迹修改段比值中位数 3.503361</td><td>80子运行、1600修改解及80初始解；不代表全部LP/MIP或完整启动过程的统一加速</td></tr><tr><td>失败与局限</td><td>同源warm3/5各5个cold超时；warm4附加宿主观察器0样本</td><td>跨运行时间稳定性、全程宿主受控实验成功和唯一变慢原因均未确立</td></tr><tr><td>原研究评价 E</td><td>未启动</td><td>与稀疏工程的固定性能验收分别判断</td></tr></tbody></table></div>'+sourceChips(['docs/sparse_program_acceptance_20261025.md'])+'<p class="subtle">学习如何解释这些证据：<a href="#learning/L0016/R08">L0016 · R08 实验与交付 →</a></p></div>';
   return header('evaluation','按八个维度观察能力与证据；每项结论都保留适用范围。')+notice()+'<div class="notice fresh">'+esc(state.assessment_note)+'</div><div class="tab-buttons" role="group" aria-label="评价视图">'+[['dimensions','八维评价'],['capabilities','能力成熟度'],['performance','计算基准']].map(([id,label])=>'<button data-eval-tab="'+id+'" aria-pressed="'+(view.evaluation===id)+'" class="'+(view.evaluation===id?'active':'')+'">'+label+'</button>').join('')+'</div>'+(view.evaluation==='dimensions'?'<div class="grid two">'+cards+'</div>':view.evaluation==='capabilities'?matrix:performance);
 }
 
@@ -92,6 +97,7 @@ function lessonResults() {
 }
 function pageLearning() {
   return header('learning','沿“手算 → 推导 → 代码 → 核验 → 练习”学习，正文始终来自 learning。')+
+    '<section class="panel learning-feature"><div><span class="eyebrow">综合专题 · L0016</span><h2>可靠的 solver 怎样实现出来</h2><p>八单元贯穿模型语义、稀疏数据、eta 更新、数值推进、结论核验与完整成本。完整正文、固定小例交互、练习与解答。</p></div><a class="button primary" href="#learning/L0016">进入学习专题 →</a></section>'+
     '<div class="notice fresh">当前有 '+state.lessons.length+' 篇伴学资料。checked 表示按所记录基线核对，篇目数量不用于计算求解器成熟度。</div><div class="toolbar"><input id="lesson-search" class="input search" placeholder="搜索主题、标题或篇目 ID…" aria-label="搜索伴学资料" value="'+esc(view.lessonQuery)+'"><select id="lesson-order" aria-label="学习资料排序"><option value="development">按开发顺序</option><option value="topic"'+(view.lessonOrder==='topic'?' selected':'')+'>按主题分组排序</option></select><button class="button small" data-doc="learning/CATALOG.md">查看学习路线</button></div><div id="lesson-results">'+lessonResults()+'</div>';
 }
 
@@ -107,14 +113,32 @@ function render() {
   if(!state) return;
   const page=route();
   $('#loading').hidden=true;
-  $('#app').innerHTML=pages[page]();
+  if(reliabilityRoute()) {
+    lessonView.unit=location.hash.split('/')[2] || null;
+    $('#app').innerHTML=reliabilityData?SiloReliability.render(reliabilityData,lessonView,
+      {esc,markdown,sourceChips,lessons:state.lessons}):'<div class="empty">'+
+      esc(reliabilityError || '正在读取 L0016 规范教材…')+'</div>';
+    if(!reliabilityData&&!reliabilityLoading&&!reliabilityError)loadReliability();
+    if(reliabilityData&&lessonView.unit)requestAnimationFrame(()=>
+      document.getElementById('unit-'+lessonView.unit)?.scrollIntoView({block:'start'}));
+  } else $('#app').innerHTML=pages[page]();
   $('#breadcrumb').textContent=names[page];
-  document.title=names[page]+' · SILO 开发工作台';
+  document.title=(reliabilityRoute()?'L0016 · 可靠的 solver 怎样实现出来':names[page])+' · SILO 开发工作台';
   document.querySelectorAll('[data-page]').forEach(a=>{a.classList.toggle('active',a.dataset.page===page); if(a.dataset.page===page)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
-  $('#sidebar-version').textContent='SILO '+state.version+' · 开发中';
+  $('#sidebar-version').textContent='SILO '+state.version+' · 本地候选';
   $('#updated').textContent='资料读取 '+when(state.generated_at)+'（北京时间）';
 }
 function toast(text) {$('#toast').textContent=text;$('#toast').classList.add('show');setTimeout(()=>$('#toast').classList.remove('show'),3200);}
+async function loadReliability() {
+  reliabilityLoading=true;
+  try {
+    const response=await fetch('/api/lesson/L0016',{cache:'no-store'});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error || '专题资料不可用');
+    reliabilityData=result;
+  } catch(error){reliabilityError='专题读取失败：'+error.message+'。可刷新重试。';}
+  finally{reliabilityLoading=false;if(reliabilityRoute())render();}
+}
 async function refresh(manual=false) {
   if(busy)return;
   busy=true;$('#refresh').disabled=true;
@@ -135,7 +159,9 @@ async function refresh(manual=false) {
       localStorage.setItem(key,JSON.stringify({head:next.git.head,hashes:Object.fromEntries(next.sources.map(s=>[s.path,s.sha256])),lessons:next.lessons.length,tasks:next.tasks.length}));
     } catch { /* Browser storage may be disabled; the live view still works. */ }
     changes=[...new Set([...changes,...detected])].slice(-10);
-    state=next;documentCache.clear();render();
+    state=next;documentCache.clear();
+    if(manual){reliabilityData=null;reliabilityError='';}
+    render();
     if(manual)toast('已重新读取仓库资料；未运行测试。');
   } catch(error) {
     if(state){toast(error.message+'，暂保留上次资料。');$('#updated').textContent='读取失败 · 保留 '+when(state.generated_at)+' 的资料';}
@@ -150,13 +176,19 @@ function normalizePath(base,path) {
   return result.join('/');
 }
 function inline(text,base) {
-  return esc(text).replace(/\[([^\]]+)\]\(([^)]+)\)/g,(_,label,target)=>{
+  const fragments=[];
+  const protectedText=text.replace(/\\\(([\s\S]*?)\\\)|`([^`]+)`/g,(_,formula,code)=>{
+    fragments.push(formula===undefined?'<code>'+esc(code)+'</code>':SiloMath.render(formula));
+    return '\uE000'+(fragments.length-1)+'\uE001';
+  });
+  return esc(protectedText).replace(/\[([^\]]+)\]\(([^)]+)\)/g,(_,label,target)=>{
     if(/^https?:\/\//i.test(target))return '<a href="'+target+'" target="_blank" rel="noopener noreferrer">'+label+' ↗</a>';
     if(target.startsWith('#'))return label;
     if(/^[a-z][a-z0-9+.-]*:/i.test(target))return label;
     const path=normalizePath(base,target.split('#')[0]);
     return '<button class="link-button" data-doc="'+esc(path)+'">'+label+'</button>';
-  }).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  }).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/\uE000(\d+)\uE001/g,(_,index)=>fragments[Number(index)] || '');
 }
 function markdown(text,path) {
   const lines=text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/,'').split(/\r?\n/);
@@ -172,7 +204,7 @@ function markdown(text,path) {
     if(line.trim()==='\\[' || line.trim()==='$$') {
       const end=line.trim()==='\\['?'\\]':'$$';const block=[];i++;
       while(i<lines.length&&lines[i].trim()!==end)block.push(lines[i++]);
-      output+='<div class="math-source" aria-label="公式 TeX 原文">'+esc(block.join('\n'))+'</div>';i++;continue;
+      output+='<div class="math-display">'+SiloMath.render(block.join('\n'),true)+'</div>';i++;continue;
     }
     if(/^\s*\|/.test(line)&&i+1<lines.length&&/^\s*\|?\s*:?-{3}/.test(lines[i+1])) {
       const cells=s=>s.trim().replace(/^\||\|$/g,'').split('|').map(x=>x.trim());
@@ -181,7 +213,12 @@ function markdown(text,path) {
       output+='</tbody></table></div>';continue;
     }
     const heading=line.match(/^(#{1,6})\s+(.+)/);
-    if(heading){output+='<h'+heading[1].length+'>'+inline(heading[2],path)+'</h'+heading[1].length+'>';i++;continue;}
+    if(heading){
+      const unit=heading[2].match(/^(R0[1-8])\b/),section=heading[2].match(/^(\d+)\./);
+      const id=unit?'unit-'+unit[1]:section?'lesson-section-'+section[1]:null;
+      output+='<h'+heading[1].length+(id?' id="'+id+'"':'')+'>'+inline(heading[2],path)+'</h'+heading[1].length+'>';
+      i++;continue;
+    }
     if(/^\s*[-*]\s+/.test(line)||/^\s*\d+\.\s+/.test(line)) {
       const ordered=/^\s*\d+\.\s+/.test(line);const tag=ordered?'ol':'ul';output+='<'+tag+'>';
       while(i<lines.length&&(/^\s*[-*]\s+/.test(lines[i])||/^\s*\d+\.\s+/.test(lines[i])))output+='<li>'+inline(lines[i++].replace(/^\s*(?:[-*]|\d+\.)\s+/,''),path)+'</li>';
@@ -205,7 +242,7 @@ async function getDocument(path) {
 function renderReader() {
   const doc=selectedDocument;if(!doc)return;
   $('#reader-title').textContent=doc.path;
-  $('#reader-meta').textContent='SHA-256 '+doc.sha256.slice(0,12)+' · 公式保留 TeX 原文';
+  $('#reader-meta').textContent='SHA-256 '+doc.sha256.slice(0,12)+' · 本地数学排版 / 可切换原文';
   $('#reader-mode').textContent=rawReader?'阅读视图':'查看原文';
   $('#reader-body').innerHTML=rawReader||!doc.path.endsWith('.md')?'<pre class="source-raw">'+doc.text.split('\n').map((line,i)=>'<span class="line"><span class="line-number">'+(i+1)+'</span>'+esc(line)+'</span>').join('')+'</pre>':markdown(doc.text,doc.path);
   $('#reader').scrollTop=0;
@@ -252,6 +289,16 @@ async function openContext(kind,id) {
 
 document.addEventListener('click',async event=>{
   const target=event.target.closest('button');if(!target)return;
+  if(target.dataset.lessonTab){
+    lessonView.tab=target.dataset.lessonTab;lessonView.unit=null;
+    if(location.hash!=='#learning/L0016')location.hash='learning/L0016';else render();
+    return;
+  }
+  if(target.dataset.scenario!==undefined){
+    lessonView.scenario=Number(target.dataset.scenario);
+    $('#scenario-demo').innerHTML=SiloReliability.scenarioHTML(reliabilityData.outline,lessonView.scenario);
+    return;
+  }
   if(target.dataset.close){document.getElementById(target.dataset.close).close();return;}
   if(target.dataset.doc){await openDocument(target.dataset.doc);return;}
   if(target.dataset.ask){await openContext(target.dataset.ask,target.dataset.id);return;}
@@ -263,6 +310,11 @@ document.addEventListener('input',event=>{
   if(event.target.id==='lesson-search'){view.lessonQuery=event.target.value;$('#lesson-results').innerHTML=lessonResults();}
 });
 document.addEventListener('change',event=>{
+  if(event.target.id==='eta-mode'||event.target.id==='eta-wrong'){
+    lessonView.transpose=$('#eta-mode').value==='transpose';lessonView.wrong=$('#eta-wrong').checked;
+    $('#eta-demo').innerHTML=SiloReliability.etaHTML(reliabilityData.eta,lessonView.transpose,lessonView.wrong);
+    return;
+  }
   if(event.target.id==='task-filter'){view.taskFilter=event.target.value;view.taskLimit=35;$('#task-results').innerHTML=taskResults();}
   if(event.target.id==='lesson-order'){view.lessonOrder=event.target.value;$('#lesson-results').innerHTML=lessonResults();}
   if(event.target.id==='capability-filter'){view.capability=event.target.value;render();}
@@ -275,6 +327,10 @@ $('#copy-context').addEventListener('click',async()=>{
   catch {$('#context-text').focus();$('#context-text').select();toast('浏览器未允许自动复制；已选中文本，请按 Ctrl+C。');}
 });
 $('#refresh').addEventListener('click',()=>refresh(true));
-window.addEventListener('hashchange',()=>{render();window.scrollTo({top:0});});
-setInterval(()=>{if(!document.hidden&&!$('#reader').open&&!$('#context').open&&!['INPUT','SELECT'].includes(document.activeElement.tagName))refresh();},60000);
+document.addEventListener('click',event=>{
+  const unit=event.target.closest('.lesson-nav a');
+  if(unit){lessonView.tab='body';if(unit.getAttribute('href')===location.hash)render();}
+});
+window.addEventListener('hashchange',()=>{render();if(!reliabilityRoute()||!lessonView.unit)window.scrollTo({top:0});});
+setInterval(()=>{if(!document.hidden&&!reliabilityRoute()&&!$('#reader').open&&!$('#context').open&&!['INPUT','SELECT'].includes(document.activeElement.tagName))refresh();},60000);
 refresh();

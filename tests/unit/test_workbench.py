@@ -3,6 +3,9 @@
 import hashlib
 import importlib.util
 import json
+import re
+import shutil
+import subprocess
 import threading
 from http.client import HTTPConnection
 from pathlib import Path
@@ -162,3 +165,127 @@ def test_http_read_only_routes_and_host_boundary(repository, tmp_path):
         server.shutdown()
         server.server_close()
         thread.join(timeout=3)
+
+
+def test_reliability_sources_are_read_without_running_examples(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Reading a lesson must not run a subprocess")
+
+    monkeypatch.setattr(workbench.subprocess, "run", forbidden)
+    data = workbench.reliability_lesson(workbench.ROOT)
+    assert data["metadata"]["status"] == "checked"
+    assert data["metadata"]["verified_on"] == "2026-10-26"
+    assert [item["id"] for item in data["outline"]["modules"]] == [
+        f"R{i:02}" for i in range(1, 9)
+    ]
+    assert len(re.findall(r"^## \d+\.", data["documents"]["body"]["text"], re.M)) == 10
+    assert data["eta"]["e1"] == [[2, 0], [1, 1]]
+    assert data["eta"]["e2"] == [[1, 3], [0, 2]]
+    assert data["eta"]["ordinary_rhs"] == [2, -1]
+    assert data["eta"]["transpose_rhs"] == [3, 7]
+    assert data["documents"]["examples"]["path"].endswith("examples.py")
+
+
+@pytest.mark.parametrize("problem", ["path", "heading", "zero", "version", "units"])
+def test_reliability_rejects_mismatched_or_invalid_teaching_data(tmp_path, problem):
+    lesson = tmp_path / workbench.RELIABILITY_DIR
+    shutil.copytree(workbench.ROOT / workbench.RELIABILITY_DIR, lesson)
+    path = lesson / "web_outline.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if problem == "path":
+        data["body"] = "../private.md"
+    elif problem == "heading":
+        data["modules"][0]["heading"] = "R01 missing heading"
+    elif problem == "zero":
+        data["scenarios"][0]["rhs"] = "1/0"
+    elif problem == "version":
+        data["version"] = "incorrect"
+    elif problem == "units":
+        data["modules"].pop()
+    path.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(ValueError):
+        workbench.reliability_lesson(tmp_path)
+
+
+def test_only_canonical_lesson_data_paths_are_readable(tmp_path):
+    for name in ("web_outline.json", "examples.py"):
+        result = workbench.read_document(workbench.ROOT, f"{workbench.RELIABILITY_DIR}/{name}")
+        assert result["text"]
+    other = tmp_path / "learning/lessons/L9999-other/web_outline.json"
+    other.parent.mkdir(parents=True)
+    other.write_text('{"private":"example"}', encoding="utf-8")
+    with pytest.raises(ValueError):
+        workbench.read_document(tmp_path, other.relative_to(tmp_path).as_posix())
+
+
+def test_math_and_teaching_interactions_against_canonical_data():
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("Node is required to check the browser-only teaching algebra")
+    data = workbench.reliability_lesson(workbench.ROOT)
+    source = data["documents"]["body"]["text"]
+    formulas = [a or b for a, b in re.findall(r"\\\((.*?)\\\)|\\\[(.*?)\\\]", source, re.S)]
+    script = r"""
+const fs = require('fs');
+const math = require('./scripts/workbench/math.js');
+const demo = require('./scripts/workbench/reliability.js');
+const input = JSON.parse(fs.readFileSync(0, 'utf8'));
+global.window = {SiloMath:math};
+const failed = input.formulas.filter(f => math.render(f).includes('math-fallback'));
+const sample = math.render(String.raw`\frac{x_i^2}{\sum_{j=1}^n a_j}\leq B^{-T}`);
+const matrix = math.render(String.raw`\begin{pmatrix}1&2\\3&4\end{pmatrix}`);
+const unsafe = math.render(String.raw`\text{<script>alert(1)</script>}`);
+const unknown = math.render(String.raw`\href{javascript:alert(1)}{x}`);
+console.log(JSON.stringify({
+  failed,
+  fraction:sample.includes('<mfrac>'),
+  subscript:sample.includes('<msub>'),
+  superscript:sample.includes('<msup>'),
+  matrix:matrix.includes('<mtable>'),
+  escaped:!unsafe.includes('<script>') && unsafe.includes('&lt;script&gt;'),
+  fallback:unknown.includes('math-fallback') && !unknown.includes('<a '),
+  ordinary:demo.etaCalculation(input.eta),
+  transposed:demo.etaCalculation(input.eta,true),
+  wrong:demo.etaCalculation(input.eta,true,true),
+  prior:input.outline.scenarios.map((_,i)=>demo.previousPoint(input.outline.scenarios,i)),
+  objectives:input.outline.scenarios.map(s=>s.objective),
+  demoFormula:demo.scenarioHTML(input.outline,4).includes('math-fallback')
+}));
+"""
+    result = subprocess.run(
+        [node, "-e", script], input=json.dumps({"eta": data["eta"],
+                                              "outline": data["outline"], "formulas": formulas}),
+        cwd=workbench.ROOT, capture_output=True, text=True, encoding="utf-8",
+        check=True, timeout=15,
+    )
+    output = json.loads(result.stdout)
+    assert len(formulas) >= 20
+    assert output["failed"] == []
+    assert all(output[key] for key in
+               ("fraction", "subscript", "superscript", "matrix", "escaped", "fallback"))
+    assert output["ordinary"]["answer"] == ["4", "-1"]
+    assert output["transposed"]["answer"] == ["2", "-1"]
+    assert output["ordinary"]["residual"] == output["transposed"]["residual"] == ["0", "0"]
+    assert output["wrong"]["answer"] == ["-2", "13/2"]
+    assert output["wrong"]["residual"] == ["-1/2", "27/2"]
+    assert [None if item is None else item["feasible"] for item in output["prior"]] == [
+        None, False, False, False, True
+    ]
+    assert output["objectives"] == ["-1/2", "1", "5/4", "7/5", "1/2"]
+    assert output["demoFormula"] is False
+
+
+def test_current_cards_preserve_the_signed_scope_and_performance_limits():
+    catalog = json.loads((workbench.ASSETS / "catalog.json").read_text(encoding="utf-8"))
+    assert catalog["project_position"]["title"] == "基础研究工具阶段"
+    cards = {item["id"]: item for item in catalog["dimensions"]}
+    assert "2000" in cards["performance"]["conclusion"]
+    assert "3.503361" in cards["performance"]["conclusion"]
+    assert "warm3/5" in cards["performance"]["gap"]
+    assert "跨运行时间稳定性" in cards["performance"]["gap"]
+    assert "0.3.0a1" in cards["release"]["conclusion"]
+    assert "CI pending" in cards["release"]["gap"]
+    units = {item["id"]: item for item in catalog["units"]}
+    assert [units[name]["status"] for name in "ABCDE"] == [
+        "已验收", "已验收", "HOLD", "未启动", "未启动"
+    ]

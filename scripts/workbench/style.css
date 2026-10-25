@@ -5,3 +5,90 @@
 @media(max-width:1150px){.sidebar{width:198px;padding-left:13px;padding-right:13px}.workspace{margin-left:198px}main{padding:25px 25px 35px}.topbar,footer{padding-left:25px;padding-right:25px}.grid.four{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:1fr 1fr}.flow{padding:20px 10px}.flow-step{padding:0 10px}.hold-panel{grid-template-columns:1fr 1fr}.metric{min-height:115px}}
 @media(max-width:780px){.sidebar{position:static;width:auto;padding:16px 18px 0}.brand{font-size:22px;padding:0 3px 15px}.brand-mark{height:32px;width:32px;font-size:23px;border-radius:8px}.nav-label,.sidebar-note{display:none}.sidebar nav{display:flex;overflow-x:auto;gap:4px;padding-bottom:10px}.sidebar nav a{flex-shrink:0;font-size:11px;padding:9px}.nav-index{display:none}.nav-dot{display:none}.sidebar nav a.active:before{display:none}.workspace{margin:0}.topbar{height:58px;padding:0 20px}.local-label{display:none}main{padding:24px 20px 32px}.page-heading{align-items:flex-start;flex-direction:column;gap:16px}h1{font-size:26px}.grid.two,.detail-grid{grid-template-columns:1fr}.hold-panel{grid-template-columns:1fr}.hold-side{border-left:0;border-top:1px solid #e8dfcc}.flow{flex-wrap:wrap;gap:20px}.flow-step{min-width:27%;max-width:33%}.flow-step:nth-child(3):after{display:none}.metric{padding:17px}.metric-value{font-size:20px}.panel.pad{padding:18px}.section-heading>span{display:none}.dialog-bottom{align-items:flex-start;flex-direction:column}.reader-tools>span{margin-left:0;width:100%}footer{padding:16px 20px;flex-direction:column}dialog{padding:20px}.table-wrap td:first-child{min-width:120px}}
 @media(max-width:480px){.grid.three,.grid.four{grid-template-columns:1fr}.metric{min-height:95px}.flow-step{min-width:40%;max-width:50%}.flow-step:nth-child(3):after{display:block}.flow-step:nth-child(even):after{display:none}.page-action{width:100%}.toolbar .input{width:100%}.toolbar select{max-width:none;width:100%}.dimension-card{padding:18px}}
+
+/* L0016: a continuous reading surface with source-backed teaching demonstrations. */
+.learning-feature {
+  display:flex; align-items:center; justify-content:space-between; gap:25px;
+  padding:26px; margin-bottom:24px; background:#eef4e9; border-color:#d1e0c8;
+}
+.learning-feature h2 {font-size:21px; margin-bottom:9px}
+.learning-feature p {max-width:650px; margin:0; font-size:12px; color:#627560}
+.learning-feature .button {flex-shrink:0}
+.lesson-hero {padding:8px 0 25px}
+.lesson-hero>.eyebrow {margin-top:23px}
+.lesson-hero h1 {font-size:32px; max-width:900px}
+.lesson-hero>p {font-size:14px; color:#65776c; margin:14px 0}
+.lesson-identity {display:flex; gap:8px 20px; flex-wrap:wrap; font-size:11px; color:#78877c}
+.lesson-identity code {font-size:10px}
+.lesson-layout {display:grid; grid-template-columns:205px minmax(0,1fr); gap:32px; align-items:start}
+.lesson-nav {position:sticky; top:16px; display:grid; gap:4px; padding-right:12px}
+.lesson-nav a {padding:9px 12px; color:#617465; font-size:11px; border-radius:5px}
+.lesson-nav a:hover,.lesson-nav a.active {background:#e5eee0; color:#205b45}
+.lesson-nav a span {display:block; font:10px var(--mono); color:#7d9875; margin-bottom:3px}
+.lesson-nav .lesson-nav-top {font-weight:600; border-bottom:1px solid #dce5d7; margin-bottom:9px}
+.lesson-content {min-width:0}
+.lesson-related {background:#eaf2e4; padding:14px 18px; border-radius:6px; margin-bottom:18px}
+.lesson-related strong {font-size:12px}
+.lesson-prose {font-size:15px; line-height:2.05}
+.lesson-prose h1 {font-size:22px; margin-top:4px}
+.lesson-prose h2 {margin-top:38px; padding-top:10px; border-top:1px solid var(--line)}
+.lesson-prose h3 {margin-top:35px; font-size:20px; scroll-margin-top:20px}
+.lesson-prose>p {margin-bottom:18px}
+.lesson-prose td,.lesson-prose th {font-size:12px}
+.math-display {overflow-x:auto; padding:12px 4px; margin:17px 0}
+math {font-size:1.12em; font-family:"Cambria Math","STIX Two Math",math}
+math[display="block"] {margin:10px auto; max-width:100%}
+.math-fallback {display:inline-block; padding:5px 8px; background:#fcf0dc; color:#8b622a; font-size:12px}
+.teaching-demo {padding:22px; background:#fcfdf9; margin:20px 0 26px; font-size:13px; line-height:1.7}
+.demo-heading {display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px}
+.demo-heading h3 {font-size:16px; margin:0; padding:0}
+.demo-heading .eyebrow {font-size:9px}
+.scenario-tabs {display:flex; gap:7px; margin:15px 0; flex-wrap:wrap}
+.scenario-current {padding:14px; background:#f1f5ec; border-radius:6px; overflow-x:auto}
+.scenario-current strong {display:block; font-size:12px; margin-bottom:8px}
+.demo-grid {display:grid; grid-template-columns:2fr 1fr; gap:18px; margin:10px 0 15px}
+.demo-value {display:block; margin-top:20px; font-size:24px; font-weight:500}
+.scenario-reason {border-top:1px solid var(--line); padding-top:15px}
+.scenario-reason strong {font-size:12px; color:#3d6250}
+.scenario-reason p {font-size:12px; margin:5px 0 13px; color:#6d7b70}
+.demo-controls {display:flex; align-items:center; justify-content:space-between; gap:8px}
+.demo-controls span,.demo-note {font-size:10px; color:#809078}
+.teaching-demo .demo-note {margin:14px 0 0; font-size:10px}
+.eta-matrices {display:flex; flex-wrap:wrap; align-items:center; gap:15px; overflow-x:auto}
+.eta-steps {display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:15px 0}
+.eta-steps>div {border:1px solid var(--line); padding:12px; border-radius:5px; overflow-x:auto}
+.eta-steps span {font-size:11px; color:#6c826b}
+.eta-residual {display:flex; align-items:center; justify-content:space-between; gap:20px; padding:12px 16px; background:#edf5e7; border-radius:5px}
+.eta-residual strong {font-size:12px}
+.eta-residual.wrong {background:#fae9e0; color:#965a3a}
+.check-label {display:flex; align-items:center; gap:7px; font-size:12px}
+.lesson-sources {border-top:1px solid var(--line); padding-top:25px; margin-top:35px}
+.lesson-sources h2 {font-size:16px}
+.answer {background:white; border:1px solid var(--line); border-radius:7px; margin:12px 0}
+.answer summary {padding:16px 20px; cursor:pointer; font-size:14px; color:var(--teal)}
+.answer>.prose {padding:0 20px 20px}
+.lesson-tabs {position:relative}
+@media(max-width:1100px) {
+  .lesson-layout {grid-template-columns:170px minmax(0,1fr); gap:20px}
+  .lesson-nav {padding-right:0}
+  .lesson-nav a {padding-left:8px; padding-right:8px}
+}
+@media(max-width:850px) {
+  .lesson-layout {display:block}
+  .lesson-nav {position:static; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; margin-bottom:23px}
+  .lesson-nav .lesson-nav-top {grid-column:1/-1}
+  .lesson-nav a {background:#edf2e8; padding:9px 12px}
+  .lesson-hero h1 {font-size:27px}
+  .learning-feature {align-items:flex-start; flex-direction:column}
+}
+@media(max-width:480px) {
+  .lesson-prose {font-size:14px}
+  .lesson-prose h3 {font-size:18px}
+  .teaching-demo {padding:15px}
+  .demo-heading {flex-direction:column}
+  .demo-grid {grid-template-columns:1fr 1fr}
+  .eta-steps {grid-template-columns:1fr}
+  .eta-residual {flex-wrap:wrap}
+  .lesson-identity code {word-break:break-all}
+  .sidebar nav {scrollbar-width:thin; scrollbar-color:#5b7770 transparent}
+}

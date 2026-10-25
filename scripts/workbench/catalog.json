@@ -1,7 +1,7 @@
 {
-  "reviewed_on": "2026-10-24",
-  "baseline": "d4c852f7112c6abfc2d799c42c924a6aa4cef188",
-  "assessment_note": "M1-M5本地原型完成，主协调最终技术门控GO；6147测试、冻结288项、64诊断、192对照及四安装通过。远端CI pending，未push，原研究身份保持。",
+  "reviewed_on": "2026-10-26",
+  "baseline": "537b742c21ff1ee4c1f50e950e99a299b1828371",
+  "assessment_note": "按2026-10-25已签收评估同步：稀疏LP与连续重优化原八项目标完成，本地候选0.3.0a1。以下是固定源/输入/本机该轮的证据，保留跨运行局限；原研究A/B、C HOLD、D/E未启动分别判断。网页读取不产生新验收。",
   "boundaries": [
     "长期目标：同一 SILO 内核承载教学、学习与运筹优化研究。",
     "研究主线：固定资源约束路径在对偶变化下的精确状态维护、恢复与完整成本。",
@@ -226,62 +226,56 @@
       "id": "correctness",
       "name": "数学正确性",
       "short": "正确性",
-      "status": "有限范围有依据",
+      "status": "固定范围有依据",
       "tone": "good",
       "question": "实现、对偶、终止状态与数学规格是否一致？",
-      "conclusion": "已有独立小实例真值与 A/B 的限定参考域核验。",
-      "gap": "有限样本不替代一般证明；更广输入域须独立核验。",
+      "conclusion": "48小例、24压力按冻结类别通过；12容量/12Netlib及真实稀疏MIP/有限池CG有对应核验。",
+      "gap": "压力类别含不可行、无界、limit和数值失败；通过不等于全部optimal，更广模型域仍需证据。",
       "criterion": "约定明确；原始可行性、目标重构、界与终止依据得到独立检查。",
       "sources": [
-        "docs/correctness_baseline.md",
-        "docs/bounded_goal_outcome_20261020.md"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     },
     {
       "id": "numerics",
       "name": "数值稳健性",
       "short": "数值",
-      "status": "局部证据",
+      "status": "固定数值范围有依据",
       "tone": "partial",
       "question": "退化、缩放、容差与异常退出是否可靠？",
-      "conclusion": "已有保守处理和局部回归；一般应用范围尚未建立。",
-      "gap": "需要冻结病态、尺度、退化问题族及异常退出评价。",
+      "conclusion": "真实稀疏LU/eta、B/B转置、完整状态发布与有界恢复已有固定核验。",
+      "gap": "固定例通过不保证任意尺度稳定；仍需分别看残差、原空间核验及保守失败。",
       "criterion": "在明确数值域、容差和失败语义下，经独立残差与状态核验。",
       "sources": [
-        "docs/correctness_baseline.md",
-        "docs/lp_unboundedness.md",
-        "ROADMAP.md"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     },
     {
       "id": "coverage",
       "name": "算法与模型覆盖",
       "short": "覆盖",
-      "status": "范围明确",
+      "status": "已签收范围明确",
       "tone": "good",
       "question": "哪些输入、资源和主问题语义受到实际支持？",
-      "conclusion": "通用LP/MILP、可重优化LP、local GMI与有限池一般CG已建立。",
-      "gap": "更大数值域、工业性能及原真实应用研究保持各自未决状态。",
+      "conclusion": "一般LP模型链、端到端稀疏内核、四类连续重优化，以及接入该内核的基础MILP和有限池CG。",
+      "gap": "MIP/分解偏基础研究原型；完整业务应用、一般隐式定价及工业竞争力分别评价。",
       "criterion": "每项能力列出输入域、算法实现、失败边界与可运行例子。",
       "sources": [
-        ".silo-dos/project_profile.md",
-        "docs/bounded_goal_outcome_20261020.md",
-        "docs/development_layout.md"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     },
     {
       "id": "performance",
       "name": "性能与可扩展性",
       "short": "性能",
-      "status": "固定规模已测",
-      "tone": "partial",
+      "status": "固定范围已验收",
+      "tone": "good",
       "question": "在何种规模、时间与内存预算内完成？",
-      "conclusion": "48 LP+24 MILP规模例在20/60秒内全部核验通过。",
-      "gap": "固定构造例不能代表工业实例或一般竞争力。",
+      "conclusion": "最大固定LP为2000变量/5000行/100000非零；指定源与输入、本机warm4该轮五重复，8轨迹修改段比值中位数3.503361。",
+      "gap": "同源warm3/5各5个cold超时，warm4附加宿主观察器0样本；跨运行时间稳定性、全程宿主受控实验成功和唯一变慢原因均未确立。",
       "criterion": "同域、同硬件、同预算比较，保留失败和超时；报告端到端成本。",
       "sources": [
-        "tasks/reports/20261023-02-01_teaching-prototype_report.md",
-        "docs/prototype_validation_20261024.md"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     },
     {
@@ -319,64 +313,52 @@
       "id": "engineering",
       "name": "软件工程质量",
       "short": "工程",
-      "status": "已有组织基础",
+      "status": "已有核验与追溯基础",
       "tone": "good",
       "question": "模块、接口、回归与维护是否可靠且可追溯？",
-      "conclusion": "已有目录边界、任务合同、回归与来源链。",
-      "gap": "公共接口长期稳定承诺与更广维护证据尚待建立。",
+      "conclusion": "原八项目标已签收，兼容、分层与既有质量6670项通过的历史记录可追溯；本网页不重跑全项目。",
+      "gap": "过程计划稳定性、工具可靠性及成本控制的已记录问题保留；公共接口长期承诺仍需维护。",
       "criterion": "依赖方向清楚、确定性回归、行为文档和变更追溯一致。",
       "sources": [
-        "docs/development_layout.md",
-        "tasks/README.md",
-        ".silo-dos/project_profile.md"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     },
     {
       "id": "release",
       "name": "可复现与发行能力",
       "short": "发行",
-      "status": "本地安装核验",
+      "status": "本地候选已验证",
       "tone": "partial",
       "question": "其他人能否从交付物独立安装、运行并复核？",
-      "conclusion": "0.2.0a1 wheel/sdist与Windows双版本按实际日志核验。",
-      "gap": "远端Windows/Linux CI未运行，无公开发布。",
+      "conclusion": "0.3.0a1 wheel/sdist，Windows3.11/3.13 × dense/sparse × 两工件共8隔离环境完成核验。",
+      "gap": "远端Windows/Linux CI pending；未push、未公开发布；本地结果不扩为多平台承诺。",
       "criterion": "确定版本的发行物在声明环境独立安装，代表例子与 CLI 通过。",
       "sources": [
-        "tasks/reports/20261023-02-01_teaching-prototype_report.md",
-        "docs/installation.md",
-        "pyproject.toml",
-        "CITATION.cff"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     }
   ],
   "capabilities": [
     {
       "id": "lp",
-      "name": "LP / 单纯形",
-      "scope": "一般min/max连续线性模型、稠密QR primal/dual、一般重优化。",
-      "maturity": 1,
-      "level": "经核验的参考实现",
-      "limit": "固定数值/规模范围；旧tableau/revised API保持原标准形域。",
+      "name": "一般 LP / 稀疏与稠密参考",
+      "scope": "一般min/max及区间模型；稀疏LU/eta与四类连续重优化已在固定域验收，保留稠密参考。",
+      "maturity": 2,
+      "level": "代表性问题验证（固定范围）",
+      "limit": "最大固定例2000变量/5000行/100000非零；不保证任意同规模模型，通用性能与跨运行稳定性仍开放。",
       "sources": [
-        "docs/general_solver.md",
-        "docs/numeric_engine.md",
-        "src/silo/lp/general.py",
-        "src/silo/lp/kernel.py",
-        "tasks/reports/20261023-02-01_teaching-prototype_report.md"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     },
     {
       "id": "mip",
       "name": "一般MILP / branch-and-cut",
-      "scope": "整数/二元/连续混合、全局界/gap/限额、启发式及local GMI。",
+      "scope": "基础MILP搜索、局部GMI、全局界和有限失败语义；已有12MIP/4CG集成证据。",
       "maturity": 1,
-      "level": "经核验的参考实现",
-      "limit": "原型固定范围；无工业性能承诺，未知无界松弛保留未解决状态。",
+      "level": "经核验的参考实现 / 基础研究原型",
+      "limit": "MIP/分解仍偏基础研究原型；固定集成例不支持成熟工业求解器定位。",
       "sources": [
-        "docs/general_solver.md",
-        "docs/branch_and_cut.md",
-        "src/silo/mip/general.py",
-        "tasks/reports/20261023-02-01_teaching-prototype_report.md"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     },
     {
@@ -434,23 +416,21 @@
     {
       "id": "package",
       "name": "Python 包与 CLI",
-      "status": "已有开发入口",
+      "status": "本地候选0.3.0a1",
       "tone": "good",
-      "detail": "pyproject 已声明 silo 命令入口，代码版本 0.1.0。当前页面未运行 CLI 或构建验证。",
+      "detail": "0.3.0a1 wheel/sdist已按本地候选标准核验；保留Python与CLI入口。未推送、未公开发布。",
       "sources": [
-        "pyproject.toml",
-        "CHANGELOG.md"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     },
     {
       "id": "clean",
       "name": "独立安装与平台矩阵",
-      "status": "本地双版本通过",
+      "status": "8隔离环境已核验",
       "tone": "good",
-      "detail": "Windows3.11/3.13各wheel/sdist四个独立安装通过；远端Windows/Linux CI待运行。",
+      "detail": "Windows3.11/3.13 × dense/sparse × wheel/sdist共8环境、1008模块核对；远端Windows/Linux CI pending。",
       "sources": [
-        "docs/installation.md",
-        "tasks/reports/20261023-02-01_teaching-prototype_report.md"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     },
     {
@@ -467,17 +447,16 @@
     {
       "id": "research",
       "name": "研究与应用交付",
-      "status": "分别冻结",
+      "status": "基础研究工具阶段",
       "tone": "partial",
-      "detail": "研究结果固定代码、数据和环境；应用层沿共享内核扩展，按自身证据评价。",
+      "detail": "稀疏LP/连续重优化原八项目标已签收；原研究C HOLD、D/E未开始。各结果按自身代码、输入和范围复现。",
       "sources": [
-        "docs/development_layout.md",
-        "docs/seven_step_completion_plan_20261020.md"
+        "docs/sparse_program_acceptance_20261025.md"
       ]
     }
   ],
   "source_hashes": {
-    ".silo-dos/project_profile.md": "392a1c238bbab682b51d539b2bd11dbb5d1b55568bc0fccbd6354e767848c16f",
+    ".silo-dos/project_profile.md": "492ad61e0f57d73506ab5a3b335c9f6bf11e673c6706775be23b263dccb739e7",
     "CHANGELOG.md": "6216840ffe24c46bb2a8266a39096b350cfb7ed95d148682af4c17eda08d55f6",
     "CITATION.cff": "6fc5cf6e96c887d637c46afe328b0b754bfab72aef6fb6c1eff4d39734633935",
     "ROADMAP.md": "64a0f78fa6fffb0b85f316aa700bcc353af96a91db1014491c73ac3f70b40ac1",
@@ -499,7 +478,7 @@
     "docs/resource_dag_column_generation.md": "b67066f3df84538fcfb5f5d3c6d0d3e6ba20699e089c84e1d2493d891390921f",
     "docs/resource_dag_pricing.md": "5a5647106ebabaf505e048dcec73ef05729ff863692fd603e03ecdb88714125e",
     "docs/seven_step_completion_plan_20261020.md": "335284f5f91d7dadb97793c89c65a6d4c1c1b522d2af78c573d1646333120e58",
-    "learning/CATALOG.md": "13f7d82a685dafc952c6e130dd115ee3765579c4c9b434bc2ba3d4324e18a17f",
+    "learning/CATALOG.md": "893046cf823dd8a37bbe843f765b17bfc3729c9ff9de9d3bfd8e75bad98a4650",
     "learning/WRITING_GUIDE.md": "c698e5bafbc49daf4cb9dfa6aaba8a0b520a06052fe4db303dbd33acde329290",
     "notes/26_incremental_pricing_research_start.md": "67cc5e68c3e05ca39630112d4b8a9db48b4ba9df47e3e9cd05718c99c750c30f",
     "notes/30_pricing_locality_conditions_and_nearest_neighbors.md": "a5437854d459b180ef9f9f8c3eefcc0206c1d3f263d68145862e68ad1befa43d",
@@ -516,6 +495,19 @@
     "src/silo/mip/branch_and_bound.py": "84ae639e5ccc6238a3ce991eb50ca370f83ce91a008a5a6a0015949682cc3a7d",
     "src/silo/mip/general.py": "146c9b6f3b5b8856bfe9c8196c9226cc114912ade958bf8b06065eb889bab6d0",
     "tasks/README.md": "7a1c700e27e611adc2e7a782d7930c2f2c910c00f091bc017ec95f7247597f0e",
-    "tasks/reports/20261023-02-01_teaching-prototype_report.md": "a6dac237c1532210648fcbb6a00242015634cc3dd4891a2b3b8b671884de3883"
+    "tasks/reports/20261023-02-01_teaching-prototype_report.md": "a6dac237c1532210648fcbb6a00242015634cc3dd4891a2b3b8b671884de3883",
+    "docs/sparse_program_acceptance_20261025.md": "8147bc3d23a09d1fc935351afe6fd4034a7d77a700d33e23164df9d4bd370697",
+    "learning/lessons/L0016-reliable-solver/README.md": "e736ac1163331420b3498ccaf6939761c256948b253d88ea9d38ab124aa09588",
+    "learning/lessons/L0016-reliable-solver/exercises.md": "f0016967813ed866fe234d20c78a261acdeceeaaf3218a2abb4e76992f85f223",
+    "learning/lessons/L0016-reliable-solver/solutions.md": "870a6238a3abd5300cf36153beb2e18721484b0b8580b3ae4132555af9760b77",
+    "learning/lessons/L0016-reliable-solver/web_outline.json": "0de80f103766d220f834e675be1ff384ed556a51f98aae8ccd233bc4baf9fbd0",
+    "learning/lessons/L0016-reliable-solver/examples.py": "21f91e64e2f5ed19327068391e356785703baa922ee4bb3ca38e3b1dbc8ff0e8"
+  },
+  "project_position": {
+    "title": "基础研究工具阶段",
+    "summary": "稀疏 LP / 连续重优化原八项目标已验收并收口；MIP / 分解仍偏基础研究原型。本地候选 0.3.0a1，远端 Windows/Linux CI pending，native 延期。",
+    "sources": [
+      "docs/sparse_program_acceptance_20261025.md"
+    ]
   }
 }

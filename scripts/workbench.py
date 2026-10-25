@@ -9,6 +9,7 @@ import mimetypes
 import re
 import subprocess
 from datetime import datetime, timezone
+from fractions import Fraction
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
@@ -22,6 +23,11 @@ ROOT_DOCS = {
 }
 DOC_DIRS = {"docs", "notes", "learning", ".silo-dos"}
 TASK_DIRS = {"codex", "reports", "phases"}
+RELIABILITY_DIR = "learning/lessons/L0016-reliable-solver"
+RELIABILITY_DATA = {
+    f"{RELIABILITY_DIR}/web_outline.json",
+    f"{RELIABILITY_DIR}/examples.py",
+}
 
 
 def timestamp() -> str:
@@ -37,6 +43,7 @@ def document_path(root: Path, name: str) -> Path:
     relative = target.relative_to(root.resolve())
     permitted = (
         relative.as_posix() in ROOT_DOCS
+        or relative.as_posix() in RELIABILITY_DATA
         or (relative.parts[0] in DOC_DIRS and target.suffix == ".md")
         or (
             len(relative.parts) > 2
@@ -134,6 +141,82 @@ def lessons_from(root: Path) -> list[dict]:
     return lessons
 
 
+def reliability_lesson(root: Path) -> dict:
+    """Read canonical teaching data, never import or execute its example program."""
+    documents = {
+        name: read_document(root, f"{RELIABILITY_DIR}/{filename}")
+        for name, filename in {
+            "body": "README.md", "exercises": "exercises.md", "solutions": "solutions.md",
+            "outline": "web_outline.json", "examples": "examples.py",
+        }.items()
+    }
+    outline = json.loads(documents["outline"]["text"])
+    if outline.get("lesson_id") != "L0016":
+        raise ValueError("Unexpected teaching identity")
+    for name, filename in {
+        "body": "README.md", "exercises": "exercises.md", "solutions": "solutions.md"
+    }.items():
+        if outline.get(name) != f"{RELIABILITY_DIR}/{filename}":
+            raise ValueError("Teaching source paths must match the canonical lesson")
+    modules = outline.get("modules", [])
+    if [item.get("id") for item in modules] != [f"R{i:02}" for i in range(1, 9)]:
+        raise ValueError("The lesson must contain the eight canonical units")
+    for item in modules:
+        if "### " + item["heading"] not in documents["body"]["text"].splitlines():
+            raise ValueError("A teaching unit heading was not found in the canonical body")
+        if not all(re.fullmatch(r"L\d{4}", name) for name in item["related_lessons"]):
+            raise ValueError("Invalid related lesson identity")
+    scenarios = outline.get("scenarios", [])
+    if [item.get("id") for item in scenarios] != [f"S{i}" for i in range(5)]:
+        raise ValueError("The fixed demonstration requires S0 through S4")
+    for item in scenarios:
+        values = [
+            item.get("rhs"), item.get("y_upper"), item.get("objective"),
+            *item.get("point", []), item.get("x_row_upper"), item.get("z_upper"),
+        ]
+        if len(item.get("point", [])) != 3:
+            raise ValueError("The teaching point needs three coordinates")
+        for value in values:
+            if value is not None:
+                if not isinstance(value, str) or not re.fullmatch(r"-?\d+(?:/\d+)?", value):
+                    raise ValueError("Teaching numbers must be bounded rational literals")
+                if len(value) > 40:
+                    raise ValueError("Teaching number is too long")
+                try:
+                    Fraction(value)
+                except ZeroDivisionError as exc:
+                    raise ValueError("Teaching denominator must be nonzero") from exc
+    exercise_text = documents["exercises"]["text"]
+    matrices = []
+    for name in ("E₁", "E₂"):
+        match = re.search(re.escape(name) + r"=(\[\[[\d,\s+-]+\],\[[\d,\s+-]+\]\])",
+                          exercise_text)
+        if match is None:
+            raise ValueError("Eta matrix is missing from L0016-E03")
+        matrix = json.loads(match[1])
+        if len(matrix) != 2 or any(len(row) != 2 for row in matrix):
+            raise ValueError("Eta demonstration needs 2 by 2 matrices")
+        matrices.append(matrix)
+    vectors = []
+    for name in ("B₂t", "B₂ᵀt"):
+        match = re.search(re.escape(name) + r"=\(([\d,−+\-\s]+)\)", exercise_text)
+        if match is None:
+            raise ValueError("Eta right-hand side is missing from L0016-E03")
+        vector = [int(value) for value in match[1].replace("−", "-").split(",")]
+        if len(vector) != 2:
+            raise ValueError("Eta right-hand side needs two entries")
+        vectors.append(vector)
+    meta = next(item for item in lessons_from(root) if item.get("lesson_id") == "L0016")
+    if outline.get("version") != meta.get("version"):
+        raise ValueError("Teaching outline and body versions disagree")
+    return {
+        "outline": outline, "metadata": meta, "documents": documents,
+        "eta": {"e1": matrices[0], "e2": matrices[1],
+                "ordinary_rhs": vectors[0], "transpose_rhs": vectors[1],
+                "source": f"{RELIABILITY_DIR}/exercises.md"},
+    }
+
+
 def tasks_from(root: Path) -> list[dict]:
     tasks = []
     for path in sorted((root / "tasks/codex").glob("*.md"), reverse=True):
@@ -199,6 +282,7 @@ def build_state(root: Path = ROOT, catalog_path: Path | None = None) -> dict:
         "version": version[1] if version else "未登记", "profile": rows,
         "snapshot_date": catalog["reviewed_on"],
         "baseline": catalog["baseline"], "assessment_note": catalog["assessment_note"],
+        "project_position": catalog.get("project_position", {}),
         "sources": inventory, "warnings": warnings,
         "units": [enrich_record(root, item, sources) for item in catalog["units"]],
         "dimensions": [enrich_record(root, item, sources) for item in catalog["dimensions"]],
@@ -243,10 +327,14 @@ def make_handler(root: Path = ROOT, assets: Path = ASSETS) -> type[BaseHTTPReque
             try:
                 if url.path == "/api/state":
                     self.json_body(200, build_state(root, assets / "catalog.json"))
+                elif url.path == "/api/lesson/L0016":
+                    self.json_body(200, reliability_lesson(root))
                 elif url.path == "/api/document":
                     name = parse_qs(url.query).get("path", [""])[0]
                     self.json_body(200, read_document(root, name))
-                elif url.path in {"/", "/index.html", "/app.js", "/style.css"}:
+                elif url.path in {
+                    "/", "/index.html", "/app.js", "/style.css", "/math.js", "/reliability.js"
+                }:
                     path = assets / ("index.html" if url.path == "/" else unquote(url.path[1:]))
                     mime = mimetypes.guess_type(path.name)[0] or "text/plain"
                     self.send_body(200, path.read_bytes(), mime + "; charset=utf-8")
