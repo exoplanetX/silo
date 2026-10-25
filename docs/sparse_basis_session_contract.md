@@ -4,6 +4,22 @@ SILO-SPARSE-LP-20261024 / SP1 design v1.0. Dense QR remains the reference.
 Sparse numerical LU uses SciPy1.16.3 SuperLU only for linear equations; SILO owns
 phases, pivots, pricing, validity, recovery, tree/CG and termination.
 
+## RR02 numerical-policy revision — 2026-10-25
+
+The SP1 equations and frozen input/truth chronology remain historical facts.
+RR02 explicitly revises the strict-minimum-tie primal selector using the
+[primal stability contract](sparse_primal_stability_contract.md), after R0
+observations and its independent mathematical gate. Every positive blocker
+limits a current-tolerance window; stable predicted candidates are tried under
+the original complete-state gates. Actual rho is separate from nonnegative
+progress counting. At most2 private full trials per entering/semantic basis,
+including optional preselection same-B refresh, survive generation restarts.
+The prior automatic candidate-validation refresh is superseded by bounded
+alternative leaving rows. Entering Devex/sticky Bland and forced residual
+recovery remain unchanged in the first package. The selector/recovery-policy
+version joins the session frame identity. This revision does not relax any
+original primal/dual/KKT criterion or assert that capacity acceptance passed.
+
 ## Factor interface and numerical invariant
 
 `lp/factorization.py` owns SparseFactor, a private session cache and diagnostics.
