@@ -19,7 +19,7 @@ SP1/SP2与旧算法SP3已独立GO；当前算法a9f3213、元数据0.3.0a1，生
 启动前新宿主预检、运行期连续记录；原工件SHA保持不变，普通pip重新验收8个全新环境。
 首次8安装均在uv缺失archive SHA时被原检查器拒绝，0solver；不重建、不削弱检查。
 原输入、阈值、60秒/1GiB与全部预算保持；其他上限capacity2/Netlib2/quality3/diagnostic20不变。
-当前记录器修补、一次性额度门及55组件/独立工程门GO，最新完整质量6622项/结构/Ruff通过，quality4/4。
+当前记录器修补、一次性额度门及66组件/独立工程门GO，最新完整质量6635项/结构/Ruff通过，quality5/5。
 原工件SHA不变的8新环境均首轮通过，无重试/重建。
 两个新宿主窗口均busy且0solver，原diagnostic20/20，warm4/4、quality3/3均已用满。
 用户call_cbfe1d7c51e94ad69b2a3b91095ade97已批准[RR05](../tasks/codex/20261024-02-05_sparse-lp-program.md)，
@@ -34,8 +34,11 @@ RR05已用2/3，第2窗quiet通过后执行warm4，剩余1窗；8环境及数值
 两条原BOUND02 cold固定21调用、75秒批次/60秒child/1GiB；各正确且完整wall≤45秒、
 频率/供电/priority/affinity稳定后，才可运行唯一原80项warm6。quality仅追加5，host≤4窗（含RR06余1）。
 原算法/工件/输入/阈值及总预算保持。用户已手动暂停，原状态syncing；61组件和真实无SILO并发遥测canary通过。
-当前工具工程已GO，quality5/两诊断/warm6尚未执行；Goal按本次直接授权续接，阻断审计重新计数。
-本包任一诊断未达即停止新增求解并恢复同步；同步唯一因果尚未证明。
+工具提交3b614d0后quality5成功；host第1窗残留同步服务busy，核实身份并停止后第2窗quiet。
+两cold各21/21正确、完整child34.3699/33.9672秒；20核频率中位4006.25/4457.5MHz，配对差10.1234%>10%。
+RR07按注册条件停止，warm6未启动；diagnostic22/22、quality5/5、warm5/6，host用2/4。
+OneDrive已重新启动，等待用户确认回到原syncing状态；仅做证据复核和本地收尾，不新增求解或改变门槛。
+完整目标第4项仍HOLD；两cold成功不替代完整80项，也不证明同步唯一因果。
 后续真实预算、轮次及结果以原追加ledger为准；所有旧失败和费用继续保留。
 
 全部原八项及最终独立GO齐备才完成同一Goal；Goal工具旧blocked状态没有active设置，
