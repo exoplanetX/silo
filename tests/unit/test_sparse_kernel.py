@@ -968,6 +968,106 @@ def test_raw_primal_gate_is_not_applied_to_dual_or_cleanup(monkeypatch, phase):
     assert result.status == "optimal"
 
 
+def test_zero_artificial_cleanup_can_change_phase_one_dual_feasibility():
+    # The only nonnegative solution is zero. Phase I starts optimal at zero;
+    # replacing artificial0 by x0 is a legal zero pivot with rc(x0)=-1.
+    # The new basis has Phase-I rc(x1)=1/2, yet its primal objective stays zero.
+    model = norm([[-2, -1], [1, 1]], [0, 0], [-1, -2], ["=", "="])
+    result = call(model, SolveOptions())
+    assert result.status == "optimal", result.reason
+    assert np.array_equal(result.point, [0, 0])
+    assert result.diagnostics["artificial_cleanup_pivots"] == 2
+    assert all(key[0] != "artificial" for key in result.column_keys)
+
+
+@pytest.mark.parametrize("fault", ["primal", "artificial", "nonfinite"])
+def test_cleanup_invalid_full_state_cannot_drop_artificials_or_issue_farkas(monkeypatch, fault):
+    original_solve, original_replace = sf.SparseFactor.solve, sf.SparseFactor.replace_column
+    replacements, injected = [], []
+
+    def replaced(self, *args, **kwargs):
+        value = original_replace(self, *args, **kwargs)
+        replacements.append(True)
+        return value
+
+    def solve(self, rhs, transpose=False):
+        value = original_solve(self, rhs, transpose)
+        if replacements and not injected and not transpose:
+            value = value.copy()
+            if fault == "primal":
+                value[0] = -1
+            elif fault == "artificial":
+                value[1] = 1
+            else:
+                value[1] = np.nan
+            injected.append(True)
+        return value
+
+    monkeypatch.setattr(sf.SparseFactor, "replace_column", replaced)
+    monkeypatch.setattr(sf.SparseFactor, "solve", solve)
+    result = call(norm([[-2, -1], [1, 1]], [0, 0], [-1, -2], ["=", "="]), SolveOptions())
+    assert injected and len(replacements) == 1
+    assert result.status == "numerical_failure"
+    assert result.diagnostics["proof_kind"] is None and result.snapshot is None
+
+
+def test_cleanup_positive_artificial_mass_cannot_cancel_with_tolerated_negative(monkeypatch):
+    original_solve, original_replace = sf.SparseFactor.solve, sf.SparseFactor.replace_column
+    replacements, injected = [], []
+
+    def replaced(self, *args, **kwargs):
+        value = original_replace(self, *args, **kwargs)
+        replacements.append(True)
+        return value
+
+    def solve(self, rhs, transpose=False):
+        value = original_solve(self, rhs, transpose)
+        if replacements and not injected and not transpose:
+            # Signed sum0.75eps passes the old objective test, while positive
+            # artificial mass1.5eps must fail. The negative coordinate is legal.
+            value = np.array([0, 1.5e-7, -0.75e-7])
+            injected.append(True)
+        return value
+
+    monkeypatch.setattr(sf.SparseFactor, "replace_column", replaced)
+    monkeypatch.setattr(sf.SparseFactor, "solve", solve)
+    result = call(norm(-np.eye(3), [0, 0, 0], [-1, -1, -1], ["="] * 3), SolveOptions())
+    assert injected and len(replacements) == 1
+    assert result.status == "numerical_failure" and "zero artificial mass" in result.reason
+    state = result.diagnostics["last_cleanup_state"]
+    assert state["minimum_basic"] >= -state["primal_threshold"]
+    assert state["positive_artificial_mass"] == 1.5e-7
+    assert result.diagnostics["proof_kind"] is None
+
+
+def test_last_cleanup_pivot_checks_actual_primal_before_removing_artificial(monkeypatch):
+    original_solve, original_replace = sf.SparseFactor.solve, sf.SparseFactor.replace_column
+    replacements, phases = [], []
+
+    def replaced(self, *args, **kwargs):
+        value = original_replace(self, *args, **kwargs)
+        replacements.append(True)
+        return value
+
+    def solve(self, rhs, transpose=False):
+        value = original_solve(self, rhs, transpose)
+        return -np.ones_like(value) if replacements and not transpose else value
+
+    original_phase = sk.Devex.fresh_phase
+
+    def phase(self, keys, basis, reason, **kwargs):
+        phases.append(reason)
+        return original_phase(self, keys, basis, reason, **kwargs)
+
+    monkeypatch.setattr(sf.SparseFactor, "replace_column", replaced)
+    monkeypatch.setattr(sf.SparseFactor, "solve", solve)
+    monkeypatch.setattr(sk.Devex, "fresh_phase", phase)
+    result = call(norm([[-1, -1]], [0], [-1, -2], ["="]), SolveOptions())
+    assert len(replacements) == 1 and "phase_two" not in phases
+    assert result.status == "numerical_failure" and "primal feasibility" in result.reason
+    assert result.snapshot is None and result.diagnostics["proof_kind"] is None
+
+
 def test_staged_state_can_pass_backward_error_but_fail_primal_without_publishing(monkeypatch):
     owner = sf.SparseFactor(sk.canonical(np.eye(2)), SolveOptions(), {})
     old_lu, old_matrix, old_etas, old_generation = (

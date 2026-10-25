@@ -158,6 +158,32 @@ dual/objective tolerance does not by itself refactor valid B or grant proof.
 
 ## Mechanism and resource evidence
 
+### Phase-I artificial cleanup (SP3 first revision)
+
+The Phase-I optimization run retains its existing dual-feasible optimal-state
+and Farkas checks. Cleanup then replaces zero basic artificials to represent
+the same feasible point. Its intermediate basis need not remain dual feasible
+for the artificial objective. For example, A=[[-2,-1],[1,1]], b=0 and x>=0 has
+only x=0: replacing artificial0 by column0 gives Phase-I reduced cost1/2 on
+column1, although the point's artificial objective remains the global upper
+bound0. Requiring that intermediate basis to be dual feasible rejects a legal
+degenerate cleanup pivot.
+
+Every cleanup state must instead be finite, generation coherent, satisfy the
+unchanged coordinate primal gate, and have positive artificial mass
+sum(max(xB[i],0) for basic artificial i)<=original primal_tolerance. Positive
+mass prevents tolerated negative coordinates from cancelling positive ones.
+Recheck immediately after every cleanup pivot, including the last, using the
+actual current B. Any failed cleanup gate yields numerical_failure; a dual
+infeasible cleanup basis cannot issue Farkas. The original optimization-run
+Farkas path remains. Artificial columns, old factors and pricing frames are
+removed before Phase II. Harris selection and its trial budget do not apply
+to this separate zero-artificial cleanup operation.
+
+Independent theory_architect review of the saved scalar observation and the
+proof obligations approved this minimal correction. It does not pre-approve
+the fixed eight mechanism examples, warm performance or the final source.
+
 Counters are actual calls: base_factorizations, eta_updates,
 refactorizations_by_reason, within_solve_reuses, cross_solve_reuses, cold_fallbacks.
 Record A/standard/L/U nnz, factor fill, eta chain length/bytes, residual/refinement
