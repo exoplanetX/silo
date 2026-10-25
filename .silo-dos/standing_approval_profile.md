@@ -2,6 +2,15 @@
 
 ## Explicit human activation — SILO-SPARSE-LP-20261024
 
+Current narrow authority is[RR08](../tasks/codex/20261024-02-08_sparse-lp-program.md):
+the human requests audit, targeted revision and direct dispatch for execution.
+Only reconcile the original eight evidence criteria and final closure: prebound warm4,
+mandatory failure/auxiliary-gap disclosure, strict current-source/artifact identity.
+No new formal solver/benchmark/install/host actions; <=2 necessary quality checks and
+900s in original SP4/global time. ExistingGoal and append-only ledger persist.
+RR04-RR07 remain historical auxiliaryHOLD, not retroactive original-goal requirements.
+No generic standing authority expands; subsequent paragraphs retain prior history.
+
 Current authority2026-10-25: the human requested review and dispatch of necessary repair
 and original-goal continuation. [RR02](../tasks/codex/20261024-02-02_sparse-lp-program.md)
 and its recovery plan supersede the exhausted7/7 boundary only for the listed concentrated

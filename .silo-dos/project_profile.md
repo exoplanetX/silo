@@ -2,48 +2,31 @@
 
 ## Active Sparse LP Program — 2026-10-24
 
-### 当前恢复入口（2026-10-25）
+### 当前最终收口入口（2026-10-25）
 
-当前执行[RR02合同](../tasks/codex/20261024-02-02_sparse-lp-program.md)及
-[恢复计划](../tasks/phases/sparse_lp_recovery_20261025.md)，沿用原唯一Goal与codex/sparse-lp-reoptimization。
-当前唯一[RR02总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)。
-SP1/SP2与旧算法SP3已独立GO；当前算法a9f3213、元数据0.3.0a1，生产source
-889d191b05736d36de4cd935aecf15e77900d6e7c0f2c5bb8d6bef5914439669。
-最终48tiny/24pressure/12容量/12Netlib、8机制、12MIP/4CG及737历史组均通过；
-当前源warm第4轮80/80、1600修改/80初始、中位收益3.503361倍、8/8不回退，原数值/性能独立GO。
-第4轮监督0样本的ctypes缺陷已修复；第5轮持续325样本完整，但75/80、五BOUND02 cold超时，受控性能HOLD，整体未完成。
-旧源80/80不能桥接为当前源；pivot/LU与旧对应前缀一致，墙钟上升的唯一原因尚未证明。
+用户要求审查反复中断、制定针对性修订并直接交付执行。当前入口为
+[RR08合同](../tasks/codex/20261024-02-08_sparse-lp-program.md)、
+[收口计划](../tasks/phases/sparse_lp_closure_20261025.md)及
+[最新审查](../docs/sparse_closure_audit_20261025.md)。沿用原唯一Goal/分支/ledger；
+[RR02](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)仍为唯一总报告。
 
-用户call_b401b2090a634e03b64bcdcebf18fc2f已直接批准
-[RR04](../tasks/codex/20261024-02-04_sparse-lp-program.md)：仅同源码第4轮固定80项warm（3→4），
-启动前新宿主预检、运行期连续记录；原工件SHA保持不变，普通pip重新验收8个全新环境。
-首次8安装均在uv缺失archive SHA时被原检查器拒绝，0solver；不重建、不削弱检查。
-原输入、阈值、60秒/1GiB与全部预算保持；其他上限capacity2/Netlib2/quality3/diagnostic20不变。
-当前记录器修补、一次性额度门及66组件/独立工程门GO，最新完整质量6635项/结构/Ruff通过，quality5/5。
-原工件SHA不变的8新环境均首轮通过，无重试/重建。
-两个新宿主窗口均busy且0solver，原diagnostic20/20，warm4/4、quality3/3均已用满。
-用户call_cbfe1d7c51e94ad69b2a3b91095ade97已批准[RR05](../tasks/codex/20261024-02-05_sparse-lp-program.md)，
-仅追加≤3×20秒零求解宿主窗口单列记账；源码/quiet阈值/正式轮次和总预算不变。
-RR05已用2/3，第2窗quiet通过后执行warm4，剩余1窗；8环境及数值/伴学独立复核均有效。
-记录器二文件隔离补丁已真实并发红/绿回归及独立工程GO，并按下述RR06获批集成。
-用户call_de30bd6eb2384ab388f2c29188b6049d已明确批准[RR06](../tasks/codex/20261024-02-06_sparse-lp-program.md)：
-记录器精确修补及一次性额度门、quality3→4/warm4→5各仅一次、host≤3窗包含RR05余1窗。
-提交2c09e90后完整质量6622通过，保护drivers与生产source不变；RR06 host第2窗quiet后执行warm5，现5/5及quality4/4用满，host余1窗。
-用户call_8b0bb8cd29ae4555b6794390d2bc8466直接批准
-[RR07](../tasks/codex/20261024-02-07_sparse-lp-program.md)：临时暂停OneDrive并结束恢复原状态，
-两条原BOUND02 cold固定21调用、75秒批次/60秒child/1GiB；各正确且完整wall≤45秒、
-频率/供电/priority/affinity稳定后，才可运行唯一原80项warm6。quality仅追加5，host≤4窗（含RR06余1）。
-原算法/工件/输入/阈值及总预算保持。用户已手动暂停，原状态syncing；61组件和真实无SILO并发遥测canary通过。
-工具提交3b614d0后quality5成功；host第1窗残留同步服务busy，核实身份并停止后第2窗quiet。
-两cold各21/21正确、完整child34.3699/33.9672秒；20核频率中位4006.25/4457.5MHz，配对差10.1234%>10%。
-RR07按注册条件停止，warm6未启动；diagnostic22/22、quality5/5、warm5/6，host用2/4。
-OneDrive已重新启动，等待用户确认回到原syncing状态；仅做证据复核和本地收尾，不新增求解或改变门槛。
-完整目标第4项仍HOLD；两cold成功不替代完整80项，也不证明同步唯一因果。
-后续真实预算、轮次及结果以原追加ledger为准；所有旧失败和费用继续保留。
+当前算法a9f3213、0.3.0a1，source889d191b…4439669；完整48/24/12容量/12外部、
+8机制、12MIP/4CG及737历史均有通过记录，当前6635质量通过。
+当前源warm4完整80/80、1600修改+80初始、中位收益3.503361、8/8；原wall/RSS guard有效。
+同源warm3/5各75/80、warm4附加observer0样本、RR07频率10.1234%>10%及warm6未跑均保留。
+原八项已有候选达线证据，整体尚待RR08原始核验及独立最终GO，不预先标完成。
+RR04-RR07辅助受控宿主/归因义务保持HOLD，不追溯性改变原八项定义；不声称跨运行稳定。
+RR08依据本次直接授权取代RR06/RR07作为原Goal的后续执行与完成判定路径；
+RR04–RR07不改报通过，其未用warm6/host等权限关闭，不再排队执行。
 
-全部原八项及最终独立GO齐备才完成同一Goal；Goal工具旧blocked状态没有active设置，
-直接人类续接授权支持本包执行，不新建Goal。local-commit，无push/发布。
-两治理文件原哈希保护并排除暂存；原研究C HOLD/D/E未开始、native延期和远端CI pending保持。
+8个原工件安装通过；127文件与当前源码119 raw_equal/8严格CRLF-LF、无其他差异。
+RR08只修明确绑定的证据入口及必要工具，禁止自动挑最好轮；不新增正式求解/安装/宿主实验。
+新增自动核验≤900秒，原SP4/全局实账支出，全质量最多初验+一次真实失败修正（总5→7）。
+审查实账SP1/2/3/4=368.5422803/785.8677913/3332.2147856/1770.6314541秒，
+合计6257.2563113/28800秒；启动重读实际值。其他次数、原数据/阈值与全部失败保持。
+OneDrive客户端/同步引擎已重启，实际syncing仍待用户确认；不再自动控制，单列操作恢复待办。
+local-commit，无push/发布；两治理文件原哈希排除暂存。原研究C HOLD/D/E未开始、native延期、
+远端CI pending保持。全部原八项独立GO即结束；发现真实原门缺口则如实停机，不自动追加任务。
 
 ### 第7轮终止快照（历史，以下耗尽权限已由RR02窄范围续接）
 

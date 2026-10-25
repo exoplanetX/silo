@@ -2,6 +2,16 @@
 
 ## Activated sparse LP program — 2026-10-24
 
+**Current corridor,2026-10-25:** execute
+[RR08](../tasks/codex/20261024-02-08_sparse-lp-program.md) and its closure plan.
+Original-eight evidence reconciliation and final independent GO only; no new solver
+method/benchmark/install/host experiment. Explicitly bound warm4 candidate and all
+subsequent failures, current-source/artifact strict transport. RR04-RR07 auxiliary
+HOLD persists separately from original criteria. Same Goal/ledger and original time;
+<=900s new verification, <=2 necessary quality runs, no other round increases.
+OneDrive actualsyncing pending is disclosed, not presumed or used as an algorithm gate.
+The following recovery corridors are historical and do not queue additional work.
+
 **Current2026-10-25 recovery corridor:** direct human instruction in the discussion
 chat authorizes the reviewed repair/continuation package to be dispatched for execution.
 [RR02](../tasks/codex/20261024-02-02_sparse-lp-program.md) and the

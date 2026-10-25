@@ -316,6 +316,29 @@ at a genuine blocker or exhausted budget. Do not push/publish or silently expand
 
 ### 6.11 Activated Goal Program — SILO-SPARSE-LP-20261024
 
+**Current final-closure revision,2026-10-25:** the human explicitly requested another
+audit of repeated failures/interruption, a targeted revision and direct dispatch.
+[RR08](codex/20261024-02-08_sparse-lp-program.md) and the
+[closure plan](phases/sparse_lp_closure_20261025.md) govern current execution.
+Retain original01/02 eight criteria. Explicitly assess the prebound current-source
+warm4 record against its original80-child/1680-solution/time/RSS/speed gates; disclose
+all later failures and its missing auxiliary host trace. This is not an automatic
+best-run search or a claim of cross-run stability. RR04-RR07 auxiliary contracts and
+HOLD results persist; their added host/frequency/sync conditions do not retroactively
+become new original-goal completion requirements.
+RR08 explicitly supersedes RR06/RR07 as the originalGoal's subsequent execution and
+completion path. RR04-RR07 stayHOLD; their unused warm6/host permissions are closed,
+not queued work. This narrow priority rule resolves conflicting continuation clauses.
+
+No new formal solves/benchmark/install/probes/host control. At most2 necessary full
+quality runs (5→7, initial plus one genuine failure correction) and900s total added
+verification in the original SP4/global budgets; test-internal native calls remain
+accounted. No reset of any count, Goal or ledger. Append RR08 authority/evidence mapping,
+independently review all eight raw-evidence criteria and complete only if they pass.
+RR02 remains the total report; RR08 has its matching closure receipt. OneDrive syncing
+is an explicitly pending user-environment restoration fact, not an algorithm criterion.
+No automaticpush/new research/native. The following are historical authorizations.
+
 **Current recovery authority,2026-10-25:** the human explicitly requested the discussion
 chat to review the failed implementation, prepare a repair/continuation plan and dispatch
 it to `silo-solver开发`. The immutable

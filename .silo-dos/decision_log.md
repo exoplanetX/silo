@@ -1,5 +1,23 @@
 # SILO Decision Log
 
+## DEC-20261025-SPARSE-RR08-ORIGINAL-GOAL-CLOSURE
+
+- Human directly requests audit of repeated errors/interruption, targeted revision
+  and dispatch to the implementation conversation. Review starts9d0eb4b.
+- SP2 numerical blockers are fixed. Current-source warm4 has original80/80,1680
+  solutions, wall/RSS guards and3.503361 speed evidence; its auxiliarySampler failed.
+  Same-source warm3/5 timeouts andRR07 frequency rejection remain fully disclosed.
+- Distinguish original01/02 eight criteria from later authorized auxiliaryhost work.
+  RR04-RR07 contracts/results stayHOLD; do not change10% or fabricate controlled success.
+- IssueRR08 with explicit fixedpath/SHA evidence selection, no generic best-run fallback,
+  no new formal benchmarks/installs/probes; <=2 necessaryquality and900s originalSP4time.
+- Currentartifact127-file identity was independently checked:119 raw equal/8 CRLF-only,
+  no algorithm difference. Final raw-evidence review must still verify the full chain.
+- All original eight items and independentfinalGO required before completing the
+  existingGoal; otherwise retain concrete unmet obligations and stop. No next task.
+- OneDriveclient/engine restarted; actualsyncing is pending user confirmation and
+  reported separately. No further app control, publication, native or originalC/D/E.
+
 ## DEC-20261025-SPARSE-CONCENTRATED-RECOVERY-RR02
 
 - Direct user instruction: audit implementation, identify causes, formulate continuation
