@@ -394,6 +394,23 @@ def test_small_nonzero_equation_is_not_deleted_as_dependent(epsilon):
     assert "Unproved near-dependent" in result.reason
 
 
+def test_failed_reduced_factor_does_not_publish_row_removal(monkeypatch):
+    original = sf.splu
+
+    def singular(matrix, **kwargs):
+        if matrix.shape == (1, 1):
+            raise np.linalg.LinAlgError("Injected reduced-factor failure")
+        return original(matrix, **kwargs)
+
+    monkeypatch.setattr(sf, "splu", singular)
+    result = call(norm([[1, 1], [2, 2]], [2, 4], [-1, -2], ["=", "="]), SolveOptions())
+    assert result.status == "numerical_failure" and result.snapshot is None
+    assert result.diagnostics["sparse_dependency_certificates"] == 1
+    assert result.diagnostics["dependent_rows_removed"] == 0
+    assert result.diagnostics["final_basis_rows"] == 2
+    assert result.diagnostics["proof_kind"] is None
+
+
 def test_nearby_distinct_ratios_are_not_false_bland_ties():
     result = call(norm([[1], [1]], [5e-11, 0], [1]), SolveOptions())
     assert result.status == "optimal" and result.point[0] == 0

@@ -158,6 +158,33 @@ dual/objective tolerance does not by itself refactor valid B or grant proof.
 
 ## Mechanism and resource evidence
 
+### SP4 exact sparse dependency proof
+
+Cleanup reuses its existing BTRAN u=B_scaled^-T*e_p. For a target artificial
+unit column supported at physical row t, row-scale-adjusted ratios
+(row_scale_i*u_i)/(row_scale_t*u_t) propose flipped-unscaled row weights.
+Fixed denominator limit1000000 only proposes Fractions. Acceptance independently
+streams the actual binary input coefficients, offset-adjusted RHS and flips,
+requiring exact zero on every active structural column and every slack column,
+exact zero weighted RHS, zero support on other basic artificials and unit
+weight at the target artificial. Free/reflected directions and fixed offsets
+retain the existing exact raw-equation conventions. No tolerance proves a row
+redundant, and no Fraction matrix or container of all Fraction rows is built.
+
+Reserve2q+2n+32 rational cells before Fraction allocation; the existing65536-cell,
+2000000-operation default,4096-bit and deadline rules remain. A failed proposal
+may use the old small exact-basis solve only under the same remaining budget.
+The exact relation proves equivalent nonartificial feasible equations after
+row deletion. A nonsingular exact minor additionally needs a nonsingular exact
+old B; the implementation makes no unconditional exact-rank claim from LU.
+It stages the reduced sparse matrix/basis/factor and full cleanup state first;
+only successful factorization and original finite/primal/artificial-mass gates
+publish the row change. Failure retains the old row/basis and returns safely.
+
+This changes production source. Existing source-bound SP3 results cannot be
+silently relabeled; the exhausted two-round warm cap requires human resolution
+before any additional formal warm group. No third warm is authorized here.
+
 ### SP3 second revision: mapped dual exit and repeat-only pricing
 
 The existing global dual negative-row set uses epsilon_p*(1+norm_inf(xB)).

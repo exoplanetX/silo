@@ -19,10 +19,10 @@
 | [L0009：整数资源定价、充分状态与有界冷搜索](lessons/L0009-resource-dag-pricing/README.md) | 2026-10-20 | `decomposition.resource-dag-pricing` | checked | [资源DAG冷定价](../tasks/codex/20261020-04-01_resource-dag-pricing.md) |
 | [L0010：资源可行列域与凸组合列生成](lessons/L0010-resource-dag-cg/README.md) | 2026-10-20 | `decomposition.resource-dag-column-generation` | checked | [资源参考CG](../tasks/codex/20261020-05-01_resource-dag-cg.md) |
 | [L0011：一般模型、可逆变换与原始空间核验](lessons/L0011-general-model/README.md) | 2026-10-24 | `modeling.general-lp` | checked v0.2.0 | [教学研究原型M1](../tasks/codex/20261023-02-01_teaching-prototype.md)、[正确性修订](../tasks/codex/20261024-01-01_prototype-correctness-revision.md) |
-| [L0012：基分解、缩放与原始对偶重优化](lessons/L0012-reoptimizable-lp/README.md) | 2026-10-24 | `lp.reoptimization-numerics` | checked | [教学研究原型M2](../tasks/codex/20261023-02-01_teaching-prototype.md) |
+| [L0012：基分解、缩放与原始对偶重优化](lessons/L0012-reoptimizable-lp/README.md) | 2026-10-24 | `lp.reoptimization-numerics` | checked v0.2.0 | [教学研究原型M2](../tasks/codex/20261023-02-01_teaching-prototype.md)、[稀疏续接](../tasks/codex/20261024-02-02_sparse-lp-program.md) |
 | [L0013：一般整数搜索、全局界与可核验GMI](lessons/L0013-general-milp/README.md) | 2026-10-24 | `mip.branch-and-cut` | checked v0.2.0 | [教学研究原型M3](../tasks/codex/20261023-02-01_teaching-prototype.md)、[正确性修订](../tasks/codex/20261024-01-01_prototype-correctness-revision.md) |
 | [L0014：受控研究策略、一般主问题与有限列生成](lessons/L0014-research-interfaces/README.md) | 2026-10-24 | `research.general-column-generation` | checked v0.2.0 | [教学研究原型M4](../tasks/codex/20261023-02-01_teaching-prototype.md)、[正确性修订](../tasks/codex/20261024-01-01_prototype-correctness-revision.md) |
-| [L0015：稀疏基、eta更新与重构后的状态一致性](lessons/L0015-sparse-basis-updates/README.md) | 2026-10-25 | `lp.sparse-basis-updates` | draft，SP2 GO，SP3 warm待验 | [稀疏整体执行](../tasks/codex/20261024-02-01_sparse-lp-program.md)、[RR02续接](../tasks/codex/20261024-02-02_sparse-lp-program.md) |
+| [L0015：稀疏基、eta更新与重构后的状态一致性](lessons/L0015-sparse-basis-updates/README.md) | 2026-10-25 | `lp.sparse-basis-updates` | checked v0.2.1 | [稀疏整体执行](../tasks/codex/20261024-02-01_sparse-lp-program.md)、[RR02续接](../tasks/codex/20261024-02-02_sparse-lp-program.md) |
 
 L0001 的教学编排在 [系列整理任务](../tasks/codex/20261018-02-01_learning-series.md)
 中完成；算法实现和代码基线来自上表的 LP 开发任务。总目录同时记录两种来源。
@@ -30,8 +30,8 @@ v0.2.0 由 [Phase-I 来源清理任务](../tasks/codex/20261019-01-01_revised-ph
 补充三套身份、手算与证明、数值边界和第六道练习；实际代码基线见篇首元信息与
 [执行报告](../tasks/reports/20261019-01-01_revised-phase1-cleanup_report.md)。
 
-L0012新增稀疏扩展说明明确保留draft边界；原dense正文核验基线不被新组件测试替代。
-L0015记录RR02行级窗口与人工变量清理、SP2联合GO及8机制通过；完整容量、warm收益和新候选仍待验。
+L0012稀疏增补与L0015已按实际提交、保存小例、159组件和正式五重复轨迹核对。
+完整容量、外部组和候选安装的任务完成状态仍查当前执行报告；checked不替代总体门。
 
 ## 按主题学习 / 未来专题编排
 

@@ -2,12 +2,12 @@
 lesson_id: L0015
 title: 稀疏基、eta更新与重构后的状态一致性
 topic: lp.sparse-basis-updates
-version: 0.2.0
-status: draft
+version: 0.2.1
+status: checked
 created: 2026-10-25
 updated: 2026-10-25
-verified_code: null
-verified_on: null
+verified_code: c3fea18ca45740338bdc4d2a2add828a916e804a
+verified_on: 2026-10-25
 source_tasks: [20261024-02-01_sparse-lp-program, 20261024-02-02_sparse-lp-program]
 ---
 
@@ -18,7 +18,8 @@ source_tasks: [20261024-02-01_sparse-lp-program, 20261024-02-02_sparse-lp-progra
 反复求解相邻LP时，可复用的对象包括基的语义身份、LU及其更新链。本篇解释
 三者分别保存什么，以及一次重构为何要求重新计算尚未提交的比值检验。
 本文同时说明选择窗口、私有完整状态和Phase-I人工变量清理的不同证明义务。
-RR02已取得SP2联合GO和8机制通过；正式warm与最终交付尚待核验，元信息继续draft。
+当前数学、例子及代码映射已实际核对；RR02已取得SP2联合GO和8机制通过，
+正式warm第二轮80/80通过，完整容量/外部组与最终交付仍须各自门控。
 
 ## 2. 前置知识、符号与假设
 
@@ -131,6 +132,30 @@ Phase I最大化\(-\sum a_i\)，而\(a_i\ge0\)，所以可行目标的上界为0
 正部求和避免负容差坐标抵消正人工量。每次换基后立即检查，包括最后一次；
 失败给数值失败。Farkas只保留在Phase-I优化终点具有对偶证明的路径上。
 
+### dual退出的原空间分量门与定价回退
+
+全局基本值尺度不能代表每个原变量的边界。例如\(x_B=(-1.1\times10^{-7},2.5)\)
+在\(\epsilon_p=10^{-7}\)的全局门\(3.5\times10^{-7}\)内，但第一项的零下界
+只允许约\(10^{-7}\)的误差。对于\(x-y=-1.1\times10^{-7}\)、\(w=2.5\)、
+最大化\(-y\)的模型，基\((x,w)\)对偶可行，却仍须以y换出负的x。
+
+当前实现保留原全局负行规则，仅在准备宣告dual最优时恢复当前原空间点，按实际有限bound
+及逐分量分母补查。结构变量考虑column scale；自由拆分变量没有原始有限bound时不虚构约束。
+对标准形slack，令\(q=b-Az\)、实际列系数\(\sigma\in\{-1,1\}\)，其原侧违规为
+
+\[
+\frac{-x_{B,i}-\sigma q_r}{\mathrm{row\_scale}_r}.
+\]
+
+必须保留非零q及上下侧符号。可定位的负基本坐标继续原dual换基；无法定位或没有安全进入列
+时保守数值失败。mapped-only路径不签发Farkas，原全局负行路径仍须原始精确证明。
+最后完整KKT继续独立检查；映射门只增加潜在退出处的稀疏乘积，没有新增线性求解。
+
+连续两次零步长也不能证明循环。当前Devex持续工作，只有本phase内重复的有序语义基
+才触发sticky Bland进入列回退；factor重构不清空该历史，新的公开求解和phase会清空。
+Harris出基仍按稳定性排序，因此不援引经典完整Bland有限终止定理；迭代、时限和资源门保持。
+dual退出及pricing的独立policy版本加入私有frame，旧策略缓存不能静默复用。
+
 ## 5. 算法到代码的映射
 
 | 对象 | 当前实现及职责 |
@@ -141,6 +166,7 @@ Phase I最大化\(-\sum a_i\)，而\(a_i\ge0\)，所以可行目标的上界为0
 | Phase I/II及Devex/Bland | `lp/sparse_kernel.py:solve_canonical` |
 | 行级两遍选择及实际两次试算 | `lp/sparse_ratio.py:leaving_order`、内核`full_trial` |
 | 清理的原始可行/正部人工量门 | 内核`cleanup_state`，逐次检查当前B |
+| 原空间映射dual退出 | `lp/sparse_dual.py:mapped_blockers`，潜在退出处检查 |
 | 被动语义基 | version3 `BasisSnapshot`，CSC系数为不可变tuple |
 | 私有可变LU/eta | `lp/session.py:LPSession`独占；结果领取后删除传递槽 |
 | 原空间核验与精确证明门 | `lp/verification.py`、`lp/tableau_view.py` |
@@ -174,7 +200,44 @@ SP2原修正次数到限后已停；人类随后批准追加轮及剩余原预�
 SP3的7891de5修正上述人工清理不变量，150组件及固定8机制全部通过；
 每例至少64次换基、真实eta更新占所有成功基替换的比例最低528/530。
 原始失败和更新后完整收据见[RR02报告](../../../tasks/reports/20261024-02-02_sparse-lp-program_report.md)。
-正式轨迹收益、12容量、12Netlib和8安装仍待验，正文保持draft。
+上述为第二包前的范围记录。第二包正式warm五重复已80/80、1600修改状态及80初始解通过，
+八轨迹配对中位数3.4547，8/8不慢于cold；含初始解的比值另列于原始summary。
+完整12容量、12Netlib和8安装尚待验。本篇checked只表示以下教学依据核对完成。
+
+第二包c3fea18新增映射dual退出与仅重复基触发Bland，159组件和独立SOURCE/MATH门通过。
+固定运输轨迹单次20修改的warm/cold均正确，分别5.30/33.73秒；8机制再次通过、每例至少64pivot。
+这些单次结果未替代正式五重复。以下小程序可直接从已安装SciPy的仓库环境运行：
+
+```python
+import numpy as np
+from silo import SolveOptions
+from silo.io import model_from_dict
+from silo.lp.session import LPSession
+
+e1 = np.array([[1.0, 0.0], [1.0, 1.0]])
+e2 = np.array([[1.0, 1.0], [0.0, 1.0]])
+assert np.allclose(np.linalg.solve((e1 @ e2).T, [1, 0]), [2, -1])
+payload = {
+    "sense": "minimize",
+    "variables": [{"name": "x", "upper": 2}, {"name": "y"}, {"name": "w"}],
+    "objective": {"coefficients": {"x": -1}},
+    "constraints": [
+        {"name": "balance", "coefficients": {"x": 1, "y": 1}, "sense": "=", "rhs": 1},
+        {"name": "fixed_w", "coefficients": {"w": 1}, "sense": "=", "rhs": 10},
+    ],
+}
+session = LPSession(model_from_dict(payload), SolveOptions(lp_engine="sparse", presolve=False))
+assert session.solve().status == "optimal"
+session.change_bounds("x", 0, 1 - 4e-7)
+result = session.solve()
+assert result.status == "optimal" and result.optimality["valid"]
+assert abs(result.primal_values["y"] - 4e-7) < 1e-12
+assert result.diagnostics["mapped_dual_pivots"] == 1
+```
+
+上列保存程序已原样运行，2次公开LP、2次真实LU全部返回，并独立核算一次2x2转置方程。
+收据为outputs/sparse_lp_program_20261024/reviews/learning_example_receipt.json。
+159组件覆盖正文边界；E01–E10的代数与反例按上述实际源码及独立数学门核对。
 
 ## 7. 研究意义与可扩展问题
 
@@ -258,3 +321,6 @@ TRANS的rho约−1.76751e−4，进入坐标自身就不满足原约4.85714e−7
 同日v0.1.4：补充主动同基刷新发布不变量、强制残差恢复边界及第7轮局部核验；固定容量仍失败，继续draft。
 同日v0.2.0：补充RR02行级两遍窗口、两次完整试算预算、Phase-I清理的可行点证明；
 SP2 GO与8机制通过分别登记，正式轨迹及最终交付未完成，继续draft。
+同日第二包：补充原空间映射dual门、非零等式残差、仅重复基定价回退和可执行公共接口小例。
+同日v0.2.1：原样运行保存小例并核对当前提交、159组件及第二轮正式轨迹；教学内容改为checked，
+完整规模/外部组和候选安装继续保留实际未验边界。

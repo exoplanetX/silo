@@ -2,12 +2,12 @@
 lesson_id: L0012
 title: 基分解、缩放与原始对偶重优化
 topic: lp.reoptimization-numerics
-version: 0.1.1
+version: 0.2.0
 status: checked
 created: 2026-10-24
 updated: 2026-10-25
-verified_code: 8a07e4b211795c60bf77bfabda1b90a0b2f3f04c
-verified_on: 2026-10-24
+verified_code: c3fea18ca45740338bdc4d2a2add828a916e804a
+verified_on: 2026-10-25
 source_tasks: [20261023-02-01_teaching-prototype, 20261024-02-01_sparse-lp-program, 20261024-02-02_sparse-lp-program]
 ---
 
@@ -80,9 +80,9 @@ primal、dual、integrality、pivot、互补、目标容差各管自己的判据
 [总报告](../../../tasks/reports/20261023-02-01_teaching-prototype_report.md)、
 [数值说明](../../../docs/numeric_engine.md)。2026-10-24初稿。
 
-2026-10-25稀疏增补（正式warm与最终交付待验）：显式sparse路径增加LU/eta和会话独占
-数值缓存，详见[L0015](../L0015-sparse-basis-updates/README.md)。本页元信息verified_code
-仍指原dense正文基线；以下增补的核验范围单独登记，不能借用dense的checked状态。
+2026-10-25稀疏增补：显式sparse路径增加LU/eta和会话独占数值缓存，
+详见[L0015](../L0015-sparse-basis-updates/README.md)。本页元信息已更新到实际复验提交；
+原dense正文和以下稀疏增补分别按各自源码、组件和正式轨迹核对。
 
 私有数值因子的身份包含实际B系数、基本列顺序、行侧、坐标方向、尺度及数值策略。
 被动basis只提供可核对的语义身份，不携带可共享的SuperLU或eta。每次公开求解仍重新形成
@@ -102,5 +102,8 @@ primal、dual、integrality、pivot、互补、目标容差各管自己的判据
 
 RR02的4ea4264在固定48/24/6及两容量例通过原空间KKT后获独立SP2 GO；
 7891de5另通过150组件与8机制，包含Phase-I清理合法零步换基的正确性修订。
-五次冷/热轨迹、完整12容量/12Netlib和8安装仍待正式验收；本增补继续保留该边界。
+第二包c3fea18另通过159组件及正式8轨迹×冷/热×五重复，1600修改/80初始全部正确，
+实际跨调用复用、原空间核验和3.4547/8条收益门通过。L0015保存小例原样运行，覆盖上界修改
+后一次实际mapped dual pivot及真实cross reuse；原理、手算和E01–E03对应原组件/正式轨迹核对。
+完整12容量/12Netlib和8安装仍待验，本页checked不替代整体任务完成。
 完整收据见[RR02报告](../../../tasks/reports/20261024-02-02_sparse-lp-program_report.md)。

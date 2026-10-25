@@ -529,17 +529,27 @@ def _compatible_frame(old, current):
     return filtered == old["columns"]
 
 
-def _dependent_in_original_space(norm, a, b, basis, rows, keys, position, options, deadline):
+def _dependent_in_original_space(
+    norm, a, b, basis, rows, keys, position, options, deadline, witness=None, counters=None
+):
     """A small floating coefficient is never a proof that a row is dependent."""
     from fractions import Fraction
     from types import SimpleNamespace
 
+    from silo.lp.sparse_dependency import prove_dependency
     from silo.lp.tableau_view import _exact_basis_data, proof_workspace_cells
     from silo.utils.rational import ProofBudget, ProofLimitError, exact_solve
 
     native = SimpleNamespace(basis=tuple(basis), row_keys=tuple(rows), column_keys=tuple(keys))
     budget = ProofBudget(options.proof_operation_limit, deadline)
     try:
+        if witness is not None:
+            if counters is not None:
+                increment(counters, "sparse_dependency_checks")
+            if prove_dependency(norm, a, basis, rows, keys, position, witness, budget):
+                if counters is not None:
+                    increment(counters, "sparse_dependency_certificates")
+                return True
         with budget.workspace(proof_workspace_cells(norm, native)):
             raw_basis, rhs, raw_rows, _, flips = _exact_basis_data(norm, native, budget)
             unit = [Fraction(int(i == position)) for i in range(len(basis))]
@@ -564,6 +574,16 @@ def _dependent_in_original_space(norm, a, b, basis, rows, keys, position, option
         if perf_counter() >= deadline:
             raise FactorDeadline("time_limit") from None
         return False
+    finally:
+        if counters is not None:
+            counters["dependency_proof_workspace_peak"] = max(
+                counters.get("dependency_proof_workspace_peak", 0), budget.peak_cells
+            )
+            increment(
+                counters,
+                "dependency_proof_operations",
+                options.proof_operation_limit - budget.remaining,
+            )
 
 
 def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_state=None):
@@ -663,20 +683,22 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
         if get_factor().generation != generation:
             raise FactorRetry("uncommitted_generation_changed", get_factor().generation)
 
-    def cleanup_state(cost):
+    def cleanup_state(cost, values=None, staged_basis=None, staged_matrix=None):
         """A zero-artificial feasible point needs no intermediate dual-feasible basis."""
-        xb, lam, rc, generation = state(cost)
+        xb, lam, rc, generation = state(cost) if values is None else values
+        current_basis = basis if staged_basis is None else staged_basis
+        current_matrix = a if staged_matrix is None else staged_matrix
         increment(counters, "cleanup_state_checks")
         if not all(np.isfinite(value).all() for value in (xb, lam, rc)):
             raise np.linalg.LinAlgError("Nonfinite artificial-cleanup state.")
         tolerance = options.primal_tolerance * (1 + _infinity_norm(xb))
-        artificial_positions = [i for i, j in enumerate(basis) if j in arts]
+        artificial_positions = [i for i, j in enumerate(current_basis) if j in arts]
         with np.errstate(over="ignore", invalid="ignore"):
             mass = float(np.maximum(xb[artificial_positions], 0).sum())
         if not isfinite(tolerance) or not isfinite(mass):
             raise np.linalg.LinAlgError("Nonfinite artificial-cleanup allowance or mass.")
         minimum = float(np.min(xb, initial=0))
-        dual_tolerance = options.dual_tolerance * (1 + abs(cost) + abs(a).T @ abs(lam))
+        dual_tolerance = options.dual_tolerance * (1 + abs(cost) + abs(current_matrix).T @ abs(lam))
         violations = int(np.count_nonzero(rc > dual_tolerance))
         counters["last_cleanup_state"] = {
             "phase": "artificial_cleanup",
@@ -1305,7 +1327,8 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                         position = basis.index(art)
                         unit = np.zeros(len(b))
                         unit[position] = 1
-                        tableau = np.asarray(a.T @ basis_solve(unit, True, generation)).reshape(-1)
+                        dependency_witness = basis_solve(unit, True, generation)
+                        tableau = np.asarray(a.T @ dependency_witness).reshape(-1)
                         same_generation(generation)
                         choices = [
                             j
@@ -1320,7 +1343,8 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                         else:
                             increment(counters, "exact_dependency_checks")
                             if not _dependent_in_original_space(
-                                norm, a, b, basis, row_keys, keys, position, options, deadline
+                                norm, a, b, basis, row_keys, keys, position, options, deadline,
+                                witness=dependency_witness, counters=counters,
                             ):
                                 raise np.linalg.LinAlgError(
                                     "Unproved near-dependent row in artificial cleanup."
@@ -1331,12 +1355,30 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                                 raise np.linalg.LinAlgError("Artificial identity column changed.")
                             physical = int(support[0])
                             keep_rows = [i for i in range(len(b)) if i != physical]
-                            a, b = a[keep_rows, :].tocsc(), b[keep_rows]
+                            reduced_a, reduced_b = a[keep_rows, :].tocsc(), b[keep_rows]
+                            reduced_basis = basis.copy()
+                            reduced_basis.pop(position)
+                            previous_nnz = counters.get("factor_nnz", 0)
+                            reduced_factor = SparseFactor(
+                                reduced_a[:, reduced_basis], options, counters, deadline
+                            )
+                            counters["simultaneous_factor_nnz_peak"] = max(
+                                counters.get("simultaneous_factor_nnz_peak", 0),
+                                previous_nnz + counters.get("factor_nnz", 0),
+                            )
+                            reduced_values = _candidate_state(
+                                reduced_factor, reduced_a, reduced_b, phase, reduced_basis
+                            )
+                            cleanup_state(phase, reduced_values, reduced_basis, reduced_a)
+                            same_generation(generation)
+                            a, b, basis, factor = (
+                                reduced_a, reduced_b, reduced_basis, reduced_factor
+                            )
                             row_map.pop(physical)
                             row_keys.pop(physical)
-                            basis.pop(position)
                             increment(counters, "dependent_rows_removed")
-                        factor = None
+                        if choices:
+                            factor = None
                         # Check the actual new B immediately, including the last
                         # cleanup pivot; there may be no next artificial to visit.
                         xb, lam, rc, generation = cleanup_state(phase)

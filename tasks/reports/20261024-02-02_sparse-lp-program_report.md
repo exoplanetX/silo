@@ -1,6 +1,6 @@
 # 稀疏LP整体目标集中恢复与续接执行报告
 
-当前状态（2026-10-25）：SP1 GO、SP2独立联合GO；SP3第一次修订后8机制通过，warm首轮70/80，整体目标未完成。
+当前状态（2026-10-25）：SP1/SP2/SP3 GO；第二轮warm80/80及独立联合门通过，进入原SP4，整体八项未完成。
 当前合同：[20261024-02-02](../codex/20261024-02-02_sparse-lp-program.md)，签发78cc75de0197c58b95bd80b4d313c3306ab39f94。
 原目标：[总体规划](../phases/sparse_lp_reoptimization_program_20261024.md)第11节八项，
 [原实施计划](../phases/sparse_lp_implementation_20261024.md)、
@@ -38,12 +38,12 @@ cached origin/main...HEAD=0/73，未查即时远端，无push/发布；仅两项
 |---|---|
 | 1 实现前冻结与设计 | SP1 GO，a3cff29输入、3c27324真值/基线，独立GO先于生产修改 |
 | 2 端到端sparse cold | RR02首轮48/24/6全过，两CAP真实optimal且原空间KKT通过；完整12容量/12外部待验 |
-| 3 LU/eta/数值与8机制 | 已有局部实现及非交换B/BT组件；正式8机制≥50pivot/70%待验 |
-| 4 会话四修改与收益 | 已有私有会话实现，160状态×5重复和1.5/6条不回退未正式验收 |
+| 3 LU/eta/数值与8机制 | 当前源8/8、最少64pivot、eta比例全1.0；独立数学/源码及SP3联合GO |
+| 4 会话四修改与收益 | 当前源1600修改+80初始、80/80；中位比3.4547、8/8不回退，SP3联合GO |
 | 5 MIP/CG真实稀疏接入 | 现有适配及小集成，固定12MIP/4CG与原全池精确P=D待验 |
 | 6 旧行为与质量 | 旧验收保持；新源码全质量、288/192及保存64复核待完成 |
 | 7 0.3.0a1与8安装 | helper准备保留，仍0.2.0a2实验分支，未构建/安装新候选 |
-| 8 伴学、报告、独立终验 | L0015仍draft；L0012稀疏增补待核，最终八项独立GO待取得 |
+| 8 伴学、报告、独立终验 | L0012/L0015已按c3fea18和原样小例checked；最终报告及八项独立GO待取得 |
 
 原研究A/B、C HOLD、D/E未启动、native延期及远端CI pending保持。本包不改变研究身份或完成线。
 
@@ -201,3 +201,58 @@ col_scale与原始有限bound，slack使用row_scale及非零q的符号公式。
 新增尺度非1的lower/upper、上下侧slack非零残差符号、free split、mapped-only无Farkas、
 原空间上界被全局量遮蔽后一次实际dual pivot、跨调用真实因子复用及重复基历史保护。
 第二包仍待单次运输轨迹、独立源码及最后正式warm，不提前签SP3 GO。
+
+第二包c3fea18ca45740338bdc4d2a2add828a916e804a已冻结，source SHA
+be65472620c343d0a0b0e631eaddf1a9f9480cf9bb9d290c38605aa641e52a16。
+159组件及独立SOURCE/MATH GO通过，无必须源码修项。随后固定运输轨迹单次warm/cold
+均完成初始+20修改、各21/21正确，实际5.2952099/33.7281149秒；warm真实跨调用复用20次、
+映射dual换基2次（修改04与17），原失败位置不再零步错退。该单次不计正式性能。
+第3套固定8机制（初验及两次修订）8/8，最少64pivot、全部真实eta比例1.0。
+证据reviews/sp3_second_preflight.json绑定源码、组件、8机制和两个单次检查。
+最后正式warm第2/2轮已启动，完整五重复及原80分母保持；源码继续冻结。
+
+## 8. SP3正式通过与SP4续接
+
+正式第二轮431.3803621秒，80/80子进程、1600修改状态及80初始全部正确，
+strict SP3 evaluate exit0（12.8625319秒）。八轨迹修改段配对中位比分别为
+RHS01 3.5303、RHS02 1.7424、BOUND01 3.3790、BOUND02 8.9605、
+ROW01 3.7442、ROW02 1.9467、COL01 3.5727、COL02 1.7920；总体中位3.4546658467、8/8>=1。
+包含导入及初始解的八比值分别约2.3150、1.6145、2.4021、6.2504、2.4154、1.7690、2.3689、1.6566。
+主性能比定义为20次完整修改段，原60秒保护覆盖整个child。
+
+独立red_team_reviewer直接绑定401文件、80 request/result及1680原输入，错绑0；
+不导入solver/checker，独立重算1680 objective/primal/stationarity/互补，与原始checks一致。
+最大child外层33.6467839秒、packet含初始33.4420122秒、保守进程树RSS111325184字节；
+最大scaled primal 9.8036328767e-8，原门1e-7；该窄裕度保留，不宣称普遍数值稳定性。
+最大stationarity 3.6438e-10、互补5.5404e-15，cold/warm目标最大差1.0711e-9。
+实际factor跨调用复用600次，来自RHS/BOUND/COL六轨迹；ROW两轨迹每次行增维重构，
+其语义warm start成立，不能称为沿用原数值factor。正式BOUND warm五重复覆盖10次mapped dual pivot。
+
+联合门SP3 GO，无必须修项及补跑；reviews/sp3_independent_go.json登记回传事实和SHA。
+独立只读计算命令约21.234秒已补记SP3，无新solver/测试/实验。原账本追加SP3 stage_gate GO。
+截至此门SP1/2/3/4为368.5422803/785.8677913/1490.0927953/4.4615295秒，总2648.9643964。
+L0015保存Python小例原样通过：2公开LP、2真实LU及独立2x2转置解，0.5480907秒已记SP3；
+checked仅表示教学内容实际核对。原始小例SHA与更新后正文身份另存learning_checked_identity.json。
+依RR02立即接续SP4；当前最终tiny/pressure及12容量/12外部、上层、历史/质量、0.3/8安装仍待验。
+
+## 9. SP4初验与依赖证明修订
+
+同一be654源的最终tiny48/48（27.8895517秒）、pressure24/24（13.7436475秒）、
+capacity12/12（46.3194287秒）通过。完整Netlib首轮11/12（15.2864274秒），
+DEGEN2在1235pivot后以Unproved near-dependent row in artificial cleanup保守失败，
+976行基的旧精确B工作区预检必超65536格；无错误最优或Farkas，原失败结果保留。
+其余11个外部例均optimal且通过原空间与冻结目标检查。
+
+独立theory_architect批准一个窄稀疏依赖证明：复用已有cleanup BTRAN，行尺度恢复后用
+固定分母上限1000000提出权重，流式Fraction精确核验所有非人工列（含slack）及RHS，
+其他基本人工支持必须零，目标人工单位列支持权重为1。候选近似从不授权删行。
+新路径只保留q长权重与n长累计量，workspace=2q+2n+32；原65536格/2m操作/4096bit/时限不变。
+旧小基fallback共用剩余ProofBudget。删行后的因子与完整cleanup状态先暂存核验，
+成功后才提交axis/basis/row_map；数值minor失败不登记已删行，不签Farkas。
+
+174组件和Ruff通过；包含976行1986格证明、65536格实际可用/下一档预分配拒绝、
+负RHS/非单位尺度/offset/fixed/free/reflected、slack伪相关拒绝、2^-39非零反例保持、
+错误权重拒绝以及reduced-factor失败不发布行删除。最初3次lint修正记录保留，未运行失败数值组。
+本修订仍待DEGEN2单次、独立源码及完整最终矩阵。新source使旧SP3全源指纹失配；
+原warm2/2已满，禁止未授权第三轮或桥接旧算法结果。先完成已授权修复及可核对结果，
+再就唯一必须追加的正式重验提交具体额度，整体Goal保持未完成。
