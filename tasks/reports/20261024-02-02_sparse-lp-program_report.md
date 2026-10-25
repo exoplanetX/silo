@@ -329,3 +329,9 @@ PRESS-LIMIT-01/03分别在时间限制和预LP非零门退出，没有引擎诊�
 恢复64个D-案例-变体ID，仍逐一核对保存原文件SHA和0新增调用。
 该schema修正后16项纯证据测试/Ruff通过，mip_cg/historical/docs_budget全部机械通过，
 收据sp4_upper_history_readiness_complete.json。未修改历史driver、输入、保存结果或求解器。
+
+完整quality第1/3次运行49.321717秒：6584 passed、1 failed；pytest完成后因失败未进入末尾Ruff。
+唯一失败为旧test_native_layers_never_import_scipy_or_the_external_adapter无条件禁止SciPy导入，
+与已冻结稀疏契约允许矩阵存储/LU的依赖边界冲突。未修改生产代码或数学验收断言。
+架构测试改成逐文件/逐符号批准三处存储与splu导入，仍拒绝optimize、lsqr、core层扩张和外部adapter；
+新增7个正/负静态例，下一次完整质量须包含全部测试及末尾lint成功。

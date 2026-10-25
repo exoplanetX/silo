@@ -229,7 +229,38 @@ def test_real_optional_highs_nonoptimal_statuses(integer, status):
     assert result.absolute_gap is None and result.relative_gap is None
 
 
-def test_native_layers_never_import_scipy_or_the_external_adapter():
+APPROVED_SPARSE_IMPORTS = {
+    "modeling/matrix_ops.py": {"scipy.sparse"},
+    "lp/sparse_kernel.py": {
+        "scipy.sparse.coo_matrix",
+        "scipy.sparse.csc_matrix",
+        "scipy.sparse.hstack",
+    },
+    "lp/sparse_factor.py": {
+        "scipy.sparse.csc_matrix",
+        "scipy.sparse.hstack",
+        "scipy.sparse.linalg.splu",
+    },
+}
+
+
+def forbidden_native_imports(source, relative_path):
+    tree = ast.parse(source)
+    imports = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            imports.extend(f"{node.module}.{alias.name}" for alias in node.names)
+        elif isinstance(node, ast.Import):
+            imports.extend(alias.name for alias in node.names)
+    allowed = APPROVED_SPARSE_IMPORTS.get(relative_path, set())
+    return [
+        name
+        for name in imports
+        if name.startswith(("scipy", "silo.interfaces.highs")) and name not in allowed
+    ]
+
+
+def test_native_layers_only_import_approved_sparse_storage_and_lu():
     root = Path(__file__).resolve().parents[2] / "src/silo"
     for layer in (
         "core",
@@ -242,19 +273,25 @@ def test_native_layers_never_import_scipy_or_the_external_adapter():
         "uncertainty",
     ):
         for path in (root / layer).rglob("*.py"):
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-            imports = [
-                node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
-            ]
-            imports += [
-                alias.name
-                for node in ast.walk(tree)
-                if isinstance(node, ast.Import)
-                for alias in node.names
-            ]
-            assert not any(
-                name.startswith(("scipy", "silo.interfaces.highs")) for name in imports
+            assert not forbidden_native_imports(
+                path.read_text(encoding="utf-8"), path.relative_to(root).as_posix()
             ), path
+
+
+@pytest.mark.parametrize(
+    "path,source,allowed",
+    [
+        ("modeling/matrix_ops.py", "from scipy import sparse", True),
+        ("lp/sparse_factor.py", "from scipy.sparse.linalg import splu", True),
+        ("modeling/matrix_ops.py", "from scipy import optimize", False),
+        ("lp/sparse_factor.py", "from scipy.sparse.linalg import lsqr", False),
+        ("lp/sparse_kernel.py", "from scipy import optimize as coo_matrix", False),
+        ("core/model.py", "from scipy.sparse import csc_matrix", False),
+        ("mip/general.py", "import silo.interfaces.highs as external", False),
+    ],
+)
+def test_sparse_import_exception_rejects_optimizer_and_layer_expansion(path, source, allowed):
+    assert bool(forbidden_native_imports(source, path)) is not allowed
 
 
 def _no_backend_stub(monkeypatch):
