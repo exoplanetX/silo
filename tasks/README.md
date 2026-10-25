@@ -355,6 +355,13 @@ verified pip installation command. Preserve all failures, original inputs, toler
 once per action; no rebuild, fifth warm, third installation matrix or broader authority.
 RR02 remains the sole current total report; RR04 has only a small matching receipt.
 
+Human replycall_cbfe1d7c51e94ad69b2a3b91095ade97 permits the bounded
+[RR05 host package](codex/20261024-02-05_sparse-lp-program.md): at most3 additional
+20-second, zero-solver host preflights, recorded separately under host-preflight and
+charged to the original SP4/global budget. Existing diagnostic20, all formal round
+caps, source/test/driver identities and quiet thresholds remain fixed. This only
+provides the prerequisite for RR04's already authorized warm4; it adds no solver run.
+
 The human requested a detailed execution package and said they will later start it
 in the development conversation using Goal mode. The
 [prepared total contract](codex/20261024-02-01_sparse-lp-program.md),

@@ -1,6 +1,6 @@
 # RR04同源码与原工件窄续接记录
 
-当前状态（2026-10-25）：工具独立GO、完整质量和原工件8新环境全部通过；第4轮warm待启动。
+当前状态（2026-10-25）：工具独立GO、完整质量和原工件8新环境全部通过；两次宿主预检busy，第4轮warm未启动。
 [RR04合同](../codex/20261024-02-04_sparse-lp-program.md)；[唯一当前总报告](20261024-02-02_sparse-lp-program_report.md)。
 
 用户直接回复call_b401b2090a634e03b64bcdcebf18fc2f：“授权该窄续接包（推荐）”。
@@ -20,3 +20,9 @@ reused_from绑定首次summary及唯一人类权限，wheel/sdist保持合同中
 原检查器核验真实direct_url archive SHA、site-packages来源、dense缺SciPy/sparse锁定SciPy、
 四会话修改、JSON/MPS CLI、研究例和F1–F4；外部优化器调用为0。
 随后quality/delivery汇总检查通过，0.9789662秒，reviews/rr04_quality_delivery_readiness.json。
+
+新预检分别20.4283652/20.4177340秒，均quiet=false且0solver，原diagnostic达到20/20。
+第一窗两XeLaTeX合计约0.713核，第二窗Python约0.981核；这仅是当窗观测，不能证明warm3超时原因。
+busy记录分别位于host/baseline_rr04_6f12fe70-aa62-4e5b-8526-b3882e7c9c47和
+host/baseline_rr04_1561fed0-d91c-4eb5-bd90-e595e7a2439b。未终止其他进程，未消费warm4。
+用户随后批准[RR05宿主预检包](../codex/20261024-02-05_sparse-lp-program.md)，仅≤3个额外零求解窗口单列记账。

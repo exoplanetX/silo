@@ -1,7 +1,7 @@
 # 安装与发行物验证
 
-当前本地候选为0.3.0a1，目标为Windows Python3.11/3.13 × dense/sparse × wheel/sdist
-八个独立安装组合。实际完成状态、工件身份和失败重试以
+当前本地候选为0.3.0a1，Windows Python3.11/3.13 × dense/sparse × wheel/sdist
+八个全新环境已于2026-10-25首轮全部通过；原wheel/sdist SHA保持不变。实际工件身份和保留失败以
 [当前总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)及其原始收据为准。
 下文0.2.0a1四组合属于保留的历史证据；远端CI保持pending。
 

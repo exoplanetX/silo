@@ -19,7 +19,10 @@ SP1/SP2与旧算法SP3已独立GO；当前算法a9f3213、元数据0.3.0a1，生
 首次8安装均在uv缺失archive SHA时被原检查器拒绝，0solver；不重建、不削弱检查。
 原输入、阈值、60秒/1GiB与全部预算保持；其他上限capacity2/Netlib2/quality3/diagnostic20不变。
 当前工具40组件及独立源码门GO，最后完整质量6607项/结构/Ruff通过，quality3/3。
-原工件SHA不变的8新环境均首轮通过，无重试/重建；新的宿主预检和warm4待启动。
+原工件SHA不变的8新环境均首轮通过，无重试/重建。
+两个新宿主窗口均busy且0solver，原diagnostic20/20，warm仍3/4未启动新轮。
+用户call_cbfe1d7c51e94ad69b2a3b91095ade97已批准[RR05](../tasks/codex/20261024-02-05_sparse-lp-program.md)，
+仅追加≤3×20秒零求解宿主窗口单列记账；源码/quiet阈值/正式轮次和总预算不变。
 后续真实预算、轮次及结果以原追加ledger为准；所有旧失败和费用继续保留。
 
 全部原八项及最终独立GO齐备才完成同一Goal；Goal工具旧blocked状态没有active设置，
