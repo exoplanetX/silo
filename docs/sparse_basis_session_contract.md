@@ -10,7 +10,9 @@ The SP1 equations and frozen input/truth chronology remain historical facts.
 RR02 explicitly revises the strict-minimum-tie primal selector using the
 [primal stability contract](sparse_primal_stability_contract.md), after R0
 observations and its independent mathematical gate. Every positive blocker
-limits a current-tolerance window; stable predicted candidates are tried under
+limits a row-level window clipped by the original tolerance; nonnegative rows
+use64*eps_float64*(1+abs(x_i)), while already tolerated negative deficits remain
+covered. This avoids unrelated-large-coordinate inflation. Stable candidates are tried under
 the original complete-state gates. Actual rho is separate from nonnegative
 progress counting. At most2 private full trials per entering/semantic basis,
 including optional preselection same-B refresh, survive generation restarts.

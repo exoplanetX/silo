@@ -1,6 +1,6 @@
 # 稀疏LP整体目标集中恢复与续接执行报告
 
-当前状态（2026-10-25）：RR02的R0因果诊断及独立数学门已完成，R1集中首包实施；SP1 GO，SP2未验收。
+当前状态（2026-10-25）：RR02的R0/R1已完成，SP1 GO、SP2独立联合GO；接续原SP3，整体八项目标未完成。
 当前合同：[20261024-02-02](../codex/20261024-02-02_sparse-lp-program.md)，签发78cc75de0197c58b95bd80b4d313c3306ab39f94。
 原目标：[总体规划](../phases/sparse_lp_reoptimization_program_20261024.md)第11节八项，
 [原实施计划](../phases/sparse_lp_implementation_20261024.md)、
@@ -37,7 +37,7 @@ cached origin/main...HEAD=0/73，未查即时远端，无push/发布；仅两项
 | 项 | 当前证据与状态 |
 |---|---|
 | 1 实现前冻结与设计 | SP1 GO，a3cff29输入、3c27324真值/基线，独立GO先于生产修改 |
-| 2 端到端sparse cold | 第7轮48/24及四小Netlib通过；两CAP未最优，完整12容量/12外部待验 |
+| 2 端到端sparse cold | RR02首轮48/24/6全过，两CAP真实optimal且原空间KKT通过；完整12容量/12外部待验 |
 | 3 LU/eta/数值与8机制 | 已有局部实现及非交换B/BT组件；正式8机制≥50pivot/70%待验 |
 | 4 会话四修改与收益 | 已有私有会话实现，160状态×5重复和1.5/6条不回退未正式验收 |
 | 5 MIP/CG真实稀疏接入 | 现有适配及小集成，固定12MIP/4CG与原全池精确P=D待验 |
@@ -49,7 +49,7 @@ cached origin/main...HEAD=0/73，未查即时远端，无push/发布；仅两项
 
 ## 4. R0诊断、设计及后续实际收据
 
-尚未开始新的联合验收，不把审查136项或历史78例算作RR02容量成功。
+R0开始时尚未进行新的联合验收；审查136项和历史78例不计作RR02容量成功。
 
 观察器提交f07835e，12纯逻辑测试/Ruff通过；9条准备检查共3.3788595秒，初次lint和统计边界
 失败保留。准备期0公开求解/原生kernel/真实LU，36次toy、21次fake LU factory单列。
@@ -82,3 +82,51 @@ reviews/rr02_r0_evidence.json，SHA6ae3b2e470a7196b121a480c6ed47e5c5a76f349e6458
 direction有限且P空先走ray；所有正blocker参与窗口，+Infinity非绑定而非删行；非有限数据数值失败。
 真实rho用于代数与观测，max(0,rho)仅用于进展/退化。private frame加入策略版本。
 此数学GO不代替源码门或48/24/6联合SP2验收。启动实账SP2=635.2621407秒；R0闭合时692.7192160秒。
+
+## 5. R1集中首包与组件核验
+
+新增纯NumPy的lp/sparse_ratio.py，所有d>0进入首遍，次遍按稳定pivot及语义键排序；
+完整私有trial实际构造次数统一计额，B′与same-B合计最多2、跨generation重启不补额。
+same-B仅用于零预测可行候选的前选回退；B′失败优先另一离基行，不再candidate_validation自动刷新。
+代数与pivot观测使用真实rho，进展/退化才max(0,rho)；新策略版本加入私有frame，dual/cleanup不改。
+
+首次lint有一项import排序失败，保留并修正。首轮组件123通过/17失败，其中旧unsafe blocker
+回归暴露全局tau窗口的实质错误最优：1e-8*x<=0及1e4*x<=1e4的精确最优为0，却返回x=1。
+该旧反例保持原断言，不能视为过时策略测试；另5项选择/拒绝保护也保持。
+独立数学服务再次审核后，将内部窗口收紧为
+delta_i=min(原tau,max(-x_i,0)+64*eps64*(1+abs(x_i)))，用非负headroom的溢出安全公式计算。
+验收容差、输入及目标未变；Gamma为固定内部工程规则，不宣称精确前向误差或全浮点最优性定理。
+保存状态重算仍保留12/12稳定预测候选，0新增solver/LU/export，见reviews/rr02_r1_window_refinement.json。
+
+行级窗口后134通过/11失败，前述6项旧数学回归全部恢复通过。余11项经独立只读核对均为
+已取消的candidate-validation刷新、可选离基行数或对应成本计数假设；保留零发布、回滚、
+B/BT重算、deadline/resource、拒绝历史及原空间错误最优保护，只按实际新策略修正计数。
+最后144组件通过，Ruff clean；成功普通pivot仍1初始LU/6次三角求解，内部代次重启不增加trial额度。
+所有失败日志和每次实际kernel/候选/LU调用分别保留在rr02_r1_*_receipt及原账本；该组件门先于联合78例。
+
+## 6. RR02首轮SP2联合验收与独立GO
+
+生产提交4ea42647f228d65b63aa74ee13969060e27d84a7，完整source SHA
+1de3f1d307dd4f8286862bcce92d954725bebf924c32ec8768a71bd8c40018d7。
+公开LP/根集成172项通过（含LP315/315、root118/118，另两NumPy隔离探针），
+固定tiny48/48、pressure24/24、smoke6/6全部通过；strict SP2 evaluate exit0。
+实际root78启动/78完成，LP77/77，PRESS-LIMIT-03按预期在LP前返回resource_limit。
+
+| 固定容量例 | 原始目标 | pivot | 求解秒 | 峰值RSS字节 | 原空间核验 |
+|---|---:|---:|---:|---:|---|
+| CAP-FLOW-01 | -349.625=-2797/8 | 4216 | 7.429259 | 121114624 | optimal，primal/dual/KKT通过 |
+| CAP-TRANS-01 | -349.625=-2797/8 | 14697 | 30.410889 | 218984448 | optimal，primal/dual/KKT通过 |
+
+两例guard均null，低于原120秒/1GiB；全候选trial峰值均1，dense_model_allocations均0。
+TRANS中间maximum_basis_residual约0.095504保留为拒绝/恢复过程峰值，不把最终KKT通过
+扩张为一般浮点LP数值稳定性结论。独立原payload复算FLOW的primal/stationarity/互补残差
+约1.44e-15/1.75e-15/1.92e-15、P-D约1.71e-13；TRANS约9.97e-16/3.74e-16/1.87e-16、1.14e-13。
+
+原联合包reviews/rr02_sp2_joint_01.json保留其当时pending字段，SHA
+7ae433416c4ae54bf96a1cdb576d7cd2a3b7eef5be68f7fe4209b0289c2f0ce2。
+独立red_team_reviewer逐例核对78组request/result/input SHA，错绑0/78，给出SP2 GO；
+回传及当前门分别保存在reviews/rr02_sp2_independent_return.txt和rr02_sp2_independent_go.json，
+原账本已追加SP2 stage_gate GO。审查0新求解/测试/文件写入，无需消耗第二次联合轮。
+RR02联合轮1/2、新增诊断2/3（原总4/20）；当前计账SP2=785.8677913/3600秒，
+SP1=368.5422803、SP4=4.4615295，总1158.8716011/28800秒，SP3尚未启动。
+原八项保持，依RR02直接授权连续进入8机制与8轨迹×五次冷/热验证，再完成SP4。

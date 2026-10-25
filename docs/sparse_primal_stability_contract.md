@@ -1,6 +1,6 @@
 # Sparse primal stability and bounded recovery contract
 
-SILO-SPARSE-LP-20261024 / RR02 / mathematical design GO v1.0, 2026-10-25.
+SILO-SPARSE-LP-20261024 / RR02 / row-window mathematical design GO v1.1, 2026-10-25.
 Authority: [RR02](../tasks/codex/20261024-02-02_sparse-lp-program.md).
 Original inputs, reference truths, original-space acceptance tolerances, and eight
 outcomes stay fixed. This document explicitly revises internal selection policy;
@@ -32,10 +32,20 @@ boundaries never retain a pending state or recovery objective from another run.
 ## 2. Two-pass selector
 
 Use the unchanged epsilon_p and current-state allowance
-delta(x)=epsilon_p*(1+norm_inf(x)). Define every real blocking row P={i:d_i>0};
-none is removed because its pivot is too small. The provisional common window is
-theta_bar=max(0,min_{i in P}(x_i+delta(x))/d_i).
-This uses current state scale; a candidate's amplified norm never widens it.
+tau=epsilon_p*(1+norm_inf(x)). Define gamma=64*eps_float64, a fixed engineering
+selection constant, and row allowance
+delta_i=min(tau,max(-x_i,0)+gamma*(1+abs(x_i))).
+Every real blocking row P={i:d_i>0} participates, including unsafe pivots.
+The common window is theta_bar=min_{i in P}(x_i+delta_i)/d_i. A trustworthy
+current state satisfies0<=max(-x_i,0)<=delta_i<=tau, so its headrooms are nonnegative.
+An unrelated large coordinate and a candidate's amplified norm cannot enlarge
+a nonnegative row's roundoff-level selection margin. Final gates still use the
+original public tolerance, not gamma.
+
+Compute equivalent overflow-safe headroom: for x_i<0 use
+min(gamma*(1+abs(x_i)),tau+x_i)/d_i; for x_i>=0 use
+x_i/d_i+min(tau,gamma*(1+x_i))/d_i. This avoids cancellation of a negative
+deficit and avoids overflowing the numerator before a meaningful division.
 
 Second-pass rows satisfy s_i=max(x_i,0)/d_i <= theta_bar and the existing safe
 pivot predicate abs(d_i)>pivot_tolerance*(1+norm_inf(d)). Rank by descending
@@ -54,15 +64,27 @@ actual pivot observations use rho. A tolerated negative rho does not become a
 zero entering coordinate or an assertion of exact nonnegativity.
 
 For rho>=0, window membership bounds every nonleaving positive-d coordinate by
--delta(x); nonpositive-d coordinates cannot decrease below their old values.
+-delta_i>=-tau; nonpositive-d coordinates cannot decrease below their old values.
 This is a current-scale bound only. The actual candidate norm can differ, and
 rho<0 invalidates the nonpositive-d monotonicity argument. Therefore predicted
 and actual-factor complete-state gates are mandatory independent conditions.
 The algorithm only claims floating acceptance under unchanged original gates.
+In particular, gamma is not an exact forward-error bound or a proof of exact
+optimality on all floating inputs. A true tiny blocker below that allowance may
+still be crossed within numerical gates; original scaling/KKT and the fixed
+independent objective checks remain necessary.
 
 Example: x=(0,1e-8), d=(1e-12,1). The strict-minimum row has unsafe pivot1e-12.
 The two-pass window includes row2; its stable pivot produces y=(-1e-20,1e-8),
 which passes the original gate. The tiny row still constrains theta_bar.
+
+The initial global-tau proposal was disproved by an unchanged old regression:
+x=(0,1e4),d=(1e-8,1e4) allowed rho1 and objective1 for a model whose exact optimum
+is0. The row-window bound is instead gamma/1e-8~=1.421e-6 and excludes rho1;
+the unsafe genuine blocker remains binding. No acceptance tolerance was changed
+and the old wrong-optimal test was not weakened. All12 saved R0 states retain
+a stable predicted candidate after the row-window refinement; its independent
+mathematical review GO is distinct from actual CAP acceptance.
 
 ## 3. Bounded trial and recovery policy
 
@@ -159,6 +181,8 @@ Independent theory_architect final mathematical GO has been received, with the
 finite/ray/overflow and actual-start credit rules above as binding implementation
 and test obligations. The observer's state-retention interpretation remains an
 explicit owner accounting choice, not a mathematical-service authorization.
+The v1.1 independent refinement gate adds the unchanged wrong-optimal regression,
+the negative-deficit boundary and positive-numerator overflow-safe formula.
 A design GO does not grant
 capacity/SP2 GO. Full48/24/6 and original raw KKT remain the independent joint gate.
 
