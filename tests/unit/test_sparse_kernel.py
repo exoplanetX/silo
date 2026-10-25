@@ -108,6 +108,117 @@ def ordinary():
     return norm([[1, 1], [1, 0], [0, 1]], [4, 2, 3], [3, 2])
 
 
+def test_rr02_second_predicted_leaving_can_succeed_without_same_basis_refresh(monkeypatch):
+    original = sk._candidate_state
+    attempted = []
+
+    def checked(factor, matrix, rhs, cost, basis):
+        result = original(factor, matrix, rhs, cost, basis)
+        attempted.append(tuple(basis))
+        if basis[0] == 0:
+            return -2 * np.ones(len(rhs)), *result[1:]
+        return result
+
+    monkeypatch.setattr(sk, "_candidate_state", checked)
+    result = call(norm([[1], [1]], [1, 1], [1]), SolveOptions())
+    assert result.status == "optimal" and result.point[0] == pytest.approx(1)
+    assert len(attempted) == 2 and attempted[0][0] == attempted[1][1] == 0
+    d = result.diagnostics
+    assert d["candidate_basis_attempts"] == d["full_candidate_trials"] == 2
+    assert d["candidate_basis_discards"] == d["candidate_basis_acceptances"] == 1
+    assert d["full_candidate_trials_per_entering_basis_peak"] == 2
+    assert d.get("same_basis_refresh_attempts", 0) == 0 and result.iterations == 1
+
+
+def test_rr02_two_rejections_do_not_try_a_possible_third_row(monkeypatch):
+    original = sk._candidate_state
+    attempted = []
+
+    def checked(factor, matrix, rhs, cost, basis):
+        result = original(factor, matrix, rhs, cost, basis)
+        attempted.append(tuple(basis))
+        if basis[2] != 0:
+            return -2 * np.ones(len(rhs)), *result[1:]
+        return result  # This feasible third candidate must remain untried.
+
+    monkeypatch.setattr(sk, "_candidate_state", checked)
+    result = call(norm([[1], [1], [1]], [1, 1, 1], [1]), SolveOptions())
+    d = result.diagnostics
+    assert result.status == "numerical_failure" and result.point is None
+    assert len(attempted) == 2 and all(b[2] != 0 for b in attempted)
+    assert d["candidate_basis_attempts"] == d["candidate_basis_discards"] == 2
+    assert d["full_candidate_trials"] == d["full_candidate_trials_per_entering_basis_peak"] == 2
+    assert d["last_entering_rejection"]["reason"] == "candidate_budget_exhausted"
+    assert d["last_entering_rejection"]["untried_rows_not_proved_infeasible"]
+    assert d.get("same_basis_refresh_attempts", 0) == 0 and result.iterations == 0
+
+
+def test_rr02_same_basis_refresh_leaves_only_one_new_basis_trial(monkeypatch):
+    raw, stage, state = (
+        sk._raw_primal_candidate,
+        sf.SparseFactor.stage_refactor,
+        sk._candidate_state,
+    )
+    refreshed = []
+
+    def observed_stage(self, *args, **kwargs):
+        result = stage(self, *args, **kwargs)
+        refreshed.append(result)
+        return result
+
+    def predicted(*args):
+        result = raw(*args)
+        return result if refreshed else {**result, "valid": False}
+
+    def checked(factor, matrix, rhs, cost, basis):
+        result = state(factor, matrix, rhs, cost, basis)
+        return (-2 * np.ones(len(rhs)), *result[1:]) if 0 in basis else result
+
+    monkeypatch.setattr(sf.SparseFactor, "stage_refactor", observed_stage)
+    monkeypatch.setattr(sk, "_raw_primal_candidate", predicted)
+    monkeypatch.setattr(sk, "_candidate_state", checked)
+    result = call(norm([[1], [1]], [1, 1], [1]), SolveOptions())
+    d = result.diagnostics
+    assert result.status == "numerical_failure" and result.iterations == 0
+    assert d["same_basis_refresh_attempts"] == d["same_basis_refresh_acceptances"] == 1
+    assert d["candidate_basis_attempts"] == d["candidate_basis_discards"] == 1
+    assert d["full_candidate_trials"] == d["full_candidate_trials_per_entering_basis_peak"] == 2
+    assert d["pending_state_consumptions"] == 1
+
+
+def test_rr02_prestage_generation_mismatch_does_not_consume_credit(monkeypatch):
+    original = sf.SparseFactor.stage_column
+    calls = []
+
+    def stage(self, *args, **kwargs):
+        calls.append(self.generation)
+        if len(calls) == 1:
+            self.refactor(reason="prestage_generation_test")
+            raise sf.FactorRetry("prestage_generation_test", self.generation)
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(sf.SparseFactor, "stage_column", stage)
+    result = call(norm([[1], [1]], [1, 1], [1]), SolveOptions())
+    d = result.diagnostics
+    assert result.status == "optimal" and len(calls) == 2 and calls[1] > calls[0]
+    assert d["candidate_basis_attempts"] == d["full_candidate_trials"] == 1
+    assert d["full_candidate_trials_per_entering_basis_peak"] == 1
+
+
+def test_rr02_old_primal_policy_frame_cannot_reuse_numeric_cache():
+    model = ordinary()
+    first = call(model, SolveOptions())
+    old = {
+        **first._factor_state,
+        "frame": {**first._factor_state["frame"], "policy": sf.FACTOR_POLICY},
+    }
+    result = call(model, SolveOptions(), snapshot=first.snapshot, factor_state=old)
+    assert result.status == "optimal" and np.allclose(result.point, [2, 2])
+    assert result.diagnostics["cache_invalidations"] == 1
+    assert result.diagnostics["cross_solve_reuses"] == 0
+    assert result._factor_state["frame"]["policy"] == (sf.FACTOR_POLICY, sk.PRIMAL_POLICY)
+
+
 @pytest.mark.parametrize(
     "model,status,expected",
     [
@@ -946,22 +1057,25 @@ def test_staged_primal_rejections_keep_authoritative_state_and_all_real_cost(mon
     result = call(model, SolveOptions())
     assert result.status == "numerical_failure" and result.iterations == 0
     d = result.diagnostics
-    assert d["candidate_old_basis_refreshes"] == d["candidate_entering_rejections"] == 1
-    assert d["candidate_basis_attempts"] == d["candidate_basis_discards"] == 2
+    attempts = 1 if kind == "eta" else 2
+    assert d.get("candidate_old_basis_refreshes", 0) == 0
+    assert d["candidate_basis_attempts"] == d["candidate_basis_discards"] == attempts
     assert d["basis_replacements"] == d["eta_updates"] == 0
-    # Only the accepted same-B refresh contributes cached state; neither
-    # rejected basis replacement can publish pending state or a pivot trace.
-    assert d["pending_state_consumptions"] == d["same_basis_refresh_acceptances"] == 1
+    assert d.get("pending_state_consumptions", 0) == d.get("same_basis_refresh_acceptances", 0) == 0
+    assert (
+        d["full_candidate_trials"] == d["full_candidate_trials_per_entering_basis_peak"] == attempts
+    )
     assert "last_pivot_trace" not in d
     assert d["triangular_solves"] > 0
     assert pricing_objects[-1].bland and pricing_objects[-1].degenerate == 2
     assert ("staged rejection retains history",) in pricing_objects[-1].visited
     assert all(value == 1 for value in pricing_objects[-1].weights.values())
     if kind == "eta":
-        assert d["rejected_trial_eta_updates"] == 2
+        assert d["rejected_trial_eta_updates"] == 1
+        assert d["base_factorizations"] == 1
     else:
-        assert d["rejected_trial_refactorizations"] >= 2
-        assert d["base_factorizations"] >= 4
+        assert d["rejected_trial_refactorizations"] == 2
+        assert d["base_factorizations"] == 3
 
 
 @pytest.mark.parametrize("after_rebase", ["feasible", "infeasible", "never_stable"])
@@ -1007,9 +1121,10 @@ def test_candidate_bt_rebase_requires_a_complete_final_generation_state(monkeypa
     else:
         assert result.status == "numerical_failure" and result.iterations == 0
         assert d["basis_replacements"] == d["eta_updates"] == 0
-        assert d["candidate_entering_rejections"] == 1 and d["rejected_trial_eta_updates"] == 2
+        assert d["candidate_entering_rejections"] == 1 and d["rejected_trial_eta_updates"] == 1
+        assert d["candidate_basis_attempts"] == d["full_candidate_trials"] == 1
         assert d["candidate_state_generation_restarts"] == (
-            6 if after_rebase == "never_stable" else 2
+            3 if after_rebase == "never_stable" else 1
         )
 
 
@@ -1041,6 +1156,12 @@ def test_candidate_deadline_and_resources_are_not_normal_rejections(monkeypatch,
 
 def test_candidate_singular_rebuild_preserves_owner_and_counts_failed_lu(monkeypatch):
     original = sf.splu
+    original_stage = sf.SparseFactor.stage_column
+    owners = []
+
+    def stage(self, *args, **kwargs):
+        owners.append((self, self.lu, self.matrix, self.etas, self.generation))
+        return original_stage(self, *args, **kwargs)
 
     def singular(matrix, **kwargs):
         if matrix.nnz == 3:
@@ -1048,13 +1169,18 @@ def test_candidate_singular_rebuild_preserves_owner_and_counts_failed_lu(monkeyp
         return original(matrix, **kwargs)
 
     monkeypatch.setattr(sf, "splu", singular)
+    monkeypatch.setattr(sf.SparseFactor, "stage_column", stage)
     result = call(norm([[1], [2]], [1, 1], [1]), replace(SolveOptions(), max_factor_updates=0))
     d = result.diagnostics
     assert result.status == "numerical_failure" and result.iterations == 0
     assert d["basis_replacements"] == d["eta_updates"] == 0
-    assert d["base_factorizations"] == 4
-    assert d["refactorizations_by_reason"]["updates_disabled"] == 2
+    assert d["base_factorizations"] == 2
+    assert d["refactorizations_by_reason"]["updates_disabled"] == 1
     assert d["candidate_entering_rejections"] == 1
+    assert len(owners) == d["candidate_basis_attempts"] == d["full_candidate_trials"] == 1
+    owner, lu, matrix, etas, generation = owners[0]
+    assert owner.lu is lu and owner.matrix is matrix and owner.etas is etas
+    assert owner.generation == generation == 1 and not result._factor_state
 
 
 @pytest.mark.parametrize(
@@ -1136,10 +1262,11 @@ def test_staged_rejection_allows_another_entering_and_clears_r_after_acceptance(
     result = call(norm([[1, 0], [0, 1]], [1, 1], [2, 1]), SolveOptions())
     assert result.status == "optimal" and np.allclose(result.point, [1, 1])
     d = result.diagnostics
-    assert d["candidate_entering_rejections"] == d["candidate_old_basis_refreshes"] == 1
-    assert d["candidate_basis_attempts"] == 4
+    assert d["candidate_entering_rejections"] == 1
+    assert d.get("candidate_old_basis_refreshes", 0) == 0
+    assert d["candidate_basis_attempts"] == 3
     assert d["basis_replacements"] == d["eta_updates"] == result.iterations == 2
-    assert d["rejected_trial_eta_updates"] == 2
+    assert d["rejected_trial_eta_updates"] == 1
 
 
 def test_rejected_later_candidate_does_not_overwrite_last_accepted_pivot(monkeypatch):
@@ -1270,11 +1397,9 @@ def _observe_same_basis_refresh(monkeypatch):
     return owners
 
 
-@pytest.mark.parametrize(
-    "reason", ["raw_candidate_feasibility", "pivot_selection", "candidate_validation"]
-)
+@pytest.mark.parametrize("reason", ["raw_candidate_feasibility", "pivot_selection"])
 @pytest.mark.parametrize("accepted", [False, True])
-def test_voluntary_same_basis_refresh_validates_before_publish_on_all_three_paths(
+def test_voluntary_preselection_refresh_validates_before_publish_on_both_paths(
     monkeypatch, reason, accepted
 ):
     fired = _trigger_voluntary_refresh_once(monkeypatch, reason)
@@ -1350,6 +1475,20 @@ def test_voluntary_same_basis_refresh_validates_before_publish_on_all_three_path
         assert "rejected_pivot" in resets
 
 
+def test_rejected_new_basis_never_automatically_refreshes_same_basis(monkeypatch):
+    fired = _trigger_voluntary_refresh_once(monkeypatch, "candidate_validation")
+    owners = _observe_same_basis_refresh(monkeypatch)
+    result = call(norm([[1], [2]], [1, 1], [1]), SolveOptions())
+    d = result.diagnostics
+    assert fired == ["candidate_validation"] and not owners
+    assert result.status == "numerical_failure" and result.basis == (1, 2)
+    assert d["candidate_basis_attempts"] == d["candidate_basis_discards"] == 1
+    assert d["full_candidate_trials"] == 1 and result.iterations == 0
+    assert d["basis_replacements"] == d["eta_updates"] == 0
+    assert d.get("same_basis_refresh_attempts", 0) == d.get("pending_state_consumptions", 0) == 0
+    assert "last_pivot_trace" not in d and not result._factor_state
+
+
 @pytest.mark.parametrize(
     "order",
     [
@@ -1399,10 +1538,13 @@ def test_three_voluntary_paths_share_one_credit_and_keep_whole_entering_rejectio
     assert d["basis_replacements"] == d["eta_updates"] == 0
     assert d["pivot_rejection_reasons"] == {
         "raw_candidate_feasibility": 1,
-        "unsafe_true_blocker": 1,
+        "no_stable_harris_candidate": 1,
         "staged_basis_validation": 1,
     }
-    assert d["last_same_basis_refresh_rejection"]["refresh_reason"] == order[0]
+    expected_refresh = next(reason for reason in order if reason != "candidate_validation")
+    assert d["last_same_basis_refresh_rejection"]["refresh_reason"] == expected_refresh
+    assert d["full_candidate_trials"] == 2
+    assert d["full_candidate_trials_per_entering_basis_peak"] == 1
     assert "pending_state_consumptions" not in d and d["factor_generation"] == 1
 
 

@@ -1,5 +1,6 @@
 """SILO's sparse two-phase revised simplex and private factor-session adapter."""
 
+from contextlib import contextmanager
 from copy import deepcopy
 from math import isfinite
 from time import perf_counter
@@ -22,6 +23,7 @@ from silo.lp.sparse_factor import (
     pivot_safe,
     same_matrix,
 )
+from silo.lp.sparse_ratio import FULL_TRIAL_LIMIT, PRIMAL_POLICY, leaving_order
 
 
 def _infinity_norm(value):
@@ -510,7 +512,12 @@ def _frame(norm, flips, row_map):
         (norm.row_keys[i], norm.senses[i], float(norm.row_scale[i]), float(flips[i]))
         for i in row_map
     )
-    return {"rows": rows, "columns": columns, "modes": tuple(modes), "policy": FACTOR_POLICY}
+    return {
+        "rows": rows,
+        "columns": columns,
+        "modes": tuple(modes),
+        "policy": (FACTOR_POLICY, PRIMAL_POLICY),
+    }
 
 
 def _compatible_frame(old, current):
@@ -919,7 +926,40 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
         counters.pop("last_pivot_trace", None)
         counters.pop("last_raw_candidate_rejection", None)
         selected_basis = None
-        rejected, refreshed, retries = set(), False, 0
+        rejected, refreshed, retries, trial_counts = set(), False, 0, {}
+
+        @contextmanager
+        def full_trial(entering):
+            # Stage methods perform their generation checks before incrementing
+            # the actual constructor counters. A pre-stage retry consumes zero;
+            # internal state restarts do not create another staged object.
+            if trial_counts.get(entering, 0) >= FULL_TRIAL_LIMIT:
+                raise np.linalg.LinAlgError("Full candidate budget exhausted.")
+            before = sum(
+                counters.get(name, 0)
+                for name in ("candidate_basis_attempts", "same_basis_refresh_attempts")
+            )
+            try:
+                yield
+            finally:
+                started = (
+                    sum(
+                        counters.get(name, 0)
+                        for name in ("candidate_basis_attempts", "same_basis_refresh_attempts")
+                    )
+                    - before
+                )
+                if started not in (0, 1):
+                    raise RuntimeError("A full-candidate operation created multiple trials.")
+                trial_counts[entering] = trial_counts.get(entering, 0) + started
+                increment(counters, "full_candidate_trials", started)
+                counters["full_candidate_trials_per_entering_basis_peak"] = max(
+                    counters.get("full_candidate_trials_per_entering_basis_peak", 0),
+                    trial_counts[entering],
+                )
+                if trial_counts[entering] > FULL_TRIAL_LIMIT:
+                    raise RuntimeError("Full-candidate credit was replenished incorrectly.")
+
         while True:
             if perf_counter() >= deadline:
                 return "limit", "time_limit", None, None, None, None
@@ -927,7 +967,7 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                 return "limit", "lp_iteration_limit", None, None, None, None
             if selected_basis != tuple(basis):
                 selected_basis = tuple(basis)
-                rejected, refreshed, retries = set(), False, 0
+                rejected, refreshed, retries, trial_counts = set(), False, 0, {}
                 pricing.basis_seen(basis)
             xb, lam, rc, generation = state(cost, context if mode == "primal" else None)
             if mode == "primal":
@@ -961,106 +1001,124 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                         direction = basis_solve(
                             _column(a, entering), expected_generation=generation
                         )
-                        candidates = [i for i, value in enumerate(direction) if value > 0]
-                        if not candidates:
+                        order = leaving_order(
+                            xb,
+                            direction,
+                            tuple(keys[j] for j in basis),
+                            options.primal_tolerance,
+                            options.pivot_tolerance,
+                            pivot_safe,
+                        )
+                        increment(counters, "harris_selections")
+                        if not order.positive:
                             ray = np.zeros(len(cost))
                             ray[entering], ray[basis] = 1, -direction
                             return "unbounded", "improving_ray", xb, lam, rc, ray
-                        theta = min(max(xb[i], 0) / direction[i] for i in candidates)
-                        ties = [i for i in candidates if max(xb[i], 0) / direction[i] == theta]
-                        safe = [
-                            i for i in ties if pivot_safe(direction, i, options.pivot_tolerance)
-                        ]
-                        if safe:
-                            leaving = min(safe, key=lambda i: keys[basis[i]])
+                        accepted, predicted_any, last_prediction = None, False, None
+                        for leaving in order.rows:
+                            if perf_counter() >= deadline:
+                                raise FactorDeadline("time_limit")
+                            if trial_counts.get(entering, 0) >= FULL_TRIAL_LIMIT:
+                                break
                             candidate = _raw_primal_candidate(
                                 xb, direction, leaving, options.primal_tolerance
                             )
                             increment(counters, "raw_candidate_checks")
-                            if candidate["valid"]:
-                                break
-                            increment(counters, "raw_candidate_failures")
-                            if not refreshed:
-                                refreshed = True
+                            if not candidate["valid"]:
+                                increment(counters, "raw_candidate_failures")
+                                last_prediction = {
+                                    **candidate,
+                                    "entering_key": keys[entering],
+                                    "leaving_key": keys[basis[leaving]],
+                                    "leaving_position": leaving,
+                                    "run_identity": run_identity,
+                                    "generation": generation,
+                                }
+                                counters["last_raw_candidate_rejection"] = last_prediction
+                                continue
+                            predicted_any = True
+                            rho = candidate["rho"]
+
+                            def checked_solve(rhs, transpose=False, token=generation):
+                                return basis_solve(rhs, transpose, token)
+
+                            weights = pricing.update(
+                                a, basis, entering, leaving, direction, checked_solve
+                            )
+                            same_generation(generation)
+                            try:
+                                with full_trial(entering):
+                                    rebuilt = pivot(
+                                        entering,
+                                        leaving,
+                                        generation,
+                                        direction,
+                                        (xb, rho, run_identity, mode),
+                                        cost=cost,
+                                        context=context,
+                                    )
+                            except _CandidateRejected as exc:
+                                increment(counters, "candidate_state_failures")
+                                counters["last_candidate_rejection"] = {
+                                    **exc.summary,
+                                    "entering_key": keys[entering],
+                                    "leaving_key": keys[basis[leaving]],
+                                    "run_identity": run_identity,
+                                    "authoritative_generation": get_factor().generation,
+                                }
+                                pricing.reset(basis, "rejected_pivot")
+                                continue
+                            accepted = leaving, rho, weights, rebuilt
+                            break
+                        if accepted is not None:
+                            leaving, rho, weights, rebuilt = accepted
+                            break
+                        # A refresh is only a preselection fallback. Once B'
+                        # was tried, use remaining credit for another leaving
+                        # row rather than creating a third full transaction.
+                        if (
+                            not predicted_any
+                            and trial_counts.get(entering, 0) == 0
+                            and not refreshed
+                        ):
+                            refreshed = True
+                            reason = (
+                                "raw_candidate_feasibility" if order.rows else "pivot_selection"
+                            )
+                            if order.rows:
                                 increment(counters, "raw_candidate_refreshes")
-                                voluntary_refresh(
-                                    cost, context, generation, entering, "raw_candidate_feasibility"
-                                )
-                            rejected.add(entering)
-                            increment(counters, "rejected_entering_columns")
+                            with full_trial(entering):
+                                voluntary_refresh(cost, context, generation, entering, reason)
+                        rejected.add(entering)
+                        increment(counters, "rejected_entering_columns")
+                        spent = trial_counts.get(entering, 0)
+                        if spent >= FULL_TRIAL_LIMIT:
+                            reason = "candidate_budget_exhausted"
+                            increment(counters, "candidate_budget_exhaustions")
+                        elif predicted_any:
+                            reason = "staged_basis_validation"
+                            increment(counters, "candidate_entering_rejections")
+                        elif order.rows:
+                            reason = "raw_candidate_feasibility"
                             increment(counters, "raw_candidate_rejections")
-                            increment(
-                                counters.setdefault("pivot_rejection_reasons", {}),
-                                "raw_candidate_feasibility",
-                            )
-                            counters["last_raw_candidate_rejection"] = {
-                                **candidate,
-                                "entering_key": keys[entering],
-                                "leaving_key": keys[basis[leaving]],
-                                "leaving_position": leaving,
-                                "run_identity": run_identity,
-                                "generation": generation,
-                            }
-                            pricing.reset(basis, "rejected_pivot")
-                            continue
-                        if not refreshed:
-                            refreshed = True
-                            voluntary_refresh(
-                                cost, context, generation, entering, "pivot_selection"
-                            )
-                        rejected.add(entering)
-                        increment(counters, "rejected_entering_columns")
-                        increment(
-                            counters.setdefault("pivot_rejection_reasons", {}),
-                            "unsafe_true_blocker",
-                        )
-                        pricing.reset(basis, "rejected_pivot")
-                    leaving = min(safe, key=lambda i: keys[basis[i]])
-
-                    def checked_solve(rhs, transpose=False, token=generation):
-                        return basis_solve(rhs, transpose, token)
-
-                    weights = pricing.update(a, basis, entering, leaving, direction, checked_solve)
-                    same_generation(generation)
-                    try:
-                        rebuilt = pivot(
-                            entering,
-                            leaving,
-                            generation,
-                            direction,
-                            (xb, theta, run_identity, mode),
-                            cost=cost,
-                            context=context,
-                        )
-                    except _CandidateRejected as exc:
-                        increment(counters, "candidate_state_failures")
-                        counters["last_candidate_rejection"] = {
-                            **exc.summary,
+                        else:
+                            reason = "no_stable_harris_candidate"
+                        increment(counters.setdefault("pivot_rejection_reasons", {}), reason)
+                        counters["last_entering_rejection"] = {
+                            "reason": reason,
                             "entering_key": keys[entering],
-                            "leaving_key": keys[basis[leaving]],
-                            "run_identity": run_identity,
-                            "authoritative_generation": get_factor().generation,
+                            "full_trials": spent,
+                            "positive_blockers": len(order.positive),
+                            "stable_window_rows": len(order.rows),
+                            "generation": generation,
+                            "untried_rows_not_proved_infeasible": True,
                         }
-                        if not refreshed:
-                            refreshed = True
-                            increment(counters, "candidate_old_basis_refreshes")
-                            voluntary_refresh(
-                                cost, context, generation, entering, "candidate_validation"
-                            )
-                        rejected.add(entering)
-                        increment(counters, "rejected_entering_columns")
-                        increment(counters, "candidate_entering_rejections")
-                        increment(
-                            counters.setdefault("pivot_rejection_reasons", {}),
-                            "staged_basis_validation",
-                        )
                         pricing.reset(basis, "rejected_pivot")
-                        continue
                     if rebuilt or weights is None:
                         pricing.reset(basis, "factor_rebuild" if rebuilt else "nonfinite_weight")
                     else:
                         pricing.weights.update(weights)
-                    pricing.step(theta, options.primal_tolerance)
+                    pricing.step(max(0.0, rho), options.primal_tolerance)
                     increment(counters, "primal_pivots")
                 else:
                     if any(rc[j] > dtol[j] for j in nonbasic):
