@@ -4,7 +4,7 @@ SILO is a Python/NumPy teaching and research prototype for general-form LP and
 MILP, with a dense reference engine and an optional sparse LP engine. The local
 candidate is **0.3.0a1**. Use `silo.solve()` or
 `silo optimize` for the general model pipeline. Local validation and artifact
-identities and remaining acceptance checks are recorded in the
+identities, fixed-run evidence and final acceptance are recorded in the
 [sparse program report](tasks/reports/20261024-02-02_sparse-lp-program_report.md).
 
 ## Project Philosophy
@@ -47,6 +47,10 @@ The native solver path does not call external solvers.
 - The fixed sparse validation includes up to 2000 variables, 5000 rows and 100000
   nonzeros, plus 12 Netlib LPs. These finite cohorts establish the measured scope;
   actual outcomes and timings belong to the program report. MILP remains a small-instance prototype.
+- RR08 binds the existing warm4 five-repeat run: 80 children, 1680 saved solutions,
+  median edit-segment speed ratio 3.503361 and 8/8 nonregressing trajectories.
+  Same-source warm3/5 each had five cold timeouts; warm4 lacks its auxiliary host trace.
+  This records one fixed run and does not establish stability across runs or a unique host cause.
 - Sparse factor fill, eta updates, exact proof work, iterations and wall time have
   explicit limits. An unresolved numerical case can return `numerical_failure`.
 - Finite pricing pools only for the general CG reference; arbitrary external cut expressions,

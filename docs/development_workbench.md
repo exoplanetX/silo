@@ -22,6 +22,8 @@
 ## 状态、来源与评价
 
 - 当前状态摘要读取 `.silo-dos/project_profile.md`，工程路线读取 `ROADMAP.md`。
+- 稀疏原八项按RR08的固定证据和最终签收解释，RR04–07辅助HOLD单列，详情查
+  [当前总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)。旧来源变化提示不自动清除。
 - A–E 与原研究里程碑的映射依据有界计划和停止记录，逐项注明来源。
 - 八维初始评价和能力等级属于首版整理，展示日期和来源；它们不代替正式验收。
 - `scripts/workbench/catalog.json` 只维护展示映射、初始判断与已读来源哈希。

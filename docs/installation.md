@@ -4,6 +4,8 @@
 八个全新环境已于2026-10-25首轮全部通过；原wheel/sdist SHA保持不变。实际工件身份和保留失败以
 [当前总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)及其原始收据为准。
 下文0.2.0a1四组合属于保留的历史证据；远端CI保持pending。
+RR08另逐127项核Git/archive/snapshot/wheel-sdist传输链：119项字节相同、8项仅严格CRLF/LF差异，
+8个原安装环境各126模块与snapshot相符；本次没有重新构建或安装，原SHA和既有调用记录保持。
 
 ## 运行环境
 
