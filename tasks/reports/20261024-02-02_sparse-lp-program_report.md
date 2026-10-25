@@ -1,7 +1,7 @@
 # 稀疏LP整体目标集中恢复与续接执行报告
 
 当前状态（2026-10-25）：SP1/SP2及旧源SP3已GO；SP4修复后的当前源固定LP组、MIP/CG及历史组通过。
-当前源码warm第4轮80/80、配对中位收益3.503361倍及独立数值/性能GO；连续宿主监督因ctypes共享签名冲突未采到样本，受控轮HOLD。全质量6607及原工件8环境均通过，整体仍未完成。
+当前源码warm第4轮原数值/性能80/80、3.503361倍独立GO但监督0样本；修复后第5轮325样本完整，75/80、五BOUND02 cold超时，完整受控性能HOLD。当前6622全质量及原工件8安装通过，整体未完成。
 当前合同：[20261024-02-02](../codex/20261024-02-02_sparse-lp-program.md)，签发78cc75de0197c58b95bd80b4d313c3306ab39f94。
 原目标：[总体规划](../phases/sparse_lp_reoptimization_program_20261024.md)第11节八项，
 [原实施计划](../phases/sparse_lp_implementation_20261024.md)、
@@ -40,9 +40,9 @@ cached origin/main...HEAD=0/73，未查即时远端，无push/发布；仅两项
 | 1 实现前冻结与设计 | SP1 GO，a3cff29输入、3c27324真值/基线，独立GO先于生产修改 |
 | 2 端到端sparse cold | 当前算法a9f3213：48/48、24/24、12容量/12外部全过；两完整容量/Netlib额度已用满 |
 | 3 LU/eta/数值与8机制 | 当前源8/8；既定pivot/eta机制通过，新增精确依赖SOURCE/MATH GO |
-| 4 会话四修改与收益 | 当前源round4 80/80、1600修改/80初始、3.503361倍、8/8不回退，独立数值/性能GO；宿主连续记录0样本，受控验收HOLD，warm4/4 |
+| 4 会话四修改与收益 | round4原数值/性能80/80但监督0样本；round5监督325样本完整、75/80五cold超时，受控验收HOLD；warm5/5 |
 | 5 MIP/CG真实稀疏接入 | 固定12MIP/4CG全部通过；精确全池及真实分支/局部GMI/复用由结果门继续核对 |
-| 6 旧行为与质量 | 737/737历史及6607全量测试、结构/Ruff通过；原984文件保护不变 |
+| 6 旧行为与质量 | 737/737历史及当前6622全量测试、结构/Ruff通过；原984文件保护不变 |
 | 7 0.3.0a1与8安装 | 原工件模块/元数据审计通过，RR04八个全新环境首轮全过，原SHA与检查器不变 |
 | 8 伴学、报告、独立终验 | L0012/L0015正文/练习/解答独立GO，八维评价与实账已保存；持续监督缺口阻止最终整体GO |
 
@@ -426,7 +426,7 @@ RR05第1/3窗20.4167750秒仍busy，0solver；GUI/renderer/GPU进程约0.84核�
 | 性能与扩展 | 2000变量/5000行/100000非零及12外部例通过；当前warm4中位3.503361倍、8/8不回退，原数值/收益门GO；连续监督缺口保留HOLD |
 | 应用有效性 | 外部LP与实际MIP/CG连续调用提供有限应用证据；尚不支持产业部署效果声明 |
 | 科学贡献 | 本包交付教学研究平台能力，不替代原对偶更新资源路径研究；C HOLD、D/E未开始，科学贡献独立判断 |
-| 软件工程 | 6607全量、结构和Ruff通过；依赖只用于批准存储/LU，core分层及原生路径不调用外部优化器，实际更新/失效契约有测试 |
+| 软件工程 | 当前6622全量、结构和Ruff通过；依赖只用于批准存储/LU，core分层及原生路径不调用外部优化器，实际更新/失效契约有测试 |
 | 可复现与发行 | 原两工件126模块/元数据已核，Windows双Python×双配置×双工件8新环境首轮全过；本地提交，远端Windows/Linux CI仍pending |
 
 独立准备审查已支持1/2/3/5/6/7项GO，0solver/test/install/采样/write，14只读命令6.0095336秒计SP4。
@@ -510,3 +510,76 @@ Sampler改为每实例私有ctypes.WinDLL("kernel32")，与真实资源guard的�
 55个纯工具与Windows绑定回归、Ruff及结构通过，0solver；计1.5524479秒SP4。
 当前warm4/5、quality3/4、本包host0/3、原diagnostic20/20；尚未新正式运行。
 L0012手算例仅明确加列分支从原RHS=2重新开始，解与目标不变，采纳非阻断澄清建议。
+
+工程门独立GO，4只读命令1.1103468秒；reviews/rr06_engineering_guard_go_raw.md。
+代码提交2c09e90，完整quality4成功49.3088177秒，6622 passed（47.58秒pytest）、结构及全仓Ruff通过。
+启动前scope覆盖当前所有315项源码/测试/脚本/fixture/pyproject，后续仅维护文档及零求解记录。
+质量日志runs/2026-10-25T07-27-11.404136+00-00_e29bb757-f031-4de7-b02f-243de770fb22/console.log。
+
+RR06第1预检20.4907338秒busy、0solver：宿主23.3124%、其他Python0.9722125核；
+host/rr06_attempt1_b3694717-1ebc-41a7-9ff9-ba3cbef716e5。所观测PID与本次账本parent不同，
+随后只读身份查询已无活匹配。该窗消耗转入的RR05余量，余2新窗；warm5尚未启动。
+
+## 19. 第5轮固定结果与运行条件证据
+
+RR06第2窗20.4584153秒quiet通过，宿主15.1873%、已列其他计算0，0solver；
+host/rr06_attempt2_5596b04b-c4ff-4caa-be09-1ec1e94c83ef/preflight.json。
+代码/测试/输入冻结后，唯一warm5执行659.7580784秒、80项自然完成，75pass/5fail。
+失败均为BOUND02 cold五重复60秒OS保护，不记作solver正常limit；40warm及35其他cold通过。
+summary warm/round5_b59ae4fa-438a-4091-a3aa-94285ea59517/summary.json，
+SHAae387b8961b85cc09722268d87afab4fc1424154081769ff822c7c1269c5f960。
+未聚合完整性能，全部失败/已返回前缀及调用记录保留；失败包reviews/sp3_warm_round5_failure.json。
+
+持续监督实际325样本，errors=[]，source/scripts/inputs/environment前后一致；
+私有WinDLL修复通过真实整轮，controlled_run_eligible=true，原验收false/accepted=false。
+观测线程CPU4.65625秒/父墙钟659.7581秒，约0.71%单核CPU时间；此比例不能单独排除调度/I/O影响。
+完整trace均值：整体CPU20.5394%，已列compute合计0.0651661核，最大单进程均值0.0301942核。
+运行期quiet=false作为上下文保留，失败门实际来自原子进程60秒保护；没有新增运行期quiet完成阈值。
+监督host/supervision_rr06_c451a164-cec3-423c-8caa-4e58aec14a85/supervision.json，
+SHAcff8208cb2f7489b1989179f065316e8984c6a554316227efaefbd664e29d0ea，绑定实际warm summary与trace SHA。
+
+结束后单点WMI观测到微软OneDrive.Sync.Service.exe CPU104%（约1.04核），
+可执行路径C:/Program Files/Microsoft OneDrive/26.183.0920.0005/OneDrive.Sync.Service.exe。
+同期E:磁盘约25%/10MB每秒；这些是结束后快照，不证明本轮因果或唯一瓶颈。
+项目/大输出位于E:/OneDrive，而现COMPUTE名单未覆盖同步服务，是预检覆盖缺口。
+后续只读快照另存host/warm5_postrun_process_snapshot.json；正在独立核对保存数据，并设计CPU/墙钟/I/O对照。
+不会仅因这一线索改算法、改阈值、终止同步软件或直接启动新整轮。
+
+当前warm5/5、quality4/4、diagnostic20/20均用满；RR06 host用2/3余1。
+完整Goal未完成，无最终overall GO，新增求解停止。下一步须先有可判定的集中诊断及明确窄授权。
+
+独立RR06终验HOLD，重算1650个保存解（75完整child的1575解+失败前缀75解），错误0；
+396文件绑定无错，80请求与第4轮相同。源/输入/固定drivers相同，所核数值和pivot/LU/eta计数差异0。
+五失败child各保存15修改状态；五initial仅按执行顺序推定通过，未计入独立KKT。
+实际started1660，completed只能确认1655–1660；五个第16状态返回未知、随后20状态未开始，25修改结果不完整。
+相同15状态前缀：第4轮24.22–24.51秒，第5轮56.01–57.83秒，2.298–2.361倍。
+325样本间隔2.011–2.073秒、无不可读进程/错误，源/summary/trace/parent绑定一致。
+真实回传reviews/warm5_independent_hold_raw.md，12.6441235秒计SP4，完整异步墙钟包含其中不重复加wait。
+
+## 20. 集中运行条件恢复提案（未授权，非新研究任务）
+
+只读预实验审查确认：两次暂停同步下的固定cold筛查可作为原完整组的启动条件，
+只有随后完整80项才能支持原第11节性能目标。同步唯一因果保持未证实，不新增因果研究完成义务。
+服务最初按因果问题建议ABA；主线程维持原工程目标、明确筛查作用后，同一服务澄清支持两次方案，
+没有把两次回传算作两个独立审查票。实际只读工具1.332秒、澄清0工具；
+reviews/runtime_stability_design_clarification_raw.md。
+
+具体提案proposals/runtime_stability/plan.md：
+暂时暂停OneDrive（必要时经授权退出客户端）并在包结束恢复原状态；不改电源/priority/affinity/算法。
+最多两条原BOUND02 cold完整21调用，子轨迹60秒/1GiB、每批另15秒收尾，批次75秒；拟诊断20→22。
+两条正确、完整child wall≤45秒、遥测/身份完备、AC/电源GUID/priority/affinity一致，
+20逻辑核ActualFrequency的预注册轨迹中位相对差≤10%且无采样缺失，才可使用条件式唯一warm6权限。
+原80项、五重复、60秒/1GiB、median1.5/6-of8不变；全质量仅追加一次quality5，工具来源必须重新绑定。
+预检最多4×20秒（含RR06余1窗，新增≤3），首条诊断前及完整组前各有新有效quiet记录。
+新诊断/完整组/质量/同步动作都须直接人类授权，不由本提案自行激活；全部仍计原分桶和28800秒。
+
+同步名单覆盖的单文件补丁仅在隔离副本准备，sync_coverage.patch
+SHA104df88e785392e032940624003d3870b56d538573d52582910d53a959b52376；阈值未改。
+实际Windows单次选择接线检查0solver、0.1713622秒：旧采样未包含PID24152，隔离副本能捕获同一可读同步进程。
+receipt proposals/runtime_stability/live_selection_receipt.json；并非额外20秒预检或性能证据，跟踪代码未改。
+已确认本机20核ActualFrequency字段可读、OneDrive的GetProcessTimes可读，当前电源GUID为原平衡方案；
+这些可用性检查不设置功耗/调度策略，也不补写历史归因。
+
+最新SP4汇总11.8159679秒：1/2/3/5/6/7/8机械通过，唯一unmet_id=[4]；
+evaluation/SP4_2026-10-25T08-26-14.963678+00-00.json。未运行新的求解或修改跟踪代码。
+本集中提案包含明确的应用暂停/恢复及新增次数决定，等待人类答复；不把余下时间当作授权。
