@@ -496,3 +496,17 @@ Sampler改为每实例私有ctypes.WinDLL("kernel32")，与真实资源guard的�
 仅再1次完整quality（3→4）和1轮原固定80项warm（4→5），预检≤3×20秒（含RR05余1窗、新增≤2窗）。
 新轮必须在补丁集成/组件/独立门及完整质量通过、有效预检后启动；生产数值/工件/所有原判据不变。
 任何新失败保留，不增加下一轮；全部八项及连续监督/最终独立GO齐备才完成原Goal。
+
+## 18. RR06直接授权与修补集成
+
+用户回复call_de30bd6eb2384ab388f2c29188b6049d：“授权该监督收口包（推荐）”。
+[RR06](../codex/20261024-02-06_sparse-lp-program.md)已不可变登记，typed authority
+0d9ee0ab9fd47ff7c21aced4f26d5d4e7a27e23683349770d010b55a72360adc；
+仅一次quality4和一次原固定warm5，≤3×20秒host窗口含旧RR05余1窗转入。
+旧host包已关闭，禁止转入后再重复花费旧余量；原数值源/工件/输入/阈值/资源/总预算保持。
+
+精确私有WinDLL修补及真实资源guard交错回归已集成；CLI/ledger增加typed一次性权限、
+同源、ordinal、完整quality入口及真实parent/child消费门，默认额度不放宽。
+55个纯工具与Windows绑定回归、Ruff及结构通过，0solver；计1.5524479秒SP4。
+当前warm4/5、quality3/4、本包host0/3、原diagnostic20/20；尚未新正式运行。
+L0012手算例仅明确加列分支从原RHS=2重新开始，解与目标不变，采纳非阻断澄清建议。

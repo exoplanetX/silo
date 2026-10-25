@@ -56,7 +56,7 @@ def main():
     evaluate = sub.add_parser("evaluate")
     evaluate.add_argument("--stage", choices=("SP1", "SP2", "SP3", "SP4"), required=True)
     warm = sub.add_parser("warm")
-    warm.add_argument("--round", type=int, choices=(1, 2, 3, 4), required=True)
+    warm.add_argument("--round", type=int, choices=(1, 2, 3, 4, 5), required=True)
     warm.add_argument("--repetitions", type=int, choices=(5,), required=True)
     warm.add_argument("--host-baseline")
     warm.add_argument("--host-output")
@@ -66,11 +66,11 @@ def main():
     summary = sub.add_parser("summary")
     summary.add_argument("--final", action="store_true")
     args = parser.parse_args()
-    if args.command == "warm" and args.round == 4:
+    if args.command == "warm" and args.round >= 4:
         from sparse_program.host_load import validate_baseline
 
         if not args.host_baseline or not args.host_output:
-            parser.error("Warm4 requires its quiet baseline and continuous host observation")
+            parser.error("Supervised warm requires its quiet baseline and continuous observation")
         validate_baseline(Path(args.host_baseline))
     if args.command == "_native-one":
         from sparse_program.runner import native_one
@@ -161,10 +161,10 @@ def main():
 
             return final()
         return 0
-    if args.command == "warm" and args.round == 4:
-        from sparse_program.host_load import execute_warm4
+    if args.command == "warm" and args.round >= 4:
+        from sparse_program.host_load import execute_supervised_warm
 
-        return execute_warm4(args)
+        return execute_supervised_warm(args)
     from sparse_program.runner import dispatch
 
     return dispatch(args)

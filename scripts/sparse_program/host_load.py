@@ -66,7 +66,9 @@ class Sampler:
                 ("name", w.WCHAR * 260),
             ]
 
-        self.w, self.Entry, self.kernel = w, Entry, ctypes.windll.kernel32
+        # Keep ctypes function signatures private: the resource guard uses
+        # a different PROCESSENTRY32W class in the same process.
+        self.w, self.Entry, self.kernel = w, Entry, ctypes.WinDLL("kernel32")
         k = self.kernel
         k.CreateToolhelp32Snapshot.argtypes, k.CreateToolhelp32Snapshot.restype = (
             [w.DWORD, w.DWORD],
@@ -176,21 +178,28 @@ def validate_baseline(path):
 
 
 def validate_warm4_parent(events, parent_run, source_sha256):
-    grant = ledger.warm4_grant(events)
-    assert grant is not None, "Warm4 child lacks direct human authority"
-    assert grant["source_sha256"] == source_sha256, "Warm4 child source differs"
+    return validate_supervised_parent(events, parent_run, source_sha256, warm_round=4)
+
+
+def validate_supervised_parent(events, parent_run, source_sha256, *, warm_round):
+    assert warm_round in (4, 5), "Unsupported supervised child round"
+    grant = (
+        ledger.warm4_grant(events) if warm_round == 4 else ledger.supervision_recovery_grant(events)
+    )
+    assert grant is not None, "Supervised child lacks direct human authority"
+    assert grant["source_sha256"] == source_sha256, "Supervised child source differs"
     starts = [
         event
         for event in events
         if event["kind"] == "command_started" and event.get("run") == parent_run
     ]
-    assert len(starts) == 1, "Warm4 child requires one actual accounting parent"
+    assert len(starts) == 1, "Supervised child requires one actual accounting parent"
     parent = starts[0]
     assert parent.get("group") == "warm" and parent.get("stage") == "SP3", "Wrong parent group"
-    assert parent.get("rounds") == {"warm": 1} and parent.get("warm_round") == 4
-    assert parent.get("warm4_authority_sha256") == grant["sha256"]
+    assert parent.get("rounds") == {"warm": 1} and parent.get("warm_round") == warm_round
+    assert parent.get(f"warm{warm_round}_authority_sha256") == grant["sha256"]
     assert not any(
-        event["kind"] in ("command_finished", "warm4_child_started")
+        event["kind"] in ("command_finished", f"warm{warm_round}_child_started")
         and event.get("run") == parent_run
         for event in events
     ), "Warm4 parent is finished or its child claim is already consumed"
@@ -218,12 +227,14 @@ def supervision_decision(
     }
 
 
-def execute_warm4(args):
+def execute_supervised_warm(args):
     baseline = validate_baseline(Path(args.host_baseline))
     identity, environment = ledger.identity(), ledger.environment()
     parent_run = os.environ.get("SILO_SPARSE_ACCOUNT_PARENT")
     assert parent_run, "Warm4 requires its real public accounting parent"
-    parent = validate_warm4_parent(ledger.history(), parent_run, identity["source_sha256"])
+    parent = validate_supervised_parent(
+        ledger.history(), parent_run, identity["source_sha256"], warm_round=args.round
+    )
     parent_identity = json.loads((ledger.ROOT / parent_run / "identity.json").read_text())
     assert ledger.digest(parent_identity) == parent["identity_sha256"]
     assert all(parent_identity[key] == identity[key] for key in ("source", "scripts", "inputs"))
@@ -239,10 +250,10 @@ def execute_warm4(args):
     )
     output.mkdir(parents=True, exist_ok=False)
     ledger.append(
-        "warm4_child_started",
+        f"warm{args.round}_child_started",
         run=parent_run,
         source_sha256=identity["source_sha256"],
-        authority_sha256=parent["warm4_authority_sha256"],
+        authority_sha256=parent[f"warm{args.round}_authority_sha256"],
         fixed_children=80,
         baseline_sha256=ledger.sha(args.host_baseline),
     )
@@ -267,6 +278,7 @@ def execute_warm4(args):
     observer = threading.Thread(target=observe, daemon=True)
     observer.start()
     code = 1
+    existing_summaries = set((ledger.OUT / "warm").glob("*/summary.json"))
     try:
         from sparse_program.warm import execute
 
@@ -277,6 +289,17 @@ def execute_warm4(args):
         if observer.is_alive():
             errors.append("Host observer did not finish")
         final_identity, final_environment = ledger.identity(), ledger.environment()
+        new_summaries = set((ledger.OUT / "warm").glob("*/summary.json")) - existing_summaries
+        warm_summary = None
+        if len(new_summaries) == 1:
+            path = new_summaries.pop()
+            if path.parent.name.startswith(f"round{args.round}_"):
+                warm_summary = {
+                    "path": path.relative_to(ledger.ROOT).as_posix(),
+                    "sha256": ledger.sha(path),
+                }
+        if warm_summary is None:
+            errors.append("Supervised warm did not produce exactly one matching summary")
         decision = supervision_decision(
             identity, final_identity, environment, final_environment, samples, errors, code
         )
@@ -290,6 +313,8 @@ def execute_warm4(args):
             "baseline_sha256": ledger.sha(args.host_baseline),
             "baseline_decision": baseline["decision"],
             "parent_run": parent_run,
+            "supervised_warm_round": args.round,
+            "warm_summary": warm_summary,
             "decision": decision,
             "sample_count": len(samples),
             "errors": errors,

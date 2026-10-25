@@ -44,30 +44,96 @@ def warm4_grant(events):
     return grant
 
 
+def supervision_recovery_grant(events):
+    grants = [event for event in events if event["kind"] == "human_supervision_recovery"]
+    if not grants:
+        return None
+    assert len(grants) == 1, "Supervision recovery requires one unique direct human grant"
+    grant = grants[0]
+    expected = {
+        "previous_warm_ceiling": 4,
+        "new_warm_ceiling": 5,
+        "additional_warm_rounds": 1,
+        "previous_quality_ceiling": 3,
+        "new_quality_ceiling": 4,
+        "additional_quality_rounds": 1,
+        "maximum_host_windows": 3,
+        "inherited_host_windows": 1,
+        "additional_host_windows": 2,
+        "host_sample_seconds": 20,
+        "fixed_children": 80,
+        "modified_states": 1600,
+        "initial_states": 80,
+        "repetitions": 5,
+        "child_seconds": 60,
+        "child_memory_bytes": 1 << 30,
+    }
+    assert all(grant.get(k) == v for k, v in expected.items()), "Recovery scope differs"
+    previous = warm4_grant(events)
+    assert previous is not None, "Recovery lacks its prior warm authority"
+    assert grant.get("question_call"), "Recovery lacks the direct human reply identity"
+    assert grant.get("source_sha256") == previous["source_sha256"], "Recovery source differs"
+    return grant
+
+
 def round_limits(events):
     limits = GROUP_ROUNDS.copy()
     if warm4_grant(events) is not None:
         limits["warm"] = 4
+    if supervision_recovery_grant(events) is not None:
+        limits.update(warm=5, quality=4)
     return limits
 
 
 def validate_warm4_request(events, source_sha256, *, group, stage, reserve_round, used, argv):
-    grant = warm4_grant(events)
-    assert grant is not None, "Warm4 has no direct human authority"
-    assert group == "warm" and stage == "SP3" and reserve_round, "Wrong Warm4 accounting group"
-    assert used == 3, "Warm4 must reserve exactly the fourth round"
-    assert grant["source_sha256"] == source_sha256, "Warm4 source differs from human grant"
+    return validate_supervised_request(
+        events,
+        source_sha256,
+        round_number=4,
+        group=group,
+        stage=stage,
+        reserve_round=reserve_round,
+        used=used,
+        argv=argv,
+    )
+
+
+def validate_supervised_request(
+    events, source_sha256, *, round_number, group, stage, reserve_round, used, argv
+):
+    assert round_number in (4, 5), "Unsupported supervised warm round"
+    grant = warm4_grant(events) if round_number == 4 else supervision_recovery_grant(events)
+    assert grant is not None, "Supervised warm has no direct human authority"
+    assert group == "warm" and stage == "SP3" and reserve_round, "Wrong warm accounting group"
+    assert used == round_number - 1, "Supervised warm must reserve its exact next round"
+    assert grant["source_sha256"] == source_sha256, "Warm source differs from human grant"
+    authority_field = f"warm{round_number}_authority_sha256"
     assert not any(
-        event["kind"] == "command_started"
-        and event.get("warm4_authority_sha256") == grant["sha256"]
+        event["kind"] == "command_started" and event.get(authority_field) == grant["sha256"]
         for event in events
-    ), "Warm4 authority already consumed"
+    ), "Supervised warm authority already consumed"
     assert (
         len(argv) >= 8 and Path(argv[1]).resolve() == (ROOT / "scripts/sparse_program.py").resolve()
     )
-    assert list(argv[2:4]) == ["--internal", "warm"], "Warm4 requires the public CLI parent"
-    assert argv[argv.index("--round") + 1] == "4"
+    assert list(argv[2:4]) == ["--internal", "warm"], "Warm requires the public CLI parent"
+    assert argv[argv.index("--round") + 1] == str(round_number)
     assert argv[argv.index("--repetitions") + 1] == "5"
+    return grant["sha256"]
+
+
+def validate_quality4_request(events, source_sha256, *, stage, used, argv):
+    grant = supervision_recovery_grant(events)
+    assert grant is not None, "Quality4 lacks direct human authority"
+    assert stage == "SP4" and used == 3, "Quality4 requires its exact stage and ordinal"
+    assert source_sha256 == grant["source_sha256"], "Quality4 source differs"
+    assert (
+        len(argv) == 2 and Path(argv[1]).resolve() == (ROOT / "scripts/check_quality.py").resolve()
+    ), "Quality4 must run the complete quality entry"
+    assert not any(
+        event["kind"] == "command_started"
+        and event.get("quality4_authority_sha256") == grant["sha256"]
+        for event in events
+    ), "Quality4 authority already consumed"
     return grant["sha256"]
 
 
@@ -220,16 +286,25 @@ def command(
     )
     used = totals()
     ident = identity()
-    warm4_authority = None
-    if warm_round == 4 or (group == "warm" and reserve_round and used["rounds"]["warm"] >= 3):
-        assert warm_round == 4, "Only specifically authorized Warm4 may follow round3"
-        warm4_authority = validate_warm4_request(
+    warm_authority, quality_authority = None, None
+    if warm_round in (4, 5) or (group == "warm" and reserve_round and used["rounds"]["warm"] >= 3):
+        assert warm_round in (4, 5), "Only a specifically authorized supervised round may follow"
+        warm_authority = validate_supervised_request(
             history(),
             ident["source_sha256"],
+            round_number=warm_round,
             group=group,
             stage=stage,
             reserve_round=reserve_round,
             used=used["rounds"]["warm"],
+            argv=argv,
+        )
+    if group == "quality" and reserve_round and used["rounds"]["quality"] >= 3:
+        quality_authority = validate_quality4_request(
+            history(),
+            ident["source_sha256"],
+            stage=stage,
+            used=used["rounds"]["quality"],
             argv=argv,
         )
     remaining = min(
@@ -254,7 +329,9 @@ def command(
         timeout=limit,
         started_at=utc(),
         warm_round=warm_round,
-        warm4_authority_sha256=warm4_authority,
+        warm4_authority_sha256=warm_authority if warm_round == 4 else None,
+        warm5_authority_sha256=warm_authority if warm_round == 5 else None,
+        quality4_authority_sha256=quality_authority,
     )
     start = time.perf_counter()
     log = folder / "console.log"

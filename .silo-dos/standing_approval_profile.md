@@ -28,6 +28,13 @@ Human replycall_cbfe1d7c51e94ad69b2a3b91095ade97 authorizes only
 host windows under separate host-preflight accounting and original time budgets.
 No source/test/threshold/formal-round change; RR04's warm4 authority remains unconsumed.
 
+Later human replycall_de30bd6eb2384ab388f2c29188b6049d authorizes only
+[RR06](../tasks/codex/20261024-02-06_sparse-lp-program.md): reviewed private-DLL observer
+fix and typed one-use gates, one quality4 and one original fixed warm5, <=3 host windows
+including RR05's transferred remaining window. Original numerical source/artifacts/
+thresholds/budgets stay; all past failures persist. This supersedes the earlier code
+freeze and4/3 caps only for that package. No sixth warm or fifth quality authority.
+
 The human directly started the prepared contract20261024-02-01 in the development
 chat using Goal mode on2026-10-24. This exact program now has its listed L2/L3
 solver/dependency/API/local packaging authority and SP1–SP4 continuity; it does not

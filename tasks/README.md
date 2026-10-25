@@ -362,6 +362,15 @@ charged to the original SP4/global budget. Existing diagnostic20, all formal rou
 caps, source/test/driver identities and quiet thresholds remain fixed. This only
 provides the prerequisite for RR04's already authorized warm4; it adds no solver run.
 
+Human replycall_de30bd6eb2384ab388f2c29188b6049d authorizes the
+[RR06 supervision closure](codex/20261024-02-06_sparse-lp-program.md): apply the reviewed
+private-WinDLL observer patch and one-use CLI/ledger gates; exactly one full quality4
+(ceiling3→4) and one unchanged fixed warm5 (ceiling4→5). Up to3 zero-solver20s host
+windows include the transferred unused RR05 window and at most2 new windows. Preserve
+algorithm/artifact/input/tolerance/resource/time identities and every failure. Other
+caps stay fixed. No warm6, quality5 or fourth package window. Final continuous trace
+and independent eight-item GO are still mandatory; RR02 remains the total report.
+
 The human requested a detailed execution package and said they will later start it
 in the development conversation using Goal mode. The
 [prepared total contract](codex/20261024-02-01_sparse-lp-program.md),
