@@ -1,7 +1,7 @@
 # 稀疏LP整体目标集中恢复与续接执行报告
 
 当前状态（2026-10-25）：SP1/SP2及旧源SP3已GO；SP4修复后的当前源固定LP组、MIP/CG及历史组通过。
-当前源码warm第三轮75/80，五次BOUND02 cold触60秒保护；RR04工具门、最后完整质量与原工件8环境复验通过，第4轮warm待启动，整体八项未完成。
+当前源码warm第4轮80/80、配对中位收益3.503361倍及独立数值/性能GO；连续宿主监督因ctypes共享签名冲突未采到样本，受控轮HOLD。全质量6607及原工件8环境均通过，整体仍未完成。
 当前合同：[20261024-02-02](../codex/20261024-02-02_sparse-lp-program.md)，签发78cc75de0197c58b95bd80b4d313c3306ab39f94。
 原目标：[总体规划](../phases/sparse_lp_reoptimization_program_20261024.md)第11节八项，
 [原实施计划](../phases/sparse_lp_implementation_20261024.md)、
@@ -40,11 +40,11 @@ cached origin/main...HEAD=0/73，未查即时远端，无push/发布；仅两项
 | 1 实现前冻结与设计 | SP1 GO，a3cff29输入、3c27324真值/基线，独立GO先于生产修改 |
 | 2 端到端sparse cold | 当前算法a9f3213：48/48、24/24、12容量/12外部全过；两完整容量/Netlib额度已用满 |
 | 3 LU/eta/数值与8机制 | 当前源8/8；既定pivot/eta机制通过，新增精确依赖SOURCE/MATH GO |
-| 4 会话四修改与收益 | 当前源round3 75/80，HOLD；RR04已授权唯一round4（当前3/4），RR05新宿主窗口待执行；旧源结果不桥接 |
+| 4 会话四修改与收益 | 当前源round4 80/80、1600修改/80初始、3.503361倍、8/8不回退，独立数值/性能GO；宿主连续记录0样本，受控验收HOLD，warm4/4 |
 | 5 MIP/CG真实稀疏接入 | 固定12MIP/4CG全部通过；精确全池及真实分支/局部GMI/复用由结果门继续核对 |
 | 6 旧行为与质量 | 737/737历史及6607全量测试、结构/Ruff通过；原984文件保护不变 |
 | 7 0.3.0a1与8安装 | 原工件模块/元数据审计通过，RR04八个全新环境首轮全过，原SHA与检查器不变 |
-| 8 伴学、报告、独立终验 | L0012/L0015按a9f3213及原样小例checked；最终报告及八项独立GO待取得 |
+| 8 伴学、报告、独立终验 | L0012/L0015正文/练习/解答独立GO，八维评价与实账已保存；持续监督缺口阻止最终整体GO |
 
 原研究A/B、C HOLD、D/E未启动、native延期及远端CI pending保持。本包不改变研究身份或完成线。
 
@@ -310,7 +310,7 @@ RR02继续为唯一整体总报告。原输入、1600修改/80初始、五重复
 red_team_reviewer独立核对当前5组104/104，90 optimal原objective/primal/dual/KKT独立重算，
 4 Farkas及4射线用精确有理数核验，未调用项目checker或solver。最大primal残差2.8422e-13，
 最大stationarity9.8363e-15、互补5.2715e-10、P-D差2.3694e-8、冻结目标误差9.3133e-10。
-全部guard null，观测最大child5.2870652秒、RSS127598592字节；6耦合例pivot
+全部guard null，最大RSS127598592字节；原摘录最大child5.2870652秒遗漏capacity最大值，已按第15节原monitor统一纠正为9.7512291秒；6耦合例pivot
 1413/80/2065/80/650/2147；8机制212/196/194/80/89/64/80/80，eta比例全1.0。
 104个请求均指定sparse，102个进入后给出sparse诊断且dense_model_allocations=0；
 PRESS-LIMIT-01/03分别在时间限制和预LP非零门退出，没有引擎诊断，不能声称102之外也实际进入内核。
@@ -406,3 +406,93 @@ summary为delivery/7909ec92-6b7c-46f3-8d12-33e5c74d1f10/summary.json；原8溯�
 [RR05](../codex/20261024-02-05_sparse-lp-program.md)仅追加≤3×20秒零求解窗口，单列host-preflight、
 原SP4/总时间预算，源码/脚本/测试/输入和quiet阈值保持。取得有效低负载记录后，执行既获批唯一warm4。
 原八项及最终独立GO仍为唯一完成线，当前整体未完成。
+
+当前SP4机械汇总16.5032389秒：1/2/3/5/6/7/8全部通过，唯一unmet_id=[4]。
+实际记录evaluation/SP4_2026-10-25T06-43-06.658145+00-00.json。
+此处第8项仅表示伴学/报告/预算机械项通过，最终独立八项签收仍待warm4实际结果。
+第3轮明确分母为40个warm和35个cold通过、5个cold失败，共75/80；不从失败组计算完整收益。
+
+RR05第1/3窗20.4167750秒仍busy，0solver；GUI/renderer/GPU进程约0.84核，
+记录host/rr05_attempt1_ffeabd10-50ec-4a5b-ad7a-c8d59c85dbfc/preflight.json，剩余2窗。
+已请求用户告知宿主方便空闲的状态；不结束其他应用，不改变启动线，warm4权限未消费。
+
+## 15. 当前八维评价（整体终验仍待warm4）
+
+| 维度 | 当前证据、判断及限制 |
+|---|---|
+| 数学正确性 | 既有原空间约定和精确终止门保持；独立核对90个optimal的可行性/目标，既有4不可行见证/4射线精确核验。有限组通过不提供任意输入的正确性或精确秩保证 |
+| 数值稳健性 | 48/24/12容量/12Netlib、8机制及DEGEN2精确清理通过；私有状态核验先于发布。原资源/操作/位数门保持，无任意病态基稳定性保证 |
+| 算法与模型覆盖 | 一般LP/MILP和有限池CG保持，新增端到端稀疏、LU/eta和四修改接口；模型种类未因稀疏化扩大 |
+| 性能与扩展 | 2000变量/5000行/100000非零及12外部例通过；当前warm4中位3.503361倍、8/8不回退，原数值/收益门GO；连续监督缺口保留HOLD |
+| 应用有效性 | 外部LP与实际MIP/CG连续调用提供有限应用证据；尚不支持产业部署效果声明 |
+| 科学贡献 | 本包交付教学研究平台能力，不替代原对偶更新资源路径研究；C HOLD、D/E未开始，科学贡献独立判断 |
+| 软件工程 | 6607全量、结构和Ruff通过；依赖只用于批准存储/LU，core分层及原生路径不调用外部优化器，实际更新/失效契约有测试 |
+| 可复现与发行 | 原两工件126模块/元数据已核，Windows双Python×双配置×双工件8新环境首轮全过；本地提交，远端Windows/Linux CI仍pending |
+
+独立准备审查已支持1/2/3/5/6/7项GO，0solver/test/install/采样/write，14只读命令6.0095336秒计SP4。
+真实回传reviews/rr04_partial_six_go_raw.md；第8项伴学独立交叉核对继续，整体未签收。
+审查指出旧摘录最大child5.2870652秒与原monitor总体最大9.7512291秒存在口径差异，
+最终统计须按实际monitor统一；两个观测都在原资源保护内，不重跑已通过组来修饰数字。
+
+原104个monitor已统一复算，0新增求解、0.4945243秒：最大墙钟与RSS均为CAP-TRANS-02，
+9.7512291秒/127598592字节，guard null。收据reviews/final_lp_resource_statistics.json；
+旧5.2870652秒摘录错误已在当前报告直接纠正，旧独立回传原文保持。
+
+伴学独立交叉核对GO，5个只读命令1.4539431秒；UTF-8阅读两篇正文/练习/解答，
+核对5个源码文件、手算、eta顺序、会话边界、精确清理及共享预算，无必须修正项。
+小例代码SHA仍168bf589838ad94666d3c7634a8ae184249d0b612c0f6f31a591879a1b72aa64，0重跑。
+真实回传reviews/final_learning_independent_go_raw.md。当前全部独立子项仅warm未关闭；最终整体签收仍待实际结果。
+
+## 16. 第4轮数值/性能GO与连续监督HOLD
+
+RR05第2窗20.3550703秒通过：平均宿主9.21856%，其他计算合计0.00389268核，
+单进程均值最大0.00155770核，10有效样本，0solver；RR05用2/3，余1窗。
+启动实际baseline为host/rr05_attempt2_3aa85481-9ced-4efd-a35c-fd8c4c64800c/preflight.json，
+SHA2ad666ef44476bf46c93b22d01500eb7deb2b8ae4c8d30adaf695d4685b454a3。
+启动距baseline约35.81秒；源/脚本/输入/环境前后一致。本线程未并行运行其他重型核验。
+
+固定warm4自然完成，436.0637343秒，80/80子进程、1600修改及80初始全部通过原空间/真值门。
+配对五重复中位3.5033610038028766、8/8不回退；包含导入和初始解的另一中位比值2.3831270740。
+summary为warm/round4_f8279cbc-be58-4599-b0c4-bf1321e01bc2/summary.json，
+SHA67075757acf4802a8ad040deeffa82d2f3ee80c91c9d60bf685e39825c452088。
+五BOUND02 cold均完成，约33.97–34.35秒；全轮最大34.3454353秒，峰值保守进程树RSS913170432字节。
+800次warm start、600真实因子跨调用复用、3290 eta更新、0 cold fallback；200次增行按维数重建因子。
+
+独立核对全部1680解、168唯一输入/真值、401文件及固定次序，错误0；最大缩放primal9.80363e-8、
+stationarity3.64381e-10、互补5.54036e-15、冻结目标绝对误差8.59472e-10，原容差保持。
+数值/收益子门GO；真实回传reviews/warm4_numeric_go_supervision_hold_raw.md，结构收据同名.json。
+该次独立异步审计有部分工具墙钟缺失；未把已知10.9467051秒冒充完整成本，
+按warm命令完成至回传捕获的包络648秒保守计SP4，已知部分包含其中不再另加。
+
+整体CLI退出1。监督器sample_count=0、无trace，错误为
+`ArgumentError: argument 2: TypeError: expected LP_Entry instance instead of pointer to Entry`。
+supervision位于host/supervision_rr04_b2abbbda-864f-46a5-a5f5-aa9f62a4fa24/supervision.json，
+SHAa773fb43a27c9ea3a84705b0fe5a301ba3b7b741c4ad56509bc61205edf2cf32。
+原warm.execute返回0，末尾源码/脚本/输入/环境冻结均true；监督accepted=false正确阻止受控验收。
+记录器与resources.windows_tree_peaks共享ctypes.windll.kernel32函数对象，不同Entry类的argtypes并发覆盖。
+这是本线程工具缺陷，单独预检及先前纯工具门没有覆盖真实guard并发，全部失败如实保留。
+持续记录是用户明示义务，80/80不能补回缺失的运行期负载，最终overall GO仍不签。
+
+## 17. 记录器隔离补丁（独立工程GO，待新的次数授权）
+
+跟踪源码/测试继续冻结。仅在outputs/proposals隔离副本准备二文件补丁：
+proposals/observer_private_bindings/observer_private_bindings.patch，
+SHAdac3381fd06c668dcc22794ba629efd4dd22ff4aeab190af0bc2932a03533f97。
+Sampler改为每实例私有ctypes.WinDLL("kernel32")，与真实资源guard的全局函数签名隔离；
+新Windows回归让采样线程与现有windows_tree_peaks交错，连续保存5真实样本，0solver/0假子进程。
+原版稳定复现ArgumentError、补丁版通过；两个红/绿测试两次通过，Ruff通过，补丁dry-run通过。
+组件耗时0.6918276/0.1305505/0.1083274/0.6222586秒，均按原SP4记账。
+正式warm4/4、quality3/3已满；未申请前不应用跟踪代码、不跑第5轮或第4次全质量。
+恢复完整受控证据还需要：应用获审补丁和一次性额度门、再1次完整质量、原固定80项再1轮、
+有效新预检及连续trace、最终独立GO；生产数值源码/原工件/输入/阈值/60秒1GiB/总预算保持。
+
+新独立工程复核GO，核对本机Python3.13.9的ctypes实际实现、DLL函数实例缓存及真实guard回归，
+确认私有WinDLL隔离有效、补丁及回归精确对应，0solver/test/install/采样/write。
+8条只读命令1.7428741秒计SP4；外层工具返回2.6秒仅另记观察口径、不重复计入。
+真实回传reviews/observer_private_binding_independent_go_raw.md。
+用户随后在宿主状态问题明确答复“已让其他任务空闲，继续”；该状态答复不扩大正式/质量次数。
+
+准备提交人类审查的唯一收口范围：精确记录器补丁、支持一次性授权的CLI/ledger门及拒绝回归；
+仅再1次完整quality（3→4）和1轮原固定80项warm（4→5），预检≤3×20秒（含RR05余1窗、新增≤2窗）。
+新轮必须在补丁集成/组件/独立门及完整质量通过、有效预检后启动；生产数值/工件/所有原判据不变。
+任何新失败保留，不增加下一轮；全部八项及连续监督/最终独立GO齐备才完成原Goal。
