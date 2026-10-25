@@ -1,6 +1,6 @@
 # 稀疏LP整体目标集中恢复与续接执行报告
 
-当前状态（2026-10-25）：RR02的R0/R1已完成，SP1 GO、SP2独立联合GO；接续原SP3，整体八项目标未完成。
+当前状态（2026-10-25）：SP1 GO、SP2独立联合GO；SP3第一次修订后8机制通过，warm首轮70/80，整体目标未完成。
 当前合同：[20261024-02-02](../codex/20261024-02-02_sparse-lp-program.md)，签发78cc75de0197c58b95bd80b4d313c3306ab39f94。
 原目标：[总体规划](../phases/sparse_lp_reoptimization_program_20261024.md)第11节八项，
 [原实施计划](../phases/sparse_lp_implementation_20261024.md)、
@@ -148,4 +148,56 @@ SP3第一次修订仅替换此清理不变量，并在每次换基/删依赖行�
 
 两行精确零解反例在旧源上复现失败，另外3项故障保护先通过；修订后该反例及原数学例通过。
 新增正负人工量抵消及末次清理故障检查，完整因子/比值/kernel组件和Ruff通过；
-原错误最优与资源保护保持。此源码尚待固定8机制复验，不预支SP3 GO。
+原错误最优与资源保护保持，首次组件门先于8机制复验，不预支SP3 GO。
+
+修订7891de51312bc17c79c8b117718906e7aea14b66，source SHA
+3b94e2ef1272dd153cc916a576c5d3e4537737e83f544016a955b3f3c8143f3f。
+8机制复验8/8，最少64pivot、最低eta比例528/530；UPDATE-05现530pivot含12cleanup、正确optimal。
+150组件及独立SOURCE/MATH GO通过，核对非交换B/BT、当前B残差、缓存隔离与warm计时；
+此源码意见明确不包含正式warm收益或SP3整体GO。
+
+### 正式warm第1/2轮
+
+固定8轨迹×cold/warm×五重复全部80child自然执行，实际699.9385155秒。
+70/80成功，10失败均为WARM-BOUND-02：五次warm在第4次修改返回original_kkt_failed，
+五次cold在初始成功后的第1次修改触发原60秒保护。完整分母保留，不聚合总体收益或宣称SP3通过。
+其余七条各10/10，配对中位比分别3.5422、1.7448、3.4486、3.7610、1.9448、3.7067、1.8373，
+仅用于定位已完成范围，不替代八条完整门。
+首轮summary为warm/round1_06596c02-a89c-454f-85f5-e3cb92a94533/summary.json，SHA
+abcd669cbed25cd4ec629a9b064be9af03f1dfe51fbce8aaf36947cb3ebfc66d；
+归档reviews/sp3_warm_round1_failure.json。
+
+首版driver在assert前未保存失败的公开返回，只有成功状态与失败日志；此观测缺口如实保留。
+已补异常分支failed_return.json及实际started/completed计数，不改求解、truth、时序或性能门；
+同时终验文档引用加入RR02当前报告，原01报告继续作为历史引用。
+Ruff与8项纯证据逻辑测试通过。补充诊断只重放固定失败前缀，不能替代或回填首轮真实失败。
+阶段还有第2次修订及第2次正式warm额度，原时间/诊断总上限保持。
+
+### 第二次修订的证据与实现
+
+标量观测器先出现一次OneDrive替换锁错误（56实际LU后、下一次pre-call marker中断），
+随后两次逐行包装在已通过的initial冷解上放大开销并触58秒保护；全部保留并计账。
+保存各版harness后，仅修改段启用trace、LU采用单一固定计数槽，未改变数值路径。
+有效warm重放34.6716702秒，5公开调用/913真实LU全部返回，0额外线性解/重构/证明/完整状态导出。
+state04的x14=-1.083257012e-7；内部global ptol约3.5e-7，原下界允许约1.0e-7。
+该步0pivot、generation569/eta7/B不变；B/BT残差和其余KKT均过，唯一原空间失败是变量下界。
+有效cold前缀58.6656324秒在Phase II持续Bland中触保护，从未进入Farkas/ray/proof。
+初始17703pivot中17450次Bland、触发均two_degenerate；修改1到6144pivot仍有真实目标进展，无重复基。
+
+受控诊断只取消two_degenerate触发，保留真实重复基保护及全部原门。固定cold初始+20修改
+21/21正确并通过冻结oracle，880真实LU，初始722pivot、各次722–912；含导入/初始/编辑/核验
+33.0049849秒。该对照不计正式性能，证明开销解释被前缀否证，支持窄修定价控制。
+两个独立数学门分别批准潜在dual退出时的原空间映射分量门、仅重复基触发sticky Bland。
+
+实现新增lp/sparse_dual.py，仅在原全局负行集合为空时补查实际原空间投影；结构变量使用
+col_scale与原始有限bound，slack使用row_scale及非零q的符号公式。可映射负基本量继续原dual；
+无法映射或mapped-only无安全pivot返回数值失败，不发Farkas。原全局/Farkas/完整KKT保持。
+两个policy token纳入frame，旧策略cache失配；pricing仅取消two_degenerate触发，保留退化统计、
+真实有序语义基重复及原资源退出。Harris出基保持，不声称经典完整Bland有限终止定理。
+
+组件初验152/155、再验158/159的失败保留：新增pure-helper offset整数数组需强制float；
+原RHS编辑fixture还需同步原空间row_upper，并固定为float以避免4.25截成4。
+修复这些真实数据一致性问题后159组件/Ruff通过，旧数学反例与错误最优断言保持。
+新增尺度非1的lower/upper、上下侧slack非零残差符号、free split、mapped-only无Farkas、
+原空间上界被全局量遮蔽后一次实际dual pivot、跨调用真实因子复用及重复基历史保护。
+第二包仍待单次运输轨迹、独立源码及最后正式warm，不提前签SP3 GO。

@@ -9,6 +9,7 @@ import numpy as np
 from scipy.sparse import coo_matrix, csc_matrix, hstack
 
 from silo.lp.kernel import BasisSnapshot, KernelResult
+from silo.lp.sparse_dual import DUAL_EXIT_POLICY, mapped_blockers
 from silo.lp.sparse_factor import (
     FACTOR_POLICY,
     RESIDUAL_TOLERANCE,
@@ -24,6 +25,8 @@ from silo.lp.sparse_factor import (
     same_matrix,
 )
 from silo.lp.sparse_ratio import FULL_TRIAL_LIMIT, PRIMAL_POLICY, leaving_order
+
+PRICING_POLICY = "silo-devex-repeat-only-sticky-bland-v1"
 
 
 def _infinity_norm(value):
@@ -444,10 +447,6 @@ class Devex:
 
     def step(self, theta, tolerance):
         self.degenerate = self.degenerate + 1 if theta <= tolerance else 0
-        if self.degenerate >= 2 and not self.bland:
-            self.bland = True
-            increment(self.counters, "bland_triggers")
-            increment(self.counters.setdefault("bland_trigger_reasons", {}), "two_degenerate_steps")
 
     def entering(self, eligible, reduced, basis):
         if any(not isfinite(self.weights.get(self.keys[j], 1)) for j in eligible):
@@ -516,7 +515,7 @@ def _frame(norm, flips, row_map):
         "rows": rows,
         "columns": columns,
         "modes": tuple(modes),
-        "policy": (FACTOR_POLICY, PRIMAL_POLICY),
+        "policy": (FACTOR_POLICY, PRIMAL_POLICY, DUAL_EXIT_POLICY, PRICING_POLICY),
     }
 
 
@@ -1160,8 +1159,27 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                     if any(rc[j] > dtol[j] for j in nonbasic):
                         raise np.linalg.LinAlgError("Dual simplex lost dual feasibility.")
                     candidates = [i for i, value in enumerate(xb) if value < -ptol]
+                    mapped_only = False
                     if not candidates:
-                        return "optimal", "optimal", xb, lam, rc, None
+                        mapped = mapped_blockers(
+                            norm, a, b, basis, row_keys, keys, xb, options.primal_tolerance
+                        )
+                        increment(counters, "mapped_dual_exit_checks")
+                        counters["last_mapped_dual_check"] = {
+                            "negative_basic_blockers": len(mapped.rows),
+                            "original_primal_violations": mapped.violations,
+                            "maximum_scaled_violation": mapped.maximum_scaled_violation,
+                        }
+                        candidates = list(mapped.rows)
+                        if not candidates:
+                            if not mapped.primal_feasible:
+                                return (
+                                    "numerical_failure",
+                                    "unmapped_original_primal_violation",
+                                    None, None, None, None,
+                                )
+                            return "optimal", "optimal", xb, lam, rc, None
+                        mapped_only = True
                     leaving = min(candidates, key=lambda i: keys[basis[i]])
                     unit = np.zeros(len(b))
                     unit[leaving] = 1
@@ -1170,11 +1188,18 @@ def solve_canonical(norm, options, snapshot=None, deadline=float("inf"), factor_
                     same_generation(generation)
                     eligible = [j for j in nonbasic if tableau[j] < -options.pivot_tolerance]
                     if not eligible:
+                        if mapped_only:
+                            return (
+                                "numerical_failure", "mapped_dual_no_safe_pivot",
+                                None, None, None, None,
+                            )
                         return "infeasible", "dual_farkas", xb, witness, -a.T @ witness, None
                     entering = min(eligible, key=lambda j: (rc[j] / tableau[j], keys[j]))
                     pivot(entering, leaving, generation, observation=(xb, None, run_identity, mode))
                     pricing.reset(basis, "dual_pivot")
                     increment(counters, "dual_pivots")
+                    if mapped_only:
+                        increment(counters, "mapped_dual_pivots")
             except FactorRetry as exc:
                 retries += 1
                 increment(counters, "pivot_generation_restarts")

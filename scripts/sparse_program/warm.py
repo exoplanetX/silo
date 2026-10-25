@@ -81,17 +81,37 @@ def one(request_path, response_path):
     assert initial["payload_sha256"] == chain["initial_sha256"]
     assert ledger.sha(ledger.ROOT / initial["witness_path"]) == initial["witness_sha256"]
     records = []
+    calls = {"started": 0, "completed": 0}
 
     def record_started(label):
+        calls["started"] += 1
         with response.with_suffix(".started.jsonl").open("a", encoding="utf-8") as stream:
             stream.write(json.dumps({"id": label, "mode": mode, "native_roots_started": 1}) + "\n")
 
     def call(label, truth):
         record_started(label)
         result = session.solve() if mode == "warm" else solve(session.model, options)
+        calls["completed"] += 1
         raw = result.to_dict()
-        checked = checker.check(payload, raw, truth=truth, options=vars(options))
-        assert result.status == "optimal", (label, result.status, result.termination_reason)
+        try:
+            checked = checker.check(payload, raw, truth=truth, options=vars(options))
+            assert result.status == "optimal", (label, result.status, result.termination_reason)
+        except (AssertionError, OSError, ValueError, KeyError, TypeError) as exc:
+            response.with_suffix(".failed_return.json").write_text(
+                json.dumps(
+                    {
+                        "id": label,
+                        "mode": mode,
+                        "result": raw,
+                        "failure": f"{type(exc).__name__}: {exc}",
+                        "native_roots_started": calls["started"],
+                        "native_roots_completed": calls["completed"],
+                    },
+                    allow_nan=False,
+                ),
+                encoding="utf-8",
+            )
+            raise
         return raw, checked
 
     raw, checked = call(chain["id"] + "-initial", initial["truth"])
@@ -129,8 +149,8 @@ def one(request_path, response_path):
         "states": records,
         "segment_seconds": segment_seconds,
         "total_seconds_including_import_initial": perf_counter() - start,
-        "native_roots_started": 21,
-        "native_roots_completed": 21,
+        "native_roots_started": calls["started"],
+        "native_roots_completed": calls["completed"],
     }
     response.write_text(json.dumps(packet, allow_nan=False), encoding="utf-8")
     return 0

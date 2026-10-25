@@ -158,6 +158,38 @@ dual/objective tolerance does not by itself refactor valid B or grant proof.
 
 ## Mechanism and resource evidence
 
+### SP3 second revision: mapped dual exit and repeat-only pricing
+
+The existing global dual negative-row set uses epsilon_p*(1+norm_inf(xB)).
+When that set is empty, the kernel now recovers the current original point and
+checks its actual finite variable/row sides with their unchanged component
+allowances. A negative basic structural variable maps through its actual
+column scale and original finite bound. Free split coordinates acquire no
+fictitious bound. A negative basic slack uses the original row scale and
+the actual standard equation residual q=b-Az:
+original_side_violation=(-xB_i-sigma*q_r)/row_scale_r, where sigma is its
+actual+1/-1 standard coefficient. The denominator is the original row's
+1+sum(abs(a_j*x_j))+abs(bound), or 1+abs(x)+abs(upper) for a bound row.
+
+A mapped blocker continues the existing dual tableau/ratio/pivot. An original
+primal violation without a mapped negative basic coordinate is numerical
+failure. A mapped-only blocker without an eligible pivot also yields numerical
+failure; it cannot issue Farkas. The existing global-negative-row Farkas path
+and final original-space KKT remain. This adds sparse matrix products only at
+potential exits, with no extra linear solve, LU, refactor or private trial.
+
+Two consecutive small steps no longer permanently replace Devex. Only an
+actual repeated ordered semantic basis triggers sticky Bland entering in the
+current phase/run. Degenerate counting remains; fresh public solves/phases
+clear history, while factor/weight rebuilds preserve it. Harris leaving is
+unchanged, so the complete classical Bland finite-pivot theorem does not apply.
+Iteration, deadline and resource gates continue to bound exits. Independent
+DUAL_EXIT_POLICY and PRICING_POLICY join the private frame identity.
+
+The independent theory service approved both bounded designs after a fixed
+counterexample and a single causal pricing control. Source/runtime and the
+complete8x2x5 warm performance gate remain separate obligations.
+
 ### Phase-I artificial cleanup (SP3 first revision)
 
 The Phase-I optimization run retains its existing dual-feasible optimal-state

@@ -1023,6 +1023,7 @@ def docs_budget_check():
             "docs/sparse_basis_session_contract.md",
             "docs/sparse_validation_contract.md",
             "tasks/reports/20261024-02-01_sparse-lp-program_report.md",
+            "tasks/reports/20261024-02-02_sparse-lp-program_report.md",
         )
     )
     return {

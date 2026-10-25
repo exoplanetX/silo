@@ -77,10 +77,10 @@ def norm(matrix, rhs, costs, senses=None):
     lower, upper = np.zeros(n), np.full(n, np.inf)
     senses = tuple(senses or ["<="] * m)
     row_lower = np.array(
-        [rhs[i] if side in (">=", "=") else -np.inf for i, side in enumerate(senses)]
+        [rhs[i] if side in (">=", "=") else -np.inf for i, side in enumerate(senses)], dtype=float
     )
     row_upper = np.array(
-        [rhs[i] if side in ("<=", "=") else np.inf for i, side in enumerate(senses)]
+        [rhs[i] if side in ("<=", "=") else np.inf for i, side in enumerate(senses)], dtype=float
     )
     return SimpleNamespace(
         matrix=a,
@@ -96,6 +96,8 @@ def norm(matrix, rhs, costs, senses=None):
         offset=np.zeros(n),
         data=SimpleNamespace(
             names=names,
+            lower=lower,
+            upper=upper,
             a=a,
             row_names=tuple(f"r{i}" for i in range(m)),
             row_lower=row_lower,
@@ -216,7 +218,49 @@ def test_rr02_old_primal_policy_frame_cannot_reuse_numeric_cache():
     assert result.status == "optimal" and np.allclose(result.point, [2, 2])
     assert result.diagnostics["cache_invalidations"] == 1
     assert result.diagnostics["cross_solve_reuses"] == 0
-    assert result._factor_state["frame"]["policy"] == (sf.FACTOR_POLICY, sk.PRIMAL_POLICY)
+    assert result._factor_state["frame"]["policy"] == (
+        sf.FACTOR_POLICY,
+        sk.PRIMAL_POLICY,
+        sk.DUAL_EXIT_POLICY,
+        sk.PRICING_POLICY,
+    )
+
+
+def test_degenerate_steps_do_not_replace_actual_repeated_basis_evidence():
+    keys = (("variable", "x0", 1), ("variable", "x1", 1), ("variable", "x2", 1))
+    counters = {}
+    pricing = sk.Devex(keys, [0], counters)
+    for index in range(3):
+        pricing.basis_seen([index])
+        pricing.step(0, 1e-7)
+    assert pricing.degenerate == 3 and not pricing.bland
+    pricing.basis_seen([0])
+    pricing.basis_seen([0])
+    assert pricing.bland and counters["bland_triggers"] == 1
+    assert counters["bland_trigger_reasons"] == {"repeated_basis": 1}
+    history = pricing.visited.copy()
+    pricing.reset([0], "residual")
+    assert pricing.bland and pricing.visited == history
+    assert pricing.entering([1, 2], np.array([0, 1, 100]), [0]) == 1
+    pricing.fresh_phase(keys, [0], "public_solve", preserve=True)
+    assert not pricing.bland and not pricing.visited and pricing.degenerate == 0
+    assert pricing.entering([1, 2], np.array([0, 1, 100]), [0]) == 2
+
+
+@pytest.mark.parametrize("has_blocker", [False, True])
+def test_mapped_only_failure_never_issues_farkas_or_silently_cold_retries(monkeypatch, has_blocker):
+    first = call(norm([[1]], [1], [1]), SolveOptions())
+    mapped = SimpleNamespace(
+        rows=(0,) if has_blocker else (), primal_feasible=False,
+        violations=1, maximum_scaled_violation=2e-7,
+    )
+    monkeypatch.setattr(sk, "mapped_blockers", lambda *args: mapped)
+    result = call(norm([[1]], [1], [1]), SolveOptions(), first.snapshot)
+    assert result.status == "numerical_failure" and result.diagnostics["proof_kind"] is None
+    assert result.diagnostics["cold_fallbacks"] == 0
+    assert result.reason == (
+        "mapped_dual_no_safe_pivot" if has_blocker else "unmapped_original_primal_violation"
+    )
 
 
 @pytest.mark.parametrize(
@@ -252,6 +296,7 @@ def test_unchanged_rhs_cache_reuses_real_lu_and_clears_bland_history():
     cache["pricing"].visited.add(("artificial stale history",))
     second_model = ordinary()
     second_model.rhs[0] = 4.25
+    second_model.data.row_upper[0] = 4.25
     second = call(second_model, SolveOptions(), first.snapshot, factor_state=cache)
     assert second.status == "optimal" and np.allclose(second.point, [2, 2.25])
     assert second.diagnostics["base_factorizations"] == 0
