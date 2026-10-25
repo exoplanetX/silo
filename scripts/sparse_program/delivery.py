@@ -347,7 +347,12 @@ def _install_combination(key, artifact, mode, requested_python, outside, folder,
                 20,
             ),
             (
-                "install",
+                "seed-pip",
+                [interpreter, "-I", "-m", "ensurepip", "--upgrade"],
+                60,
+            ),
+            (
+                "install-runtime",
                 [
                     UV,
                     "--native-tls",
@@ -360,6 +365,21 @@ def _install_combination(key, artifact, mode, requested_python, outside, folder,
                     "--no-deps",
                     f"numpy=={NUMPY}",
                     *([f"scipy=={SCIPY}"] if mode == "sparse" else []),
+                ],
+                120,
+            ),
+            (
+                "install-artifact",
+                [
+                    interpreter,
+                    "-I",
+                    "-m",
+                    "pip",
+                    "install",
+                    "--index-url",
+                    "https://pypi.org/simple",
+                    "--no-deps",
+                    "--no-cache-dir",
                     artifact["path"],
                 ],
                 120,
@@ -421,7 +441,90 @@ def _install_combination(key, artifact, mode, requested_python, outside, folder,
     return record
 
 
+def _provenance_recheck_authority(events, previous_sha256):
+    authorized = [
+        event
+        for event in events
+        if event["kind"] == "human_delivery_provenance_recheck"
+        and event.get("prior_summary_sha256") == previous_sha256
+    ]
+    if len(authorized) != 1:
+        raise RuntimeError("Same-archive provenance recheck requires unique direct human authority")
+    authority = authorized[0]["sha256"]
+    if any(
+        event["kind"] == "delivery_provenance_recheck_started"
+        and event.get("authority_sha256") == authority
+        for event in events
+    ):
+        raise RuntimeError("Same-archive provenance recheck authority is already consumed")
+    return authority
+
+
+def _reuse_delivery(previous, folder, activation):
+    previous = Path(previous).resolve()
+    if not previous.is_relative_to((ledger.OUT / "delivery").resolve()):
+        raise ValueError("Reused delivery must stay inside the original program delivery root")
+    path = previous / "summary.json"
+    authority = _provenance_recheck_authority(ledger.history(), ledger.sha(path))
+    old = json.loads(path.read_text(encoding="utf-8"))
+    source = old["source"]
+    if old["candidate"] != CANDIDATE or source["project"] != activation["project"]:
+        raise ValueError("Reused candidate/project metadata differs from current committed source")
+    snapshot = Path(source["snapshot"])
+    if not snapshot.resolve().is_relative_to(previous):
+        raise ValueError("Reused snapshot escaped its original delivery")
+    current = ledger.identity()["source"]
+    if source["source_sha256"] != ledger.digest(source["files"]):
+        raise ValueError("Reused source digest differs from its module map")
+    if set(current) != set(source["files"]):
+        raise ValueError("Reused source module inventory differs")
+    for name, digest in source["files"].items():
+        if ledger.sha(snapshot / name) != digest:
+            raise ValueError("Reused snapshot bytes changed")
+        equivalent_text((snapshot / name).read_bytes(), (ledger.ROOT / name).read_bytes())
+    checker = snapshot / "scripts/sparse_program/check_installed.py"
+    if (
+        ledger.sha(checker) != old["checker_sha256"]
+        or ledger.sha(ledger.ROOT / "scripts/sparse_program/check_installed.py")
+        != old["checker_sha256"]
+    ):
+        raise ValueError("Reused installation checker changed")
+    for kind in ("wheel", "sdist"):
+        artifact = old["artifacts"][kind]
+        if audit_artifact(Path(artifact["path"]), kind, snapshot, source["project"]) != artifact:
+            raise ValueError("Reused artifact bytes or metadata changed")
+    archive = previous / "source.zip"
+    if ledger.sha(archive) != source["archive_sha256"]:
+        raise ValueError("Reused committed archive changed")
+    shutil.copyfile(archive, folder / "source.zip")
+    ledger.append(
+        "delivery_provenance_recheck_started",
+        authority_sha256=authority,
+        prior_summary_sha256=ledger.sha(path),
+        candidate=CANDIDATE,
+        artifacts={kind: old["artifacts"][kind]["sha256"] for kind in ("wheel", "sdist")},
+    )
+    return (
+        source,
+        old["artifacts"],
+        {
+            "path": str(path),
+            "sha256": ledger.sha(path),
+            "authority_sha256": authority,
+        },
+    )
+
+
+def validate_delivery_route(previous_summaries, reuse_delivery):
+    if previous_summaries and not reuse_delivery:
+        raise RuntimeError("Existing candidate delivery requires authorized same-SHA reuse")
+
+
 def execute(args):
+    validate_delivery_route(
+        list((ledger.OUT / "delivery").glob("*/summary.json")),
+        getattr(args, "reuse_delivery", None),
+    )
     folder = ledger.OUT / "delivery" / str(uuid4())
     folder.mkdir(parents=True)
     summary = {
@@ -433,11 +536,17 @@ def execute(args):
         "commands": [],
         "all_pass": False,
         "started_at": ledger.utc(),
+        "execution_scripts": ledger.identity()["scripts"],
     }
     try:
         if args.candidate != CANDIDATE:
             raise ValueError("Only the issued candidate0.3.0a1 is authorized")
-        source = ready()
+        activation = ready()
+        if getattr(args, "reuse_delivery", None):
+            source, artifacts, reused = _reuse_delivery(args.reuse_delivery, folder, activation)
+            summary.update(source=source, artifacts=artifacts, reused_from=reused)
+            return _finish_installations(folder, summary)
+        source = activation
         summary["source"] = source
         archive_path = folder / "source.zip"
         _must_run(
@@ -488,35 +597,7 @@ def execute(args):
             raise RuntimeError("Build must produce exactly one wheel and one sdist")
         for kind, path in (("wheel", wheels[0]), ("sdist", sdists[0])):
             summary["artifacts"][kind] = audit_artifact(path, kind, snapshot, source["project"])
-        outside = Path(tempfile.mkdtemp(prefix="silo-sparse-install-"))
-        if outside.resolve().is_relative_to(ledger.ROOT.resolve()):
-            raise RuntimeError("Installation workspace must be outside the source checkout")
-        summary["outside_workspace"] = str(outside)
-        checker = snapshot / "scripts/sparse_program/check_installed.py"
-        summary["checker_sha256"] = ledger.sha(checker)
-        for requested_python in ("3.11", "3.13"):
-            for mode in ("dense", "sparse"):
-                for kind in ("wheel", "sdist"):
-                    key = f"{requested_python}-{mode}-{kind}"
-                    record = _install_combination(
-                        key,
-                        summary["artifacts"][kind],
-                        mode,
-                        requested_python,
-                        outside,
-                        folder,
-                        checker,
-                    )
-                    summary["installations"].append(record)
-                    (folder / "progress.json").write_text(
-                        json.dumps(summary, indent=2), encoding="utf-8"
-                    )
-                    print(json.dumps({"installation": key, "pass": record["pass"]}), flush=True)
-        summary["all_pass"] = (
-            len(summary["installations"]) == 8
-            and {r["key"] for r in summary["installations"]} == KEYS
-            and all(r["pass"] for r in summary["installations"])
-        )
+        return _finish_installations(folder, summary)
     except (RuntimeError, ValueError, OSError, KeyError, subprocess.CalledProcessError) as exc:
         summary["failure"] = f"{type(exc).__name__}: {exc}"
     finally:
@@ -527,4 +608,38 @@ def execute(args):
                 {"delivery_summary": str(folder / "summary.json"), "all_pass": summary["all_pass"]}
             )
         )
+    return 1
+
+
+def _finish_installations(folder, summary):
+    source = summary["source"]
+    outside = Path(tempfile.mkdtemp(prefix="silo-sparse-install-"))
+    if outside.resolve().is_relative_to(ledger.ROOT.resolve()):
+        raise RuntimeError("Installation workspace must be outside the source checkout")
+    summary["outside_workspace"] = str(outside)
+    checker = Path(source["snapshot"]) / "scripts/sparse_program/check_installed.py"
+    summary["checker_sha256"] = ledger.sha(checker)
+    for requested_python in ("3.11", "3.13"):
+        for mode in ("dense", "sparse"):
+            for kind in ("wheel", "sdist"):
+                key = f"{requested_python}-{mode}-{kind}"
+                record = _install_combination(
+                    key,
+                    summary["artifacts"][kind],
+                    mode,
+                    requested_python,
+                    outside,
+                    folder,
+                    checker,
+                )
+                summary["installations"].append(record)
+                (folder / "progress.json").write_text(
+                    json.dumps(summary, indent=2), encoding="utf-8"
+                )
+                print(json.dumps({"installation": key, "pass": record["pass"]}), flush=True)
+    summary["all_pass"] = (
+        len(summary["installations"]) == 8
+        and {r["key"] for r in summary["installations"]} == KEYS
+        and all(r["pass"] for r in summary["installations"])
+    )
     return 0 if summary["all_pass"] else 1

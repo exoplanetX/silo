@@ -4,30 +4,26 @@
 
 ### 当前恢复入口（2026-10-25）
 
-用户已直接要求本讨论对话审查原因、制定计划并交付开发对话修复和继续完成。
-当前入口为[RR02合同](../tasks/codex/20261024-02-02_sparse-lp-program.md)、
-[集中恢复计划](../tasks/phases/sparse_lp_recovery_20261025.md)，依据
-[实施审查](../docs/sparse_execution_review_20261025.md)。
-仍是原SILO-SPARSE-LP-20261024及开发对话现有唯一Goal，SP1/SP2及旧源SP3 GO，整体未完成。
-当前算法a9f321374d4ca4758aa63d178f224c33b2a1eb0f，候选元数据0.3.0a1；沿用codex/sparse-lp-reoptimization。
-新增稀疏精确依赖通过174组件/独立SOURCE/MATH，最终48/24/12容量/12Netlib、8机制、12MIP/4CG及737历史全过。
-旧SP3正式结果不能桥接为新算法结果；RR03唯一新增warm轮已完成75/80，五BOUND02 cold超时，当前warm HOLD。
-SP3门实账1490.0927953/10800秒、SP2 785.8677913/3600秒，总2648.9643964/28800秒；后续以原ledger为准。
-授权一套联合数值恢复包，最多3新增60秒诊断（包含在原20批）和2次完整SP2联合验收
-（初包+最多1次有证据的修订），全部在原剩余时间内，不按内部补丁重复请求授权。
-优先修正严格最小比值并列筛主元的已证明缺口，有限恢复/稀疏重新平衡依诊断和数学门，
-Devex/Bland控制调整须有独立证据；不扰动原问题，不改变输入、真值、容差或验收指标。
-两容量真实optimal且48/24/6、独立联合GO后连续完成原SP3/SP4；全部八项齐备才完成Goal。
-RR02的R0/R1已完成，首轮48/24/6全过且两CAP真实optimal/KKT通过，独立审核SP2 GO。
-SP3两次修订后8机制及正式80/80、1600修改/80初始全部通过，独立联合GO；中位配对收益3.4547，8/8不回退。
-真实因子跨调用复用600次；ROW两轨迹按行增维重建因子，保留语义基warm。首轮70/80失败完整保留。
-当前6592全量测试和全仓lint通过，继续原已授权的候选/8安装独立检查；最终八项门仍待完成。
-正式warm3/3、capacity2/2、Netlib2/2已用满，无第四warm授权；14/20全局诊断均计账。
-第三轮完整失败和正确前缀保留；pivot/LU数与旧对应前缀一致而墙钟上升，唯一原因未证明。
-RR02已用2/3新增诊断（原总4/20）、1/2联合轮；当前唯一[RR02总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)。
-01报告保留恢复前历史；现有Goal身份不变，启动工具状态仍blocked但本次明确授权允许本包执行。
-不创建替代Goal；新授权的诊断/联合轮及原实账继续累计。local-commit，无push。
-原研究C HOLD/D/E未开始、native延期、两治理文件保护和远端CI pending保持。
+当前执行[RR02合同](../tasks/codex/20261024-02-02_sparse-lp-program.md)及
+[恢复计划](../tasks/phases/sparse_lp_recovery_20261025.md)，沿用原唯一Goal与codex/sparse-lp-reoptimization。
+当前唯一[RR02总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)。
+SP1/SP2与旧算法SP3已独立GO；当前算法a9f3213、元数据0.3.0a1，生产source
+889d191b05736d36de4cd935aecf15e77900d6e7c0f2c5bb8d6bef5914439669。
+最终48tiny/24pressure/12容量/12Netlib、8机制、12MIP/4CG及737历史组均通过；
+当前源warm第三轮75/80，5个BOUND02 cold触60秒保护，失败完整保留，整体未完成。
+旧源80/80不能桥接为当前源；pivot/LU与旧对应前缀一致，墙钟上升的唯一原因尚未证明。
+
+用户call_b401b2090a634e03b64bcdcebf18fc2f已直接批准
+[RR04](../tasks/codex/20261024-02-04_sparse-lp-program.md)：仅同源码第4轮固定80项warm（3→4），
+启动前新宿主预检、运行期连续记录；原工件SHA保持不变，普通pip重新验收8个全新环境。
+首次8安装均在uv缺失archive SHA时被原检查器拒绝，0solver；不重建、不削弱检查。
+原输入、阈值、60秒/1GiB与全部预算保持；其他上限capacity2/Netlib2/quality3/diagnostic20不变。
+当前工具40组件通过，完整质量已过6592项，但新工具仍须原最后一次全质量；复验尚未启动。
+后续真实预算、轮次及结果以原追加ledger为准；所有旧失败和费用继续保留。
+
+全部原八项及最终独立GO齐备才完成同一Goal；Goal工具旧blocked状态没有active设置，
+直接人类续接授权支持本包执行，不新建Goal。local-commit，无push/发布。
+两治理文件原哈希保护并排除暂存；原研究C HOLD/D/E未开始、native延期和远端CI pending保持。
 
 ### 第7轮终止快照（历史，以下耗尽权限已由RR02窄范围续接）
 

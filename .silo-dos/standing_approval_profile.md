@@ -16,6 +16,13 @@ warm round, raising this program's ceiling2→3 with all prior costs, original80
 denominator, inputs/tolerances/guards and SP3/global time budgets retained. No fourth
 round or wider standing authority. RR02 remains the sole current total report.
 
+Human replycall_b401b2090a634e03b64bcdcebf18fc2f directly authorizes
+[RR04](../tasks/codex/20261024-02-04_sparse-lp-program.md): one same-source fixed warm
+round4 (ceiling3→4), quiet preflight and continuous host recording, and one new eight
+fresh-environment matrix of the original unchanged wheel/sdist archives using verified
+pip installation. All failures, original thresholds/guards/budgets and other caps remain.
+No rebuild, fifth warm, third installation matrix or general standing expansion.
+
 The human directly started the prepared contract20261024-02-01 in the development
 chat using Goal mode on2026-10-24. This exact program now has its listed L2/L3
 solver/dependency/API/local packaging authority and SP1–SP4 continuity; it does not

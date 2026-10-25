@@ -20,6 +20,57 @@ TOTAL_SECONDS = 28800
 GROUP_ROUNDS = {"capacity": 2, "netlib": 2, "warm": 3, "quality": 3, "diagnostic": 20}
 
 
+def warm4_grant(events):
+    grants = [event for event in events if event["kind"] == "human_warm4_recheck"]
+    if not grants:
+        return None
+    assert len(grants) == 1, "Warm4 requires one unique direct human grant"
+    grant = grants[0]
+    expected = {
+        "previous_ceiling": 3,
+        "new_ceiling": 4,
+        "additional_rounds": 1,
+        "fixed_children": 80,
+        "modified_states": 1600,
+        "initial_states": 80,
+        "repetitions": 5,
+        "child_seconds": 60,
+        "child_memory_bytes": 1 << 30,
+    }
+    assert all(grant.get(key) == value for key, value in expected.items()), "Warm4 scope differs"
+    assert grant.get("question_call"), "Warm4 lacks the direct human reply identity"
+    source = grant.get("source_sha256", "")
+    assert len(source) == 64 and set(source) <= set("0123456789abcdef"), "Warm4 source missing"
+    return grant
+
+
+def round_limits(events):
+    limits = GROUP_ROUNDS.copy()
+    if warm4_grant(events) is not None:
+        limits["warm"] = 4
+    return limits
+
+
+def validate_warm4_request(events, source_sha256, *, group, stage, reserve_round, used, argv):
+    grant = warm4_grant(events)
+    assert grant is not None, "Warm4 has no direct human authority"
+    assert group == "warm" and stage == "SP3" and reserve_round, "Wrong Warm4 accounting group"
+    assert used == 3, "Warm4 must reserve exactly the fourth round"
+    assert grant["source_sha256"] == source_sha256, "Warm4 source differs from human grant"
+    assert not any(
+        event["kind"] == "command_started"
+        and event.get("warm4_authority_sha256") == grant["sha256"]
+        for event in events
+    ), "Warm4 authority already consumed"
+    assert (
+        len(argv) >= 8 and Path(argv[1]).resolve() == (ROOT / "scripts/sparse_program.py").resolve()
+    )
+    assert list(argv[2:4]) == ["--internal", "warm"], "Warm4 requires the public CLI parent"
+    assert argv[argv.index("--round") + 1] == "4"
+    assert argv[argv.index("--repetitions") + 1] == "5"
+    return grant["sha256"]
+
+
 def digest(value):
     return hashlib.sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
@@ -115,7 +166,7 @@ def totals():
             rounds[group] += value
     assert all(seconds[k] <= v for k, v in STAGE_SECONDS.items()), seconds
     assert sum(seconds.values()) <= TOTAL_SECONDS, seconds
-    assert all(rounds[k] <= v for k, v in GROUP_ROUNDS.items()), rounds
+    assert all(rounds[k] <= v for k, v in round_limits(events).items()), rounds
     return {"seconds": seconds, "total_seconds": sum(seconds.values()), "rounds": rounds}
 
 
@@ -136,8 +187,9 @@ def append(kind, *, seconds=None, rounds=None, **details):
     seconds, rounds = seconds or {}, rounds or {}
     assert all(0 <= v <= STAGE_SECONDS[k] - used["seconds"][k] for k, v in seconds.items())
     assert sum(seconds.values()) <= TOTAL_SECONDS - used["total_seconds"]
-    assert all(0 <= v <= GROUP_ROUNDS[k] - used["rounds"][k] for k, v in rounds.items())
     events = history()
+    limits = round_limits(events)
+    assert all(0 <= v <= limits[k] - used["rounds"][k] for k, v in rounds.items())
     event = {
         "program": PROGRAM,
         "contract": CONTRACT,
@@ -154,7 +206,9 @@ def append(kind, *, seconds=None, rounds=None, **details):
     return event
 
 
-def command(argv, *, stage, group, timeout=None, reserve_round=False, calls=None, cwd=ROOT):
+def command(
+    argv, *, stage, group, timeout=None, reserve_round=False, calls=None, cwd=ROOT, warm_round=None
+):
     """Run one top-level check, charge it once, retain failures and process identity.
 
     Caller-supplied call counts are declared reservations, not claims of completed
@@ -165,6 +219,19 @@ def command(argv, *, stage, group, timeout=None, reserve_round=False, calls=None
         "Do not nest accounting parents; invoke budgeted CLI directly."
     )
     used = totals()
+    ident = identity()
+    warm4_authority = None
+    if warm_round == 4 or (group == "warm" and reserve_round and used["rounds"]["warm"] >= 3):
+        assert warm_round == 4, "Only specifically authorized Warm4 may follow round3"
+        warm4_authority = validate_warm4_request(
+            history(),
+            ident["source_sha256"],
+            group=group,
+            stage=stage,
+            reserve_round=reserve_round,
+            used=used["rounds"]["warm"],
+            argv=argv,
+        )
     remaining = min(
         STAGE_SECONDS[stage] - used["seconds"][stage], TOTAL_SECONDS - used["total_seconds"]
     )
@@ -174,7 +241,6 @@ def command(argv, *, stage, group, timeout=None, reserve_round=False, calls=None
         assert timeout <= remaining - 1, "Insufficient budget for the entire planned batch"
     folder = OUT / "runs" / (utc().replace(":", "-") + "_" + str(uuid4()))
     folder.mkdir(parents=True)
-    ident = identity()
     (folder / "identity.json").write_text(json.dumps(ident, indent=2), encoding="utf-8")
     append(
         "command_started",
@@ -187,6 +253,8 @@ def command(argv, *, stage, group, timeout=None, reserve_round=False, calls=None
         declared_calls=calls,
         timeout=limit,
         started_at=utc(),
+        warm_round=warm_round,
+        warm4_authority_sha256=warm4_authority,
     )
     start = time.perf_counter()
     log = folder / "console.log"

@@ -2,6 +2,7 @@
 
 import ast
 import io
+import json
 import tarfile
 import zipfile
 from pathlib import Path
@@ -120,3 +121,71 @@ def test_installed_checker_top_level_dependencies_are_standard_library():
             imported.add(node.module.split(".")[0])
     assert imported <= sys.stdlib_module_names
     assert not imported.intersection({"silo", "scipy", "numpy"})
+
+
+def test_same_archive_provenance_recheck_requires_unique_unconsumed_human_authority(monkeypatch):
+    module = delivery(monkeypatch)
+    authorization = {
+        "kind": "human_delivery_provenance_recheck",
+        "prior_summary_sha256": "a" * 64,
+        "sha256": "b" * 64,
+    }
+    for events in (
+        [],
+        [authorization, authorization],
+        [{**authorization, "prior_summary_sha256": "c"}],
+    ):
+        with pytest.raises(RuntimeError, match="unique direct human authority"):
+            module._provenance_recheck_authority(events, "a" * 64)
+    assert module._provenance_recheck_authority([authorization], "a" * 64) == "b" * 64
+    consumed = {"kind": "delivery_provenance_recheck_started", "authority_sha256": "b" * 64}
+    with pytest.raises(RuntimeError, match="already consumed"):
+        module._provenance_recheck_authority([authorization, consumed], "a" * 64)
+
+
+def test_existing_delivery_cannot_be_rebuilt_by_omitting_reuse_flag(monkeypatch):
+    module = delivery(monkeypatch)
+    module.validate_delivery_route([], None)
+    module.validate_delivery_route(["prior/summary.json"], "prior")
+    with pytest.raises(RuntimeError, match="authorized same-SHA reuse"):
+        module.validate_delivery_route(["prior/summary.json"], None)
+
+
+@pytest.mark.parametrize("checker_passes", [True, False])
+def test_candidate_archive_uses_seeded_pip_and_provenance_failure_is_not_retried(
+    monkeypatch, tmp_path, checker_passes
+):
+    module = delivery(monkeypatch)
+    artifact = tmp_path / "candidate.whl"
+    artifact.write_bytes(b"immutable candidate archive")
+    checker = tmp_path / "checker.py"
+    checker.write_text("# read-only checker", encoding="utf-8")
+    commands = []
+
+    def fake_run(argv, cwd, folder, label, timeout):
+        commands.append((label, list(map(str, argv))))
+        if label.endswith("_check"):
+            Path(argv[-1]).write_text(
+                json.dumps({"status": "passed" if checker_passes else "failed", "provenance": {}}),
+                encoding="utf-8",
+            )
+            return {"returncode": 0 if checker_passes else 1}
+        return {"returncode": 0}
+
+    monkeypatch.setattr(module, "_run", fake_run)
+    result = module._install_combination(
+        "3.13-sparse-wheel",
+        {"path": str(artifact), "sha256": module.ledger.sha(artifact)},
+        "sparse",
+        "3.13",
+        tmp_path / "outside",
+        tmp_path,
+        checker,
+    )
+    jobs = {label.rsplit("_", 1)[-1]: argv for label, argv in commands}
+    assert jobs["seed-pip"][1:] == ["-I", "-m", "ensurepip", "--upgrade"]
+    assert str(artifact) not in jobs["install-runtime"]
+    assert jobs["install-artifact"][1:5] == ["-I", "-m", "pip", "install"]
+    assert jobs["install-artifact"][-1] == str(artifact)
+    assert "--no-deps" in jobs["install-artifact"]
+    assert result["pass"] is checker_passes and len(result["attempts"]) == 1

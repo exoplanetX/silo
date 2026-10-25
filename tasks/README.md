@@ -345,6 +345,16 @@ No fourth warm, extra capacity/Netlib round, new Goal, algorithm bridge or broad
 authority follows. RR03's small matching report records the exception; RR02 remains
 the single current total report. This supersedes the two-round ceiling only as stated.
 
+Direct human narrow continuation2026-10-25, replycall_b401b2090a634e03b64bcdcebf18fc2f:
+[RR04](codex/20261024-02-04_sparse-lp-program.md) permits exactly one same-source
+fixed warm round4, raising this program's ceiling3→4, after a fresh quiet-host preflight
+and with continuous host observations. It also permits one eight-fresh-environment
+recheck of the already built wheel/sdist with their original SHA values, using the
+verified pip installation command. Preserve all failures, original inputs, tolerances,
+60s/1GiB guards, time budgets and other round caps. Typed ledger authority is consumed
+once per action; no rebuild, fifth warm, third installation matrix or broader authority.
+RR02 remains the sole current total report; RR04 has only a small matching receipt.
+
 The human requested a detailed execution package and said they will later start it
 in the development conversation using Goal mode. The
 [prepared total contract](codex/20261024-02-01_sparse-lp-program.md),

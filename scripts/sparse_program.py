@@ -56,13 +56,22 @@ def main():
     evaluate = sub.add_parser("evaluate")
     evaluate.add_argument("--stage", choices=("SP1", "SP2", "SP3", "SP4"), required=True)
     warm = sub.add_parser("warm")
-    warm.add_argument("--round", type=int, choices=(1, 2, 3), required=True)
+    warm.add_argument("--round", type=int, choices=(1, 2, 3, 4), required=True)
     warm.add_argument("--repetitions", type=int, choices=(5,), required=True)
+    warm.add_argument("--host-baseline")
+    warm.add_argument("--host-output")
     install = sub.add_parser("install-checks")
     install.add_argument("--candidate", choices=("0.3.0a1",), required=True)
+    install.add_argument("--reuse-delivery", help="Authorized recheck of unchanged archives")
     summary = sub.add_parser("summary")
     summary.add_argument("--final", action="store_true")
     args = parser.parse_args()
+    if args.command == "warm" and args.round == 4:
+        from sparse_program.host_load import validate_baseline
+
+        if not args.host_baseline or not args.host_output:
+            parser.error("Warm4 requires its quiet baseline and continuous host observation")
+        validate_baseline(Path(args.host_baseline))
     if args.command == "_native-one":
         from sparse_program.runner import native_one
 
@@ -133,6 +142,7 @@ def main():
             group=group,
             timeout=timeout,
             reserve_round=group in ("capacity", "netlib", "warm"),
+            warm_round=args.round if args.command == "warm" else None,
         )
     if args.command == "freeze-inputs":
         from sparse_program.cases import write_input_freeze
@@ -151,6 +161,10 @@ def main():
 
             return final()
         return 0
+    if args.command == "warm" and args.round == 4:
+        from sparse_program.host_load import execute_warm4
+
+        return execute_warm4(args)
     from sparse_program.runner import dispatch
 
     return dispatch(args)

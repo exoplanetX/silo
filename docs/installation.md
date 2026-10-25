@@ -93,6 +93,12 @@ dense环境中SciPy缺席；sparse环境中基础`import silo`仍延迟加载Sci
 LP/MILP的JSON/MPS CLI、公开研究例、全池精确终止及F1–F4回归。
 外部优化器入口受到禁止调用检查。八组合分别给出结果，有限本地验证不替代远端CI。
 
+RR04获批溯源复验使用`--reuse-delivery`明确指定首次构建目录，保留两份工件原SHA。
+uv只创建环境并安装锁定运行依赖；环境内`python -I -m ensurepip --upgrade`后，
+使用普通`python -I -m pip install --no-deps --no-cache-dir`安装原工件，
+使`direct_url.json`记录真实archive SHA。已有工件时省略复用参数会在构建前拒绝。
+原溯源检查器及失败记录保持；一次性复验权限不授权重复构建或反复安装。
+
 ## M5 的独立安装检查
 
 M5 统一执行时先使用 `python -m build` 产生 wheel 和 sdist，并记录工件 SHA-256。
