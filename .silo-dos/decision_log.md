@@ -1,5 +1,20 @@
 # SILO Decision Log
 
+## DEC-20261025-SPARSE-DISCUSSION-ACCEPTANCE
+
+- The human requests the overall completion assessment after RR08, and explicitly
+  says OneDrive is manually exited and should remain closed for now.
+- Discussion audit accepts the original eight fixed targets: actual final exit0,
+  independent eight-item GO, source/artifact/input identity and Goal complete agree.
+  Rehashed38 final evidence references; separate read-only code and evidence reviews
+  found no required new fix. Execution result remains3904626, production source unchanged.
+- Preserve warm3/5 timeouts, missing warm4 auxiliary trace, RR07 rejection and auxiliary
+  HOLD. Acceptance does not claim cross-run stability, general industrial maturity,
+  host causality or original researchC/D/E completion. No next task or extra experiment.
+- Overall assessment:docs/sparse_program_acceptance_20261025.md. The new OneDrive
+  decision supersedes the prior syncing-restoration confirmation item; no auto restart.
+  Historical sealed reports and receipts are not rewritten.
+
 ## DEC-20261025-SPARSE-RR08-ORIGINAL-GOAL-CLOSURE
 
 - Executed: original eight criteria independentlyGO, final program exit0/overall_complete=true.

@@ -8,7 +8,9 @@
 summary --final --rr08-receipt已实际exit0、overall_complete=true、unmet_ids=[]。
 [RR02唯一总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)已按最终文档ACK封存；
 [RR08签收页](../tasks/reports/20261024-02-08_sparse-lp-program_report.md)记录最终Git和现有Goal工具回执。
-本次工程工作已收口，现有唯一Goal在本地提交后作最终工具标记，不创建新Goal或后续任务。
+本次工程工作已收口，现有唯一Goal实际工具回执已为complete，执行收尾3904626；
+不创建新Goal或后续任务。本次讨论总体评估见
+[总体完成评估](../docs/sparse_program_acceptance_20261025.md)。
 
 当前算法a9f3213、候选0.3.0a1，source889d191b…4439669；工具代码63dbe78。
 48tiny/24pressure/12容量/12Netlib、8机制、12MIP/4CG及737历史组按冻结预期通过；
@@ -22,7 +24,8 @@ RR04–07辅助包仍HOLD；未用warm6/host权限关闭，不排队执行，不
 原两工件SHA不变，127文件119字节同/8严格CRLF-LF，8实际环境1008模块与snapshot相符。
 本包没有新增正式求解/基准/诊断/安装/主机操作；quality6计数工具超180秒失败保留，唯一修正quality7通过。
 
-OneDrive客户端/同步引擎已重启，实际syncing待用户确认，单列操作待办且不再自动控制。
+2026-10-25用户最新决定：OneDrive已手动退出，暂时保持关闭，未经新指令不得自动启动。
+该决定取代先前恢复syncing待确认的操作收尾要求；旧报告/收据保留其当时状态，不回写。
 原研究C HOLD/D/E未开始、native延期和远端CI pending保持；本地提交，无push/发布。
 两治理文件按原哈希保护并排除暂存。预算和最终回执以原追加ledger及closure_rr08实际文件为准。
 后续开发优先级由用户和讨论对话确定，本Goal结束后停止。
