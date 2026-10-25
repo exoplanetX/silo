@@ -4,7 +4,7 @@
 规则见 [tasks/README.md](README.md)，当前状态见
 [project_profile](../.silo-dos/project_profile.md)。请修改来源文件后重新生成索引。
 
-共 161 份合同、158 份报告。报告存在只表示有记录；
+共 163 份合同、159 份报告。报告存在只表示有记录；
 批准范围、执行是否成功及代码基线需要阅读合同、报告与对应 Git 提交。
 未出现同名报告的合同可能尚未执行；索引不据此推断完成或失败。
 
@@ -12,6 +12,8 @@
 
 | 任务身份 / 合同 | 报告 | 说明 |
 |---|---|---|
+| [20261026-02-01_reliable-solver-web](codex/20261026-02-01_reliable-solver-web.md) | 尚无同名报告 |  |
+| [20261026-01-01_reliable-solver-learning](codex/20261026-01-01_reliable-solver-learning.md) | [报告](reports/20261026-01-01_reliable-solver-learning_report.md) |  |
 | [20261024-02-08_sparse-lp-program](codex/20261024-02-08_sparse-lp-program.md) | [报告](reports/20261024-02-08_sparse-lp-program_report.md) |  |
 | [20261024-02-07_sparse-lp-program](codex/20261024-02-07_sparse-lp-program.md) | [报告](reports/20261024-02-07_sparse-lp-program_report.md) |  |
 | [20261024-02-06_sparse-lp-program](codex/20261024-02-06_sparse-lp-program.md) | [报告](reports/20261024-02-06_sparse-lp-program_report.md) |  |

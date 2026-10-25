@@ -23,6 +23,7 @@
 | [L0013：一般整数搜索、全局界与可核验GMI](lessons/L0013-general-milp/README.md) | 2026-10-24 | `mip.branch-and-cut` | checked v0.2.0 | [教学研究原型M3](../tasks/codex/20261023-02-01_teaching-prototype.md)、[正确性修订](../tasks/codex/20261024-01-01_prototype-correctness-revision.md) |
 | [L0014：受控研究策略、一般主问题与有限列生成](lessons/L0014-research-interfaces/README.md) | 2026-10-24 | `research.general-column-generation` | checked v0.2.0 | [教学研究原型M4](../tasks/codex/20261023-02-01_teaching-prototype.md)、[正确性修订](../tasks/codex/20261024-01-01_prototype-correctness-revision.md) |
 | [L0015：稀疏基、eta更新与重构后的状态一致性](lessons/L0015-sparse-basis-updates/README.md) | 2026-10-25 | `lp.sparse-basis-updates` | checked v0.2.2 | [稀疏整体执行](../tasks/codex/20261024-02-01_sparse-lp-program.md)、[RR02续接](../tasks/codex/20261024-02-02_sparse-lp-program.md) |
+| [L0016：可靠的 solver 怎样实现出来](lessons/L0016-reliable-solver/README.md) | 2026-10-26 | `solver.reliability` | checked v0.1.0 | [综合伴学整理](../tasks/codex/20261026-01-01_reliable-solver-learning.md) |
 
 L0001 的教学编排在 [系列整理任务](../tasks/codex/20261018-02-01_learning-series.md)
 中完成；算法实现和代码基线来自上表的 LP 开发任务。总目录同时记录两种来源。
@@ -40,10 +41,11 @@ RR08重核指定warm4的原固定门并显式披露历次失败；L0012/L0015仅
 
 | 主题单元 | 建议先掌握 | 已有篇目 | 待积累的问题 |
 |---|---|---|---|
-| 基础：模型与可行性 | 线性代数、线性约束 | 待积累 | 变量域、原始对象、标准化与原坐标 |
-| LP：单纯形与对偶 | 基、线性方程组、可行解 | [L0001](lessons/L0001-lp-duality/README.md) → [L0006](lessons/L0006-lp-unboundedness/README.md) | Phase I、冗余行、重优化 |
-| 预处理与数值 | LP 基础、浮点误差 | L0001 第 5、8 节 | 变换恢复、缩放与误差传播 |
-| 整数优化 | LP 松弛、上下界 | 待积累 | 分支定界、节点状态、剪枝依据 |
+| 综合：可靠求解器 | 基础 LP、矩阵运算 | [L0016](lessons/L0016-reliable-solver/README.md) → 按需深入下列专题 | 原问题、数值状态、终止依据和成本怎样联系 |
+| 基础：模型与可行性 | 线性代数、线性约束 | [L0011](lessons/L0011-general-model/README.md) | 更广模型域与应用恢复的具体案例 |
+| LP：单纯形与对偶 | 基、线性方程组、可行解 | [L0001](lessons/L0001-lp-duality/README.md) → [L0006](lessons/L0006-lp-unboundedness/README.md) → [L0012](lessons/L0012-reoptimizable-lp/README.md) | 更广病态输入域和推进策略 |
+| 预处理与数值 | LP 基础、浮点误差 | [L0011](lessons/L0011-general-model/README.md) → [L0012](lessons/L0012-reoptimizable-lp/README.md) → [L0015](lessons/L0015-sparse-basis-updates/README.md) | 前向误差、更广稳定性与工作区策略 |
+| 整数优化 | LP 松弛、上下界 | [L0013](lessons/L0013-general-milp/README.md) | 更广节点数值域与规模证据 |
 | 分解与定价 | 对偶、约化成本、反复求解 | [L0002](lessons/L0002-restricted-master/README.md) → [L0003](lessons/L0003-dag-pricing/README.md) → [L0004](lessons/L0004-column-generation/README.md) → [L0005](lessons/L0005-cg-feasibility/README.md) → [L0007](lessons/L0007-rmp-reoptimization/README.md) → [L0008](lessons/L0008-cg-reoptimization/README.md)；资源专题[L0009](lessons/L0009-resource-dag-pricing/README.md) → [L0010](lessons/L0010-resource-dag-cg/README.md)，先读L0001 | 真实覆盖CG、时间窗/访问记忆、增量维护与更一般主问题 |
 
 资源专题从L0003进入[L0009](lessons/L0009-resource-dag-pricing/README.md)，

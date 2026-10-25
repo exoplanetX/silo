@@ -7,6 +7,11 @@
 从 [总目录与阅读路线](CATALOG.md) 选择篇目。首篇是
 [L0001：LP 对偶约定与最优性核验](lessons/L0001-lp-duality/README.md)。
 
+希望先看清整个求解器怎样建立可靠性，可从综合专题
+[L0016：可靠的 solver 怎样实现出来](lessons/L0016-reliable-solver/README.md)进入，
+沿模型语义、稀疏数据、数值迭代、结论核验、状态复用与实验评价学习，
+再按其中的链接深入各算法篇目。
+
 ## 目录结构
 
 ```text

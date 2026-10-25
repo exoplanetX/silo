@@ -1,0 +1,26 @@
+{
+  "lesson_id": "L0016",
+  "title": "可靠的 solver 怎样实现出来",
+  "version": "0.1.0",
+  "body": "learning/lessons/L0016-reliable-solver/README.md",
+  "exercises": "learning/lessons/L0016-reliable-solver/exercises.md",
+  "solutions": "learning/lessons/L0016-reliable-solver/solutions.md",
+  "modules": [
+    {"id": "R01", "heading": "R01 模型语义怎样跨越转换", "related_lessons": ["L0011"]},
+    {"id": "R02", "heading": "R02 稀疏性怎样贯穿数据链", "related_lessons": ["L0011", "L0015"]},
+    {"id": "R03", "heading": "R03 怎样持续求解当前基本方程", "related_lessons": ["L0012", "L0015"]},
+    {"id": "R04", "heading": "R04 怎样在浮点数中安全推进", "related_lessons": ["L0015"]},
+    {"id": "R05", "heading": "R05 怎样核验最终结论", "related_lessons": ["L0001", "L0006", "L0015"]},
+    {"id": "R06", "heading": "R06 怎样复用状态并正确处理失效", "related_lessons": ["L0007", "L0012"]},
+    {"id": "R07", "heading": "R07 怎样把可靠性传到 MIP 和列生成", "related_lessons": ["L0013", "L0014"]},
+    {"id": "R08", "heading": "R08 怎样评价速度和交付能力", "related_lessons": ["L0008", "L0015"]}
+  ],
+  "scenario_note": "S0到S4逐项累积修改；本地代数演示，不在浏览器执行求解器。所有数值为精确有理数。",
+  "scenarios": [
+    {"id": "S0", "edit": "初始模型", "rhs": "2", "y_upper": "3/2", "x_row_upper": null, "z_upper": null, "point": ["1/2", "3/2", "0"], "objective": "-1/2"},
+    {"id": "S1", "edit": "主行RHS改为1", "rhs": "1", "y_upper": "3/2", "x_row_upper": null, "z_upper": null, "point": ["0", "1", "0"], "objective": "1"},
+    {"id": "S2", "edit": "y上界改为3/4", "rhs": "1", "y_upper": "3/4", "x_row_upper": null, "z_upper": null, "point": ["1/4", "3/4", "0"], "objective": "5/4"},
+    {"id": "S3", "edit": "追加行x不超过1/10", "rhs": "1", "y_upper": "3/4", "x_row_upper": "1/10", "z_upper": null, "point": ["1/10", "3/4", "0"], "objective": "7/5"},
+    {"id": "S4", "edit": "追加成本为-3的z列", "rhs": "1", "y_upper": "3/4", "x_row_upper": "1/10", "z_upper": "1/2", "point": ["0", "1/2", "1/2"], "objective": "1/2"}
+  ]
+}
