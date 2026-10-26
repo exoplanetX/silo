@@ -1,5 +1,18 @@
 # SILO Decision Log
 
+## DEC-20261026-RELIABILITY-R4-CLOSURE
+
+- Authority：用户在审查解释后明确要求“针对只收口R4…制定任务交付执行”。
+- Scope：[03-02合同](../tasks/codex/20261026-03-02_reliability-io.md)为同一任务块修订，
+  仅CG回归可移植性、Linux RSS缺测/清理与原定CI交付；生产算法、格式、版本及R1–R3证据保持。
+- Evidence：03-01产品4289203、收尾08c35a4及run40261995554的3个质量失败/下游未运行；
+  独立只读代码核查确认旧resources哈希受历史driver锁保护，新工具必须另记身份。
+- Bounded continuation：新本地30分钟、最多2次代码push/2次CI（第二额度共享）；
+  两次新增额度与原成本分别记录，无重置旧Goal/旧ledger，无新增阶段。
+- Exit：原13-job、16安装、24外部读取与定向数学/资源回归全部通过才完成原任务；
+  到达结束线或有界失败交付后停止。原C/D/E、native、扩容/结构延期和OneDrive退出保持。
+- Decision status：已签发，执行结果待实际报告；本条设计/签发不作为产品验证通过证据。
+
 ## DEC-20261026-RELIABILITY-IO-DELIVERY-HOLD
 
 - 唯一合同已执行至停止条件：R1/R2/R3和本地四环境通过，R4真实CI失败，overall_complete=false。

@@ -1,5 +1,15 @@
 # SILO Technical Route
 
+## Current Corridor — R4 Closure RR02, 2026-10-26
+
+按用户直接指令执行[03-02](../tasks/codex/20261026-03-02_reliability-io.md)，
+只完成原R4。自然CG回归改核数学不变量，已有确定性负gap边界单测保持；
+Linux VmHWM缺测有界处理、deadline/峰值/直接子进程回收保持。
+全部生产src、R1–R3冻结与已过证据只读，resources修订只作新工具身份。
+原13个CI job全部实际通过及16安装/24外部读是结束线；原03-01失败不覆盖。
+本次有界最多2次代码push与2次CI，共享第二修正/infra额度；其余规则见合同。
+本段取代下列03-01停止记录的当前续接禁令，旧额度/失败保持；不启动新Goal或研究阶段。
+
 ## Current Stop — 20261026-03-01
 
 本单R1–R3及本地四安装通过，R4实际CI失败，已按合同停止；overall_complete=false。

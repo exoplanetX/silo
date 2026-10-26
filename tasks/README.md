@@ -463,6 +463,18 @@ unchanged. No automatic push or next task follows. All unrelated tasks keep prio
 
 ### 6.12 Approved Reliability and File I/O Maintenance — 2026-10-26
 
+**Current R4 closure revision:** the human explicitly requested repairing and dispatching
+only the remaining R4 work. [RR02](codex/20261026-03-02_reliability-io.md) resumes that
+single task block. Preserve the original R1–R3 acceptance and all previous failures.
+Its narrow exceptions allow the named CG regression and `resources.py` repair, plus
+at most two code/config pushes and two CI attempts sharing the same second-attempt
+allowance. This is a task-specific exception to §6.4's single-push default; it does not
+reset earlier counts or permit a third attempt. All production source stays unchanged.
+RR02 has a separate report and new evidence ledger; the original report is historical
+and read-only. The same known branch/governance differences remain authorized.
+Stop after R4 acceptance or the bounded failure handoff. No new Goal or next program.
+The following initial authorization remains as history where RR02 supersedes it.
+
 The human approved a fixed research baseline, independent same-domain validation,
 actual CI, and the discussed LP/MPS file work, then explicitly requested task dispatch.
 The [single contract](codex/20261026-03-01_reliability-io.md) and

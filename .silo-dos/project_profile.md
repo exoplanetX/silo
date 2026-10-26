@@ -1,5 +1,17 @@
 # SILO Project Profile
 
+## Authorized R4 Closure — 20261026-03-02
+
+用户明确要求仅处理R4剩余问题并交付执行。
+[RR02合同](../tasks/codex/20261026-03-02_reliability-io.md)接续原03任务块，
+修订CG浮点回归数学断言及Linux RSS缺测/回收，然后完成原13-job/16安装/24外部读CI。
+R1–R3继续通过；整体仍未完成，以下03-01交付HOLD保留历史。
+候选0.3.0a2、全部生产src/版本/依赖、冻结真值只读。旧resources哈希保留于旧签收，
+新工具另记身份，不重跑旧Goal或160接受组。原C HOLD/D/E未开始、native延期不变。
+当前branch/两治理差异获准续接；OneDrive保持退出。新报告03-02与独立证据根承载收尾。
+本次新增本地30分钟；最多2次代码push/CI尝试，第二额度共享修正或基础设施rerun。
+成功即停止；未通过按同一有界任务交付，不自动继续。
+
 ## Delivered With CI HOLD — Reliability and File I/O, 2026-10-26
 
 [唯一合同20261026-03-01](../tasks/codex/20261026-03-01_reliability-io.md)已交付并按停止条件结束。

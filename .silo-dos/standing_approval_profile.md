@@ -1,5 +1,16 @@
 # SILO Standing Approval Profile
 
+## Explicit R4 Continuation — 20261026-03-02
+
+用户已明确批准仅收口R4、处理剩余问题并交付执行。
+[RR02](../tasks/codex/20261026-03-02_reliability-io.md)授权指定CG测试、Linux资源脚本、
+必要CI薄工具和原矩阵验证；L2/L3仅限这些文件，全部生产源码/版本/生产依赖只读。
+允许当前已知branch/治理差异继续，保护文件不暂存；不要求main归零。
+原一次push已消耗并保留，本次另有至多2次代码/config push和2次CI尝试的窄例外，
+第二次供一次同范围纠正或同SHA基础设施重试共享；不得第三次或自动新合同。
+R1–R3通过证据/旧Goal/旧账本不改，新报告与新输出记录实际新增和累计成本。
+下列03-01停止保持历史，本段是本次唯一续接权限；不构成一般standing approval。
+
 ## Current Stop — 20261026-03-01
 
 本单R1–R3及本地四安装通过，R4实际CI失败，已按合同停止；overall_complete=false。
