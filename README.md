@@ -9,6 +9,9 @@ identities, fixed-run evidence and final acceptance are recorded in the
 [sparse program report](tasks/reports/20261024-02-02_sparse-lp-program_report.md).
 The current file I/O and independent acceptance results, including the failed CI,
 are in the [reliability report](tasks/reports/20261026-03-01_reliability-io_report.md).
+The [R4 continuation](tasks/reports/20261026-03-02_reliability-io_report.md) fixes the
+regressions and passes 6772 local tests. Its Git push failed in transport, so the
+repaired revision has not run in remote CI; R4 remains HOLD.
 
 ## Project Philosophy
 

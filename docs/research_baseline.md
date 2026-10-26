@@ -6,6 +6,13 @@
 当前候选0.3.0a2，产品提交42892035db426c4739b6c1a7ad9648852d2b1dc8；实际来源与结果由
 [报告](../tasks/reports/20261026-03-01_reliability-io_report.md)记录。
 
+R4续接的[03-02报告](../tasks/reports/20261026-03-02_reliability-io_report.md)另记修订状态：
+本地4bff443be50a709560a04211994881e57897f883修复自然CG断言和RSS缺测/回收，
+完整质量6772项通过。全部生产src、版本/依赖及R1–R3冻结身份仍为4289203。
+首次续接push发生HTTPS连接重置，远端仍为4289203；新SHA没有CI run。
+按合同传输失败停止，不自动重试。当前R4 HOLD，13-job/16安装/24外部读仍待真实取得。
+原四本地安装通过工件/来源/checker身份核对沿用，本次没有新增求解接受组、构建或安装。
+
 支持域为既有一般形式LP/MILP，dense/sparse两引擎，原生算法不调用外部优化器。
 稀疏程序已经验收的2000变量/5000行/100000非零和warm4结论限原固定输入及该次运行，
 不代表任意同尺寸模型或一般工业稳定性。原研究C HOLD、D/E未开始、native延期。
@@ -36,7 +43,7 @@ numerical_failure、invalid_model和unsupported，不能把未收敛结果当最
 四类编辑在dense/sparse均有真实warm入口；稀疏增列因身份变化重建，按实际诊断保留。
 本地工件Windows3.13×dense/sparse×wheel/sdist四环境全部通过，每环境24请求、总96。
 远端固定4源码质量、8安装job（各两个独立工件环境）、1外部格式job。
-实际CI运行[40261995554](https://github.com/exoplanetX/silo/actions/runs/40261995554)绑定上述产品提交，
+03-01历史CI运行[40261995554](https://github.com/exoplanetX/silo/actions/runs/40261995554)绑定上述产品提交，
 首轮最终failure：Windows3.12质量通过；Ubuntu3.10、Windows3.10的旧CG尾数精确断言失败，
 Ubuntu3.12的旧RSS采样器缺VmHWM后抛StopIteration。依赖的8安装job及外部格式job未运行，
 远端工件核验0/16、外部解析0/24。R1–R3和本地四环境完成，R4 HOLD，overall_complete=false。

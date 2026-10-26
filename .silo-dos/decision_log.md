@@ -1,5 +1,17 @@
 # SILO Decision Log
 
+## DEC-20261026-R4-LOCAL-REPAIR-PUSH-FAILED
+
+- 执行03-02至停止条件：CG自然回归保留原数学门/真实快照，Linux RSS缺测/异常清理修复；定向598、完整6772通过。
+- 首完整质量因L0016正文版本/网页提纲不一致2项失败；恢复原版本、单列R4增补后第二完整质量全通过，原失败保存。
+- 修复1473f2a，最终本地候选4bff443；生产128模块/版本/依赖仍4289203，R1–R3与720旧输出未变。
+- 旧四本地安装身份核对eligible=true沿用；新增构建/安装/外部解析/160组均为0。
+- RR02首次push exit128，HTTPS Recv connection reset。只读API确认远端4289203，新SHA无CI run。
+- 按合同传输失败停止，不自动重试，新增CI0；第二push/CI额度未用不构成绕过停止条件的权限。
+- R4保持HOLD、overall_complete=false；本地保存新报告/失败包，原报告不改，无下一任务自动执行。
+- 旧Goal complete、原研究/native/规模结构延期、OneDrive退出与治理保护均保持。
+
+
 ## DEC-20261026-RELIABILITY-R4-CLOSURE
 
 - Authority：用户在审查解释后明确要求“针对只收口R4…制定任务交付执行”。

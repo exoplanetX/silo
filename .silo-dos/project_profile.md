@@ -1,16 +1,22 @@
 # SILO Project Profile
 
-## Authorized R4 Closure — 20261026-03-02
+## R4 Local Repair Delivered, Push Failed — 20261026-03-02
 
-用户明确要求仅处理R4剩余问题并交付执行。
-[RR02合同](../tasks/codex/20261026-03-02_reliability-io.md)接续原03任务块，
-修订CG浮点回归数学断言及Linux RSS缺测/回收，然后完成原13-job/16安装/24外部读CI。
-R1–R3继续通过；整体仍未完成，以下03-01交付HOLD保留历史。
-候选0.3.0a2、全部生产src/版本/依赖、冻结真值只读。旧resources哈希保留于旧签收，
-新工具另记身份，不重跑旧Goal或160接受组。原C HOLD/D/E未开始、native延期不变。
-当前branch/两治理差异获准续接；OneDrive保持退出。新报告03-02与独立证据根承载收尾。
-本次新增本地30分钟；最多2次代码push/CI尝试，第二额度共享修正或基础设施rerun。
-成功即停止；未通过按同一有界任务交付，不自动继续。
+[RR02合同](../tasks/codex/20261026-03-02_reliability-io.md)已执行至网络传输失败停止条件；
+[新报告](../tasks/reports/20261026-03-02_reliability-io_report.md)保存实际结果，overall_complete=false。
+自然CG按原Fraction/DFS/fsum/ulp数学门核对，保留原生快照和确定性负gap边界；
+Linux RSS区分缺测/畸形/读取错误，保留真实峰值/deadline并保证自建子进程清理。
+本地修复1473f2a、教学元信息一致性修正4bff443；定向598项、完整6772项通过，独立源码ACK。
+128生产模块与4289203相同；冻结R1–R3、旧报告和720原输出哈希未变，旧四安装eligible=true沿用。
+resources新SHA c35f219c8b6aec02b1f9328ba08797d7d96154a5b1f5f39df71f0818c20abc7a，
+旧driver/收据身份保留，不运行旧summary冒充新工具。
+
+RR02首次push exit128（HTTPS Recv connection reset），实际远端仍4289203，4bff443无CI run。
+合同规定传输失败不自动重试；剩余第二额度不绕过该停止条件，本轮新增CI尝试0。
+R4仍HOLD：13-job、16安装、24外部读未取得；后续同步需明确授权，不自动再推送或运行下一任务。
+当前候选0.3.0a2、全部src/版本/依赖不变。旧Goal complete、原C HOLD/D/E未开始、native延期保持。
+两治理差异不暂存、不回退；OneDrive保持退出，不控制用户进程或全局环境。
+以下03-01交付及旧稀疏程序保留当时历史，不作为本单新的通过票。
 
 ## Delivered With CI HOLD — Reliability and File I/O, 2026-10-26
 

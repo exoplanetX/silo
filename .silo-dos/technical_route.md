@@ -1,5 +1,15 @@
 # SILO Technical Route
 
+## Current Stop — RR02 Push Transport Failure
+
+03-02修复与本地完整质量6772通过，来源/冻结/旧证据保持，独立源码问题已消除。
+本地修复4bff443的首次push遇HTTPS连接重置exit128；实际远端仍4289203，新CI尝试0。
+按本单合同§7停止网络推送/CI路径，不自动使用第二额度重试传输，不force或改目标。
+新报告保存本地交付与未达项；R4 HOLD、overall_complete=false，原R1–R3仍通过。
+旧Goal complete、候选0.3.0a2、原C/D/E/native和OneDrive退出状态不变。
+下列续接授权保留历史，本次停止后不再自动执行；后续同步需新的明确指令。
+
+
 ## Current Corridor — R4 Closure RR02, 2026-10-26
 
 按用户直接指令执行[03-02](../tasks/codex/20261026-03-02_reliability-io.md)，
