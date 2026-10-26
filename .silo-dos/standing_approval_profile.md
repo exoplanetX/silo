@@ -1,5 +1,16 @@
 # SILO Standing Approval Profile
 
+## Explicit Current Task — Reliability and File I/O, 2026-10-26
+
+用户同意三项可靠性巩固，随后要求把其他已讨论工作交付执行，延期规模/结构拓展。
+本轮唯一授权为[20261026-03-01](../tasks/codex/20261026-03-01_reliability-io.md)。
+包括严格LP读写/CLI、JSON/MPS核对、同域新验证集、轻量资源说明、候选0.3.0a2及实际CI。
+这是明确的L2/L3窄范围许可，不能外推为算法修订、一般standing approval或新研究路线。
+允许当前branch和已知治理差异继续，保护文件不暂存；不要求先main归零。
+R1–R4为一项交付的内部检查点，达到即结束，不创建Goal或恢复旧Goal。
+按合同一次push-on-success同步指定公共任务分支，其他发布/合并/权限变化不授权。
+旧预算和失败完整保留；本任务独立预算，不复用旧未消费权限。
+
 ## Closed explicit human program — SILO-SPARSE-LP-20261024
 
 RR08原八项已独立签收，summary实际overall_complete=true/exit0。

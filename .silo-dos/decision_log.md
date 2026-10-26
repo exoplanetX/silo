@@ -1,5 +1,19 @@
 # SILO Decision Log
 
+## DEC-20261026-RELIABILITY-IO-DISPATCH
+
+- 用户批准固定研究基线、独立验证和实际CI，随后明确延期更大规模/更广结构，要求其他已讨论事项交付执行。
+- 签发[20261026-03-01](../tasks/codex/20261026-03-01_reliability-io.md)及
+  [有限计划](../tasks/phases/reliability_io_20261026.md)：一项维护任务、R1–R4内部检查点。
+- 补strict LP profile和CLI转换，巩固已有MPS/JSON；独立oracle先冻结，同域32模型与160请求组；
+  格式精确比较和求解容差分开。核心算法、旧证据和原研究身份不变。
+- 两项只读设计服务提供真值/复用建议；签发前独立红队提出4项合同缺口，主协调已修正，
+  针对性ACK为GO。这些是任务设计检查，不当作产品通过或新的实验依据。
+- 沿用50d3599所在branch与两保护差异；候选目标0.3.0a2；一次公开任务分支push以取实际CI。
+  固定13job与最多两次同SHA运行；不merge/main/PR/tag/Release，不为收尾自引用反复push。
+- OneDrive保持退出，仅轻量资源记录/测试子进程线程固定。旧Goal complete，不新增Goal。
+- 签发只产生合同、计划和状态登记；实现与核验由开发对话据实际报告交付，达到即停止。
+
 ## DEC-20261025-SPARSE-DISCUSSION-ACCEPTANCE
 
 - The human requests the overall completion assessment after RR08, and explicitly

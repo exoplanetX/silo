@@ -461,6 +461,30 @@ remain unmet. Genuine scope changes require a new human decision. Old C/D/E, nat
 deferral, existing immutable contracts, user governance files and publication rules stay
 unchanged. No automatic push or next task follows. All unrelated tasks keep prior rules.
 
+### 6.12 Approved Reliability and File I/O Maintenance — 2026-10-26
+
+The human approved a fixed research baseline, independent same-domain validation,
+actual CI, and the discussed LP/MPS file work, then explicitly requested task dispatch.
+The [single contract](codex/20261026-03-01_reliability-io.md) and
+[bounded plan](phases/reliability_io_20261026.md) govern this maintenance task only.
+R1–R4 are internal checkpoints of one deliverable; continue after each PASS and stop
+after the whole contract or its explicit bounded failure handoff. Do not create a Goal
+or reopen the completed sparse program. Broader models, larger capacity, native and
+original research C/D/E are outside this task.
+
+Use the known `codex/sparse-lp-reoptimization` checkout and preserve/exclude the two
+registered governance differences. This directly requested continuation does not require
+reset/clean or main alignment. The task's L2 I/O/API/CLI and L3 current-candidate/CI
+changes are explicit and narrow; solver algorithms and old evidence remain read-only.
+The task uses ordinary `push-on-success`: exactly one non-force push to its specified
+public task branch for actual CI, no main merge, PR, tag, Release or package publishing.
+An optional second CI attempt is same-SHA infrastructure-only; no second code push.
+Final report-only local commits may remain ahead, with exact CI source identity stated.
+OneDrive stays closed; resource preparation is information and child-local threading,
+never user-process termination or a new host/frequency acceptance gate.
+The separate60-minute local budget and13-job/420-runner-minute ceiling are not old
+program budget extensions. Other tasks retain all existing rules and approval limits.
+
 ## 7. Current Entry, History Index and Baselines
 
 - `.silo-dos/project_profile.md` is the single current-status summary: completed items,

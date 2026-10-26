@@ -1,5 +1,16 @@
 # SILO Technical Route
 
+## Current Corridor — Reliability and File I/O, 2026-10-26
+
+执行[20261026-03-01](../tasks/codex/20261026-03-01_reliability-io.md)与
+[有界计划](../tasks/phases/reliability_io_20261026.md)。用户明确授权交付执行，
+R1–R4在同一合同内连续，固定研究基线、LP文件I/O、独立同域核验和实际CI；不新开Goal。
+签发基线50d3599；沿用当前branch和两治理差异，不reset/clean，保护文件不暂存。
+L2/L3许可限所列I/O/API/CLI、当前候选和CI文件；核心算法、旧输入/真值/检查器/封存收据只读。
+规模与模型结构拓展明确延期。原C/D/E与native状态不动，旧稀疏Goal继续complete。
+一次固定任务分支push用于实际CI；代码失败不第二次push，只有同SHA基础设施rerun一回。
+达到有限完成线或停止条件即报告结束；此前段落的旧程序执行权限只作历史。
+
 ## Completed sparse LP program — 2026-10-25
 
 RR08原八项独立最终GO且最终程序出口0，原Goal工程收口。

@@ -1,5 +1,23 @@
 # SILO Project Profile
 
+## Current Approved Task — Reliability and File I/O, 2026-10-26
+
+用户已批准三项可靠性巩固，并要求先执行其他已讨论事项，明确延期规模和模型结构拓展。
+现已签发[唯一合同20261026-03-01](../tasks/codex/20261026-03-01_reliability-io.md)，
+依据[有限计划](../tasks/phases/reliability_io_20261026.md)，交`silo-solver开发`执行。
+签发时尚未产生实现/测试/CI结果；当前生产代码仍为已签收0.3.0a1。
+
+R1基线/冻结 → R2严格LP与既有MPS/JSON互操作 → R3独立同域验证 → R4实际CI/候选交付，
+共一个任务、四个内部检查点。新候选目标0.3.0a2；同域32模型、一轮160正式请求、最多两轮；
+本地自动核验60分钟；实际CI固定13job，最多同SHA两轮。精确格式比较不使用solver容差。
+完整文件权限、数字/区间/名称约定、次数和结束条件以合同为准，达到即停止，不追加任务。
+
+沿用当前分支和已知两治理差异，保护哈希保持、不暂存。一次push-on-success只同步指定公共任务分支获取CI；
+不merge/main/PR/tag/Release/PyPI。无法取得实际CI通过时如实交付未达，不以本地代替远端。
+独立核验、CI和安装均使用新任务证据目录；旧Goal已complete，旧账本/工件/原始失败不变。
+核心算法只读、C HOLD/D/E未开始、native延期；OneDrive保持关闭，不自动控制其他进程。
+推荐GPT-6 Sol/high，未据建议切换模型。后续完成状态由该合同报告链接核对。
+
 ## Completed Sparse LP Program — 2026-10-25
 
 ### 当前已签收状态
