@@ -6,6 +6,8 @@
 
 | 要查什么 | 文档 |
 |---|---|
+| 当前可靠研究基线、冻结输入与复现 | [研究基线](research_baseline.md)、[本轮报告](../tasks/reports/20261026-03-01_reliability-io_report.md) |
+| LP文件读写与模型转换 | [SILO-LP-1](lp_format.md)、[JSON/free-MPS](mps_format.md) |
 | 稀疏LP整体目标、当前固定组和交付验收 | [当前稀疏总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md) |
 | 稀疏矩阵/索引与真实LU、eta、持久会话 | [矩阵契约](sparse_matrix_contract.md)、[基与会话契约](sparse_basis_session_contract.md) |
 | 教学研究通用 LP/MILP 原型的五模块整体目标与验收 | [2026-10-23 原型整体计划](../tasks/phases/phase_10_teaching_research_prototype.md) |

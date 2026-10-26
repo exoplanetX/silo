@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0a2 - Reliability and file I/O candidate
+
+- Added the explicit SILO-LP-1 reader/writer and model-only CLI conversion.
+- Frozen an independent small rational oracle and same-domain acceptance inputs
+  before production changes; exact format semantics are separate from solver tolerances.
+- Added current-candidate source/installed/external-parser CI with explicit finite matrices.
+- Algorithms, numerical conventions, original sparse-program evidence and research
+  A/B/C/D/E status are unchanged. Actual acceptance and CI status are in the
+  [task report](tasks/reports/20261026-03-01_reliability-io_report.md).
+
 ## 0.2.0a2 - Unreleased local correctness revision
 
 - Removed feasibility tolerances from both MILP objective-bound pruning tests.

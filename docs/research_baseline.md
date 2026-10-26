@@ -11,7 +11,7 @@
 不代表任意同尺寸模型或一般工业稳定性。原研究C HOLD、D/E未开始、native延期。
 本合同仅增加文件互操作和同域独立核验，不改算法、预处理、搜索、容差或失败语义。
 
-LP公开API是`solve(model, SolveOptions(...))`；会话使用`LPRelaxationSession`。
+LP公开API是`solve(model, SolveOptions(...))`；会话使用`LPSession`。
 格式为既有JSON、free-MPS及[严格SILO-LP-1](lp_format.md)。CLI `optimize` 输出schema2解；
 `convert`只转换模型。JSON/MPS原行为保持。失败状态包括infeasible、unbounded、limit、
 numerical_failure、invalid_model和unsupported，不能把未收敛结果当最优证明。

@@ -1,6 +1,13 @@
 # 安装与发行物验证
 
-当前本地候选为0.3.0a1，Windows Python3.11/3.13 × dense/sparse × wheel/sdist
+当前候选更新为0.3.0a2；新增任务的实际核验状态见
+[研究基线](research_baseline.md)和[执行报告](../tasks/reports/20261026-03-01_reliability-io_report.md)。
+新检查入口为`python -m scripts.reliability.artifacts`，当前目标为Windows3.13四环境，
+远端Windows/Linux×3.11/3.13×dense/sparse的8job、16独立安装；实际CI结果待取得。
+每环境24固定公开请求，采用普通安装、源码树外`python -I`、direct_url工件SHA及全部已加载模块核对。
+新工件与旧候选独立，以下0.3.0a1及0.2.0a1描述保留历史身份。
+
+原0.3.0a1候选的Windows Python3.11/3.13 × dense/sparse × wheel/sdist
 八个全新环境已于2026-10-25首轮全部通过；原wheel/sdist SHA保持不变。实际工件身份和保留失败以
 [当前总报告](../tasks/reports/20261024-02-02_sparse-lp-program_report.md)及其原始收据为准。
 下文0.2.0a1四组合属于保留的历史证据；远端CI保持pending。

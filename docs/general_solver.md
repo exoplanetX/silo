@@ -1,5 +1,10 @@
 # Unified general-form solver
 
+The current file I/O candidate is 0.3.0a2. Supported input/output formats are
+JSON, the existing free-MPS profile and [SILO-LP-1](lp_format.md).
+`silo optimize model.lp` retains result schema2; `silo convert model.json --output model.lp`
+only converts a model. The [research baseline](research_baseline.md) records actual checks.
+
 Use `from silo import solve, SolveOptions`; call `solve(model, options)` for
 `min/max c0+c'x`, `row_lower <= Ax <= row_upper`, and variable intervals.
 Continuous, integer and binary variables are supported. Infinity represents a

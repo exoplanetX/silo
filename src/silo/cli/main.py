@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
         "command",
         nargs="?",
         default="help",
-        choices=["compare", "help", "mip-solve", "presolve", "solve", "optimize"],
+        choices=["compare", "help", "mip-solve", "presolve", "solve", "optimize", "convert"],
         help="Command to run.",
     )
     parser.add_argument("path", nargs="?", help="Path to model file.")
@@ -67,7 +67,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run presolve before solving. Used only by the solve command.",
     )
-    parser.add_argument("--format", choices=["auto", "json", "mps"], default="auto")
+    parser.add_argument("--format", choices=["auto", "json", "mps", "lp"], default="auto")
     parser.add_argument("--time-limit", type=float, default=float("inf"))
     parser.add_argument("--lp-iteration-limit", type=_nonnegative_int, default=10000)
     parser.add_argument("--relative-gap", type=float, default=0.0)
@@ -91,6 +91,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if _option_used(raw_args, "--lp-engine") and args.command != "optimize":
         parser.error("The --lp-engine option is supported by optimize.")
+
+    if args.command == "convert":
+        if not args.path or not args.output:
+            parser.error("The convert command requires input and --output paths.")
+        return _convert(args)
 
     if args.command == "optimize":
         if not args.path:
@@ -143,7 +148,6 @@ def main(argv: list[str] | None = None) -> int:
 
 def _optimize(args):
     from silo import SolveOptions, SolveResult, solve
-    from silo.io import read_mps_model
 
     try:
         options = SolveOptions(
@@ -161,8 +165,7 @@ def _optimize(args):
             heuristics=not args.no_heuristics,
         )
         path = Path(args.path)
-        use_mps = args.format == "mps" or (args.format == "auto" and path.suffix.lower() == ".mps")
-        model = read_mps_model(path) if use_mps else read_json_model(path)
+        model = _read_model(path, args.format)
         result = solve(model, options)
     except (ValueError, OSError) as exc:
         message = str(exc)
@@ -186,6 +189,42 @@ def _optimize(args):
         "invalid_model": 6,
         "unsupported": 7,
     }.get(result.status, 1)
+
+
+def _read_model(path, format_name, *, strict_suffix=False):
+    from silo.io import read_lp_model, read_mps_model
+
+    if format_name == "auto":
+        format_name = {".json": "json", ".mps": "mps", ".lp": "lp"}.get(path.suffix.lower())
+        if format_name is None:
+            if strict_suffix:
+                raise ValueError("Unknown model input suffix; specify --format")
+            format_name = "json"
+    return {"json": read_json_model, "mps": read_mps_model, "lp": read_lp_model}[format_name](path)
+
+
+def _convert(args):
+    from silo.io import model_to_dict, model_to_lp, model_to_mps
+
+    try:
+        source, target = Path(args.path), Path(args.output)
+        if source.resolve() == target.resolve() or (
+            target.exists() and source.exists() and source.samefile(target)
+        ):
+            raise ValueError("Input and output paths must differ")
+        suffix = target.suffix.lower()
+        if suffix not in (".json", ".mps", ".lp"):
+            raise ValueError("Unknown model output suffix")
+        model = _read_model(source, args.format, strict_suffix=True)
+        if suffix == ".json":
+            text = json.dumps(model_to_dict(model), indent=2, allow_nan=False) + "\n"
+        else:
+            text = (model_to_mps if suffix == ".mps" else model_to_lp)(model)
+        target.write_text(text, encoding="utf-8")
+    except (ValueError, OSError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    return 0
 
 
 def _nonnegative_int(value: str) -> int:

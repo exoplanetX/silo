@@ -23,6 +23,8 @@
 | 凸性乘数平移 | convexity-dual shift | L0010中每列conv系数及RHS均为1时，用min(0,rho)修正自由conv乘数形成数学下界 |
 | 状态/转移预算 | state / transition limit | L0009分别计已插入状态和实际出弧尝试；耗尽表示不完整搜索，候选为空 |
 | 回归案例 | regression case | 固定输入与预期行为，防止已知问题重新出现 |
+| 精确格式语义 | exact file semantics | L0017按实际二进制有理值核对目标、界、整数格和有限行侧；不借求解容差吸收数据变化 |
+| 操作性保留集 | operational holdout | 接受输入提前固定并留到实现锁定后运行；同一执行者能读取，不称真正盲测 |
 | eta更新 | eta update | 用完整进入方向表示一次基列替换；正向/转置逆的作用顺序见L0015草稿 |
 | 因子代次 | factor generation | 每次重构后的数值状态身份；未提交pivot的基本值、方向及比率须属于同一代次，当前实现仍有待关闭义务 |
 

@@ -283,7 +283,7 @@ def test_current_cards_preserve_the_signed_scope_and_performance_limits():
     assert "3.503361" in cards["performance"]["conclusion"]
     assert "warm3/5" in cards["performance"]["gap"]
     assert "跨运行时间稳定性" in cards["performance"]["gap"]
-    assert "0.3.0a1" in cards["release"]["conclusion"]
+    assert "0.3.0a2" in cards["release"]["conclusion"]
     assert "CI pending" in cards["release"]["gap"]
     units = {item["id"]: item for item in catalog["units"]}
     assert [units[name]["status"] for name in "ABCDE"] == [

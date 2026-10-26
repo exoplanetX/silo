@@ -7,6 +7,7 @@
 
 | 目录 / 文件 | 用途与维护约定 |
 |---|---|
+| scripts/reliability | 20261026单合同的有理oracle、精确格式/结果核验及当前候选安装工具；正式接受不进入pytest |
 | src/silo | 正式求解器唯一源码树；使用 Git commit 和分支管理代码演进 |
 | tests/unit、regression、verification | 模块测试、CLI/文件回归、独立小实例核验 |
 | tests/fixtures、examples | 小型固定输入、可运行例子；生成结果进入 outputs |

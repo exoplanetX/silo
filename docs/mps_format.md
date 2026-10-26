@@ -1,5 +1,8 @@
 # JSON 与 free-MPS 模型输入输出
 
+0.3.0a2另提供[严格LP文本读写](lp_format.md)与`convert`模型转换命令。
+本页JSON/MPS原域、数值保护和接口保持；LP的区间拆行规则不放宽JSON/MPS往返约定。
+
 公共函数位于 `silo.io`：`read_json_model(path)`、`model_from_dict(payload)`、
 `model_to_dict(model)`、`read_mps_model(path)`、`parse_mps(text)`、
 `write_mps_model(model, path)`、`model_to_mps(model)`。读取和写入均不调用外部求解器。

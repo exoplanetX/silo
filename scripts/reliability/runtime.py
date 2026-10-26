@@ -35,6 +35,9 @@ def environment():
                 "BLIS_NUM_THREADS", "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
         result[key] = "1"
     result["PYTHONUTF8"] = "1"
+    # Activating only this child lets existing console-script regressions find
+    # the same installed entry point as its selected interpreter.
+    result["PATH"] = str(Path(sys.executable).parent) + os.pathsep + result.get("PATH", "")
     return result
 
 

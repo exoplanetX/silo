@@ -2,7 +2,7 @@
 
 SILO is a Python/NumPy teaching and research prototype for general-form LP and
 MILP, with a dense reference engine and an optional sparse LP engine. The local
-candidate is **0.3.0a1**. Use `silo.solve()` or
+candidate is **0.3.0a2** (reliability and file I/O validation in progress). Use `silo.solve()` or
 `silo optimize` for the general model pipeline. Local validation and artifact
 identities, fixed-run evidence and final acceptance are recorded in the
 [sparse program report](tasks/reports/20261024-02-02_sparse-lp-program_report.md).
@@ -24,7 +24,8 @@ The unified pipeline supports min/max with objective constants, row intervals an
 equalities, free/fixed/upper-only variables, negative bounds and continuous,
 integer or binary domains. It includes:
 
-- Strict JSON and documented free-MPS input/output.
+- Strict JSON, documented free-MPS and [SILO-LP-1](docs/lp_format.md) input/output.
+- Model-only `silo convert input.json --output output.lp`; `optimize` also reads LP files.
 - Reversible normalization, activity propagation, integer bound rounding and real scaling.
 - Native Phase I/II revised primal/dual simplex, dense QR or sparse LU/eta factors,
   and public LP reoptimization with RHS, bounds, row and column edits.
@@ -84,12 +85,12 @@ pip install -e ".[dev]"
 ```
 
 For a normal installation, install a specific locally built wheel with
-`python -m pip install /absolute/path/to/silo_solver-0.3.0a1-py3-none-any.whl`.
+`python -m pip install /absolute/path/to/silo_solver-0.3.0a2-py3-none-any.whl`.
 The dense engine requires NumPy only. Sparse support requires Python 3.11 or newer
 and the `sparse` extra, which pins SciPy 1.16.3:
 
 ```bash
-pip install "silo-solver[sparse] @ file:///absolute/path/to/silo_solver-0.3.0a1-py3-none-any.whl"
+pip install "silo-solver[sparse] @ file:///absolute/path/to/silo_solver-0.3.0a2-py3-none-any.whl"
 ```
 
 Use an actual artifact path and the platform's file-URL syntax.
@@ -104,6 +105,8 @@ Run the general pipeline and public research examples:
 silo optimize examples/json/production.json
 python -m silo optimize examples/json/production.json --lp-engine sparse
 python -m silo optimize model.mps --time-limit 20 --node-limit 100000
+python -m silo optimize model.lp
+python -m silo convert model.json --output model.lp
 python -c "from silo.mip.research_example import run_example; print(run_example())"
 python -c "from silo.decomposition.general_master import covering_example; print(covering_example().to_dict())"
 ```
