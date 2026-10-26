@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "issuance": "315fecbbd8f601edf7283949a7ea1d444700c987",
+  "files": {
+    "tests/fixtures/reliability_20261026/inputs.json": "87940f04363d344b8399759ccdd1a78a00e69ac22b06f1bbf5f3b8acd405ec89",
+    "tests/fixtures/reliability_20261026/truth.json": "62208f41363b9cb3c1a9ff8e5321ba48f40280240bec61020fd37727749f89ee",
+    "docs/lp_format.md": "ebf93dd79ad700e5f1b9f2ffd3f8df42011b6a50b5379ba5fe5a1532e988d2e3",
+    "scripts/reliability/oracle.py": "1a7446eba8d90582ef22a035275edaf52b9bff274658502a87725be9dbcecfec",
+    "scripts/reliability/exact.py": "b59c23b10a1f8f6c1d48e3fe7cc373549255fda7fd34f1cfec23d9a3f24fae4f"
+  },
+  "public_requests": 160,
+  "operations": "exact Fraction; no SILO imports",
+  "profile": "SILO-LP-1",
+  "post_freeze": "read only"
+}

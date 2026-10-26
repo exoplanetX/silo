@@ -1,0 +1,1412 @@
+{
+  "models": [
+    {
+      "name": "L01",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 2
+        },
+        "constant": 1
+      },
+      "constraints": [
+        {
+          "name": "floor",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": 2,
+          "upper": null
+        }
+      ]
+    },
+    {
+      "name": "L02",
+      "sense": "maximize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 2,
+          "y": 3
+        },
+        "constant": -2
+      },
+      "constraints": [
+        {
+          "name": "cap",
+          "coefficients": {
+            "x": 1,
+            "y": 1
+          },
+          "lower": null,
+          "upper": 4
+        }
+      ]
+    },
+    {
+      "name": "L03",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": null,
+          "upper": null,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": -1,
+          "y": 2
+        },
+        "constant": 0
+      },
+      "constraints": [
+        {
+          "name": "link",
+          "coefficients": {
+            "x": 1,
+            "y": -1
+          },
+          "lower": 1,
+          "upper": 1
+        },
+        {
+          "name": "floor",
+          "coefficients": {
+            "y": 1
+          },
+          "lower": 1,
+          "upper": null
+        }
+      ]
+    },
+    {
+      "name": "L04",
+      "sense": "maximize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": -2,
+          "upper": 3,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": -1,
+          "upper": 2,
+          "type": "continuous"
+        },
+        {
+          "name": "t",
+          "lower": 2,
+          "upper": 2,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1,
+          "y": -1,
+          "t": 0.5
+        },
+        "constant": 1
+      },
+      "constraints": []
+    },
+    {
+      "name": "L05",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": -2,
+          "upper": 5,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": 0,
+          "upper": 3,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1,
+          "y": 2
+        },
+        "constant": 0.25
+      },
+      "constraints": [
+        {
+          "name": "band",
+          "coefficients": {
+            "x": 1,
+            "y": 1
+          },
+          "lower": 1,
+          "upper": 4
+        }
+      ]
+    },
+    {
+      "name": "L06",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": null,
+          "upper": 3,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": -2,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": -0.5,
+          "y": 0.25
+        },
+        "constant": 0
+      },
+      "constraints": [
+        {
+          "name": "link",
+          "coefficients": {
+            "x": 1,
+            "y": 1
+          },
+          "lower": -1,
+          "upper": null
+        }
+      ]
+    },
+    {
+      "name": "L07",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 5,
+          "type": "continuous"
+        },
+        {
+          "name": "zero",
+          "lower": -1,
+          "upper": 2,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1
+        },
+        "constant": -0.5
+      },
+      "constraints": [
+        {
+          "name": "eq",
+          "coefficients": {
+            "x": 2
+          },
+          "lower": 3,
+          "upper": 3
+        }
+      ]
+    },
+    {
+      "name": "L08",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": -1,
+          "y": -1
+        },
+        "constant": 2
+      },
+      "constraints": [
+        {
+          "name": "budget",
+          "coefficients": {
+            "x": 2,
+            "y": 1
+          },
+          "lower": null,
+          "upper": 5
+        },
+        {
+          "name": "budget__lower",
+          "coefficients": {
+            "y": 1
+          },
+          "lower": 0.5,
+          "upper": 3
+        }
+      ]
+    },
+    {
+      "name": "L09",
+      "sense": "maximize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": -3,
+          "upper": 3,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": -0.125
+        },
+        "constant": 0.125
+      },
+      "constraints": [
+        {
+          "name": "band",
+          "coefficients": {
+            "x": 0.5
+          },
+          "lower": -0.5,
+          "upper": 1.25
+        }
+      ]
+    },
+    {
+      "name": "L10",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1,
+          "y": 1
+        },
+        "constant": 3
+      },
+      "constraints": [
+        {
+          "name": "sum",
+          "coefficients": {
+            "x": 1,
+            "y": 1
+          },
+          "lower": 2,
+          "upper": 2
+        }
+      ]
+    },
+    {
+      "name": "L11",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": null,
+          "upper": null,
+          "type": "continuous"
+        },
+        {
+          "name": "z",
+          "lower": 1,
+          "upper": 3,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 2,
+          "z": -1
+        },
+        "constant": 4
+      },
+      "constraints": [
+        {
+          "name": "lower",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": -2,
+          "upper": null
+        },
+        {
+          "name": "upper",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": null,
+          "upper": 1
+        }
+      ]
+    },
+    {
+      "name": "L12",
+      "sense": "maximize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0.5,
+          "upper": 3.5,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": -1,
+          "upper": 1,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": -2,
+          "y": 1
+        },
+        "constant": 0
+      },
+      "constraints": [
+        {
+          "name": "mix",
+          "coefficients": {
+            "x": 0.5,
+            "y": 0.25
+          },
+          "lower": null,
+          "upper": 1.5
+        }
+      ]
+    },
+    {
+      "name": "L13",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        },
+        {
+          "name": "z",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "constant": -1
+      },
+      "constraints": [
+        {
+          "name": "cover",
+          "coefficients": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "lower": 3,
+          "upper": null
+        }
+      ]
+    },
+    {
+      "name": "L14",
+      "sense": "maximize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": -2,
+          "upper": 4,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": -2,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": -1,
+          "y": 0.5
+        },
+        "constant": 0.75
+      },
+      "constraints": [
+        {
+          "name": "interval",
+          "coefficients": {
+            "x": 1,
+            "y": -1
+          },
+          "lower": -1,
+          "upper": 2
+        }
+      ]
+    },
+    {
+      "name": "L15",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 1,
+          "upper": 1,
+          "type": "continuous"
+        },
+        {
+          "name": "y",
+          "lower": null,
+          "upper": null,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 2,
+          "y": -1
+        },
+        "constant": -3
+      },
+      "constraints": [
+        {
+          "name": "equal",
+          "coefficients": {
+            "x": 1,
+            "y": 2
+          },
+          "lower": 5,
+          "upper": 5
+        }
+      ]
+    },
+    {
+      "name": "L16",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 4,
+          "type": "continuous"
+        },
+        {
+          "name": "z",
+          "lower": -2,
+          "upper": 2,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 0,
+          "z": 0
+        },
+        "constant": 2.5
+      },
+      "constraints": [
+        {
+          "name": "nonempty",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": 1,
+          "upper": 3
+        }
+      ]
+    },
+    {
+      "name": "L17",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": -2,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1
+        },
+        "constant": 0
+      },
+      "constraints": [
+        {
+          "name": "atleast",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": 2.0,
+          "upper": null
+        },
+        {
+          "name": "atmost",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": null,
+          "upper": 1
+        }
+      ]
+    },
+    {
+      "name": "L18",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": -2,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1
+        },
+        "constant": 0
+      },
+      "constraints": [
+        {
+          "name": "atleast",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": 2.25,
+          "upper": null
+        },
+        {
+          "name": "atmost",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": null,
+          "upper": 1
+        }
+      ]
+    },
+    {
+      "name": "L19",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": -2,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1
+        },
+        "constant": 0
+      },
+      "constraints": [
+        {
+          "name": "atleast",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": 2.5,
+          "upper": null
+        },
+        {
+          "name": "atmost",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": null,
+          "upper": 1
+        }
+      ]
+    },
+    {
+      "name": "L20",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": -2,
+          "upper": 4,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1
+        },
+        "constant": 0
+      },
+      "constraints": [
+        {
+          "name": "atleast",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": 2.75,
+          "upper": null
+        },
+        {
+          "name": "atmost",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": null,
+          "upper": 1
+        }
+      ]
+    },
+    {
+      "name": "L21",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": null,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": -1
+        },
+        "constant": 0.0
+      },
+      "constraints": [
+        {
+          "name": "halfline",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": 0,
+          "upper": null
+        }
+      ]
+    },
+    {
+      "name": "L22",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": null,
+          "upper": 0,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1
+        },
+        "constant": 0.25
+      },
+      "constraints": [
+        {
+          "name": "halfline",
+          "coefficients": {
+            "x": -1
+          },
+          "lower": 0,
+          "upper": null
+        }
+      ]
+    },
+    {
+      "name": "L23",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": null,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": -1
+        },
+        "constant": 0.5
+      },
+      "constraints": [
+        {
+          "name": "halfline",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": 0,
+          "upper": null
+        }
+      ]
+    },
+    {
+      "name": "L24",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": null,
+          "upper": 0,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1
+        },
+        "constant": 0.75
+      },
+      "constraints": [
+        {
+          "name": "halfline",
+          "coefficients": {
+            "x": -1
+          },
+          "lower": 0,
+          "upper": null
+        }
+      ]
+    },
+    {
+      "name": "M01",
+      "sense": "maximize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 3,
+          "type": "integer"
+        },
+        {
+          "name": "y",
+          "lower": 0,
+          "upper": 3,
+          "type": "integer"
+        },
+        {
+          "name": "z",
+          "lower": 0,
+          "upper": 2,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1,
+          "y": 1,
+          "z": -1
+        },
+        "constant": 0.0
+      },
+      "constraints": [
+        {
+          "name": "cap",
+          "coefficients": {
+            "x": 2,
+            "y": 2
+          },
+          "lower": null,
+          "upper": 5
+        }
+      ]
+    },
+    {
+      "name": "M02",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 3,
+          "type": "integer"
+        },
+        {
+          "name": "y",
+          "lower": 0,
+          "upper": 3,
+          "type": "integer"
+        },
+        {
+          "name": "z",
+          "lower": 0,
+          "upper": 2,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": -1,
+          "y": -1,
+          "z": 1
+        },
+        "constant": 0.25
+      },
+      "constraints": [
+        {
+          "name": "cap",
+          "coefficients": {
+            "x": 2,
+            "y": 2
+          },
+          "lower": null,
+          "upper": 5
+        }
+      ]
+    },
+    {
+      "name": "M03",
+      "sense": "maximize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 3,
+          "type": "integer"
+        },
+        {
+          "name": "y",
+          "lower": 0,
+          "upper": 3,
+          "type": "integer"
+        },
+        {
+          "name": "z",
+          "lower": 0,
+          "upper": 2,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1,
+          "y": 1,
+          "z": -1
+        },
+        "constant": 0.5
+      },
+      "constraints": [
+        {
+          "name": "cap",
+          "coefficients": {
+            "x": 2,
+            "y": 2
+          },
+          "lower": null,
+          "upper": 5
+        }
+      ]
+    },
+    {
+      "name": "M04",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 3,
+          "type": "integer"
+        },
+        {
+          "name": "y",
+          "lower": 0,
+          "upper": 3,
+          "type": "integer"
+        },
+        {
+          "name": "z",
+          "lower": 0,
+          "upper": 2,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": -1,
+          "y": -1,
+          "z": 1
+        },
+        "constant": 0.75
+      },
+      "constraints": [
+        {
+          "name": "cap",
+          "coefficients": {
+            "x": 2,
+            "y": 2
+          },
+          "lower": null,
+          "upper": 5
+        }
+      ]
+    },
+    {
+      "name": "M05",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "b",
+          "lower": 0,
+          "upper": 1,
+          "type": "binary"
+        },
+        {
+          "name": "y",
+          "lower": -1,
+          "upper": 2,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "b": -2,
+          "y": 1
+        },
+        "constant": 0.5
+      },
+      "constraints": [
+        {
+          "name": "link",
+          "coefficients": {
+            "y": 1,
+            "b": -1
+          },
+          "lower": 0,
+          "upper": null
+        }
+      ]
+    },
+    {
+      "name": "M06",
+      "sense": "maximize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": -1,
+          "upper": 2,
+          "type": "integer"
+        },
+        {
+          "name": "b",
+          "lower": 0,
+          "upper": 1,
+          "type": "binary"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1,
+          "b": 2
+        },
+        "constant": -1
+      },
+      "constraints": [
+        {
+          "name": "sum",
+          "coefficients": {
+            "x": 1,
+            "b": 1
+          },
+          "lower": null,
+          "upper": 2
+        }
+      ]
+    },
+    {
+      "name": "M07",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 2,
+          "type": "integer"
+        },
+        {
+          "name": "y",
+          "lower": -1,
+          "upper": 1,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1,
+          "y": 1
+        },
+        "constant": 0
+      },
+      "constraints": [
+        {
+          "name": "fractional",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": 0.5,
+          "upper": 0.5
+        }
+      ]
+    },
+    {
+      "name": "M08",
+      "sense": "minimize",
+      "variables": [
+        {
+          "name": "x",
+          "lower": 0,
+          "upper": 2,
+          "type": "integer"
+        },
+        {
+          "name": "y",
+          "lower": -1,
+          "upper": 1,
+          "type": "continuous"
+        }
+      ],
+      "objective": {
+        "coefficients": {
+          "x": 1,
+          "y": 1
+        },
+        "constant": 0
+      },
+      "constraints": [
+        {
+          "name": "fractional",
+          "coefficients": {
+            "x": 1
+          },
+          "lower": 0.5,
+          "upper": 0.5
+        }
+      ]
+    }
+  ],
+  "witnesses": {
+    "L21": {
+      "anchor": {
+        "x": 0
+      },
+      "ray": {
+        "x": 1
+      }
+    },
+    "L22": {
+      "anchor": {
+        "x": 0
+      },
+      "ray": {
+        "x": -1
+      }
+    },
+    "L23": {
+      "anchor": {
+        "x": 0
+      },
+      "ray": {
+        "x": 1
+      }
+    },
+    "L24": {
+      "anchor": {
+        "x": 0
+      },
+      "ray": {
+        "x": -1
+      }
+    }
+  },
+  "edits": [
+    {
+      "kind": "rhs",
+      "initial": "L02",
+      "modified": {
+        "name": "edit_rhs",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 4,
+            "type": "continuous"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 4,
+            "type": "continuous"
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 2,
+            "y": 3
+          },
+          "constant": -2
+        },
+        "constraints": [
+          {
+            "name": "cap",
+            "coefficients": {
+              "x": 1,
+              "y": 1
+            },
+            "lower": null,
+            "upper": 3
+          }
+        ]
+      }
+    },
+    {
+      "kind": "bounds",
+      "initial": "L02",
+      "modified": {
+        "name": "edit_bounds",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 4,
+            "type": "continuous"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 1,
+            "type": "continuous"
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 2,
+            "y": 3
+          },
+          "constant": -2
+        },
+        "constraints": [
+          {
+            "name": "cap",
+            "coefficients": {
+              "x": 1,
+              "y": 1
+            },
+            "lower": null,
+            "upper": 4
+          }
+        ]
+      }
+    },
+    {
+      "kind": "row",
+      "initial": "L02",
+      "modified": {
+        "name": "edit_row",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 4,
+            "type": "continuous"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 4,
+            "type": "continuous"
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 2,
+            "y": 3
+          },
+          "constant": -2
+        },
+        "constraints": [
+          {
+            "name": "cap",
+            "coefficients": {
+              "x": 1,
+              "y": 1
+            },
+            "lower": null,
+            "upper": 4
+          },
+          {
+            "name": "extra",
+            "coefficients": {
+              "y": 1
+            },
+            "lower": null,
+            "upper": 1.5
+          }
+        ]
+      }
+    },
+    {
+      "kind": "column",
+      "initial": "L02",
+      "modified": {
+        "name": "edit_column",
+        "sense": "maximize",
+        "variables": [
+          {
+            "name": "x",
+            "lower": 0,
+            "upper": 4,
+            "type": "continuous"
+          },
+          {
+            "name": "y",
+            "lower": 0,
+            "upper": 4,
+            "type": "continuous"
+          },
+          {
+            "name": "z",
+            "lower": 0,
+            "upper": 2,
+            "type": "continuous"
+          }
+        ],
+        "objective": {
+          "coefficients": {
+            "x": 2,
+            "y": 3,
+            "z": 4
+          },
+          "constant": -2
+        },
+        "constraints": [
+          {
+            "name": "cap",
+            "coefficients": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "lower": null,
+            "upper": 4
+          }
+        ]
+      }
+    }
+  ],
+  "resolve_ids": [
+    "L01",
+    "L02",
+    "L03",
+    "L04",
+    "L05",
+    "L06",
+    "L07",
+    "L08",
+    "M01",
+    "M02",
+    "M03",
+    "M04"
+  ],
+  "external_ids": [
+    "L01",
+    "L02",
+    "L03",
+    "L04",
+    "L05",
+    "L06",
+    "L07",
+    "L08",
+    "M01",
+    "M02",
+    "M03",
+    "M04"
+  ],
+  "options": {
+    "lp_iteration_limit": 10000,
+    "node_limit": 10000,
+    "cuts": false,
+    "heuristics": false
+  },
+  "tolerances": {
+    "primal": 1e-07,
+    "dual": 1e-07,
+    "complementarity": 1e-07,
+    "objective": 1e-07,
+    "integer": 1e-07
+  }
+}

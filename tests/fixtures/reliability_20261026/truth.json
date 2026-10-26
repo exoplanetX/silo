@@ -1,0 +1,1450 @@
+{
+  "L01": {
+    "status": "optimal",
+    "objective": "5",
+    "point": {
+      "x": "2"
+    },
+    "dual": {
+      "floor:lower": "2"
+    },
+    "meter": {
+      "candidate_bases": 1,
+      "rational_operations": 12,
+      "seconds": 9.350001346319914e-05
+    }
+  },
+  "L02": {
+    "status": "optimal",
+    "objective": "10",
+    "point": {
+      "x": "0",
+      "y": "4"
+    },
+    "dual": {
+      "cap:upper": "3",
+      "x:lower": "1"
+    },
+    "meter": {
+      "candidate_bases": 1,
+      "rational_operations": 60,
+      "seconds": 0.00012459998833946884
+    }
+  },
+  "L03": {
+    "status": "optimal",
+    "objective": "0",
+    "point": {
+      "x": "2",
+      "y": "1"
+    },
+    "dual": {
+      "link:upper": "1",
+      "floor:lower": "1"
+    },
+    "meter": {
+      "candidate_bases": 5,
+      "rational_operations": 177,
+      "seconds": 0.00022519999765791
+    }
+  },
+  "L04": {
+    "status": "optimal",
+    "objective": "6",
+    "point": {
+      "x": "3",
+      "y": "-1",
+      "t": "2"
+    },
+    "dual": {
+      "x:upper": "1",
+      "y:lower": "1",
+      "t:upper": "1/2"
+    },
+    "meter": {
+      "candidate_bases": 13,
+      "rational_operations": 488,
+      "seconds": 0.0005529000191017985
+    }
+  },
+  "L05": {
+    "status": "optimal",
+    "objective": "5/4",
+    "point": {
+      "x": "1",
+      "y": "0"
+    },
+    "dual": {
+      "band:lower": "1",
+      "y:lower": "1"
+    },
+    "meter": {
+      "candidate_bases": 4,
+      "rational_operations": 163,
+      "seconds": 0.00019910000264644623
+    }
+  },
+  "L06": {
+    "status": "optimal",
+    "objective": "-2",
+    "point": {
+      "x": "3",
+      "y": "-2"
+    },
+    "dual": {
+      "x:upper": "1/2",
+      "y:lower": "1/4"
+    },
+    "meter": {
+      "candidate_bases": 4,
+      "rational_operations": 150,
+      "seconds": 0.00018859998090192676
+    }
+  },
+  "L07": {
+    "status": "optimal",
+    "objective": "1",
+    "point": {
+      "x": "3/2",
+      "zero": "-1"
+    },
+    "dual": {
+      "eq:lower": "1/2"
+    },
+    "meter": {
+      "candidate_bases": 4,
+      "rational_operations": 67,
+      "seconds": 9.960000170394778e-05
+    }
+  },
+  "L08": {
+    "status": "optimal",
+    "objective": "-2",
+    "point": {
+      "x": "1",
+      "y": "3"
+    },
+    "dual": {
+      "budget:upper": "1/2",
+      "budget__lower:upper": "1/2"
+    },
+    "meter": {
+      "candidate_bases": 2,
+      "rational_operations": 112,
+      "seconds": 0.00014819999341852963
+    }
+  },
+  "L09": {
+    "status": "optimal",
+    "objective": "1/4",
+    "point": {
+      "x": "-1"
+    },
+    "dual": {
+      "band:lower": "1/4"
+    },
+    "meter": {
+      "candidate_bases": 1,
+      "rational_operations": 14,
+      "seconds": 3.739999374374747e-05
+    }
+  },
+  "L10": {
+    "status": "optimal",
+    "objective": "5",
+    "point": {
+      "x": "0",
+      "y": "2"
+    },
+    "dual": {
+      "sum:lower": "1"
+    },
+    "meter": {
+      "candidate_bases": 2,
+      "rational_operations": 73,
+      "seconds": 9.699998190626502e-05
+    }
+  },
+  "L11": {
+    "status": "optimal",
+    "objective": "-3",
+    "point": {
+      "x": "-2",
+      "z": "3"
+    },
+    "dual": {
+      "lower:lower": "2",
+      "z:upper": "1"
+    },
+    "meter": {
+      "candidate_bases": 3,
+      "rational_operations": 73,
+      "seconds": 0.00010569998994469643
+    }
+  },
+  "L12": {
+    "status": "optimal",
+    "objective": "0",
+    "point": {
+      "x": "1/2",
+      "y": "1"
+    },
+    "dual": {
+      "x:lower": "2",
+      "y:upper": "1"
+    },
+    "meter": {
+      "candidate_bases": 7,
+      "rational_operations": 275,
+      "seconds": 0.00033039998379535973
+    }
+  },
+  "L13": {
+    "status": "optimal",
+    "objective": "2",
+    "point": {
+      "x": "3",
+      "y": "0",
+      "z": "0"
+    },
+    "dual": {
+      "cover:lower": "1",
+      "y:lower": "1",
+      "z:lower": "2"
+    },
+    "meter": {
+      "candidate_bases": 11,
+      "rational_operations": 868,
+      "seconds": 0.0008703999919816852
+    }
+  },
+  "L14": {
+    "status": "optimal",
+    "objective": "9/4",
+    "point": {
+      "x": "-2",
+      "y": "-1"
+    },
+    "dual": {
+      "interval:lower": "1/2",
+      "x:lower": "1/2"
+    },
+    "meter": {
+      "candidate_bases": 2,
+      "rational_operations": 73,
+      "seconds": 0.00010010000551119447
+    }
+  },
+  "L15": {
+    "status": "optimal",
+    "objective": "-3",
+    "point": {
+      "x": "1",
+      "y": "2"
+    },
+    "dual": {
+      "equal:upper": "1/2",
+      "x:lower": "5/2"
+    },
+    "meter": {
+      "candidate_bases": 4,
+      "rational_operations": 177,
+      "seconds": 0.00020959999528713524
+    }
+  },
+  "L16": {
+    "status": "optimal",
+    "objective": "5/2",
+    "point": {
+      "x": "1",
+      "z": "-2"
+    },
+    "dual": {},
+    "meter": {
+      "candidate_bases": 4,
+      "rational_operations": 67,
+      "seconds": 9.560000034980476e-05
+    }
+  },
+  "L17": {
+    "status": "infeasible",
+    "farkas": {
+      "atleast:lower": "1/2",
+      "atmost:upper": "1/2"
+    },
+    "meter": {
+      "candidate_bases": 9,
+      "rational_operations": 90,
+      "seconds": 0.00017169999773614109
+    }
+  },
+  "L18": {
+    "status": "infeasible",
+    "farkas": {
+      "atleast:lower": "1/2",
+      "atmost:upper": "1/2"
+    },
+    "meter": {
+      "candidate_bases": 9,
+      "rational_operations": 90,
+      "seconds": 0.00016120000509545207
+    }
+  },
+  "L19": {
+    "status": "infeasible",
+    "farkas": {
+      "atleast:lower": "1/2",
+      "atmost:upper": "1/2"
+    },
+    "meter": {
+      "candidate_bases": 9,
+      "rational_operations": 90,
+      "seconds": 0.0001644000003580004
+    }
+  },
+  "L20": {
+    "status": "infeasible",
+    "farkas": {
+      "atleast:lower": "1/2",
+      "atmost:upper": "1/2"
+    },
+    "meter": {
+      "candidate_bases": 9,
+      "rational_operations": 90,
+      "seconds": 0.00015889998758211732
+    }
+  },
+  "L21": {
+    "status": "unbounded",
+    "anchor": {
+      "x": "0"
+    },
+    "ray": {
+      "x": "1"
+    },
+    "meter": {
+      "candidate_bases": 0,
+      "rational_operations": 10,
+      "seconds": 2.8999987989664078e-05
+    }
+  },
+  "L22": {
+    "status": "unbounded",
+    "anchor": {
+      "x": "0"
+    },
+    "ray": {
+      "x": "-1"
+    },
+    "meter": {
+      "candidate_bases": 0,
+      "rational_operations": 10,
+      "seconds": 2.4300010409206152e-05
+    }
+  },
+  "L23": {
+    "status": "unbounded",
+    "anchor": {
+      "x": "0"
+    },
+    "ray": {
+      "x": "1"
+    },
+    "meter": {
+      "candidate_bases": 0,
+      "rational_operations": 10,
+      "seconds": 2.2799998987466097e-05
+    }
+  },
+  "L24": {
+    "status": "unbounded",
+    "anchor": {
+      "x": "0"
+    },
+    "ray": {
+      "x": "-1"
+    },
+    "meter": {
+      "candidate_bases": 0,
+      "rational_operations": 10,
+      "seconds": 2.2099993657320738e-05
+    }
+  },
+  "M01": {
+    "status": "optimal",
+    "objective": "2",
+    "point": {
+      "x": "0",
+      "y": "2",
+      "z": "0"
+    },
+    "slices": [
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "0",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "1"
+        },
+        "status": "optimal",
+        "value": "1",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "2"
+        },
+        "status": "optimal",
+        "value": "2",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "1",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "1"
+        },
+        "status": "optimal",
+        "value": "2",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "2",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "0"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      }
+    ],
+    "relaxation": {
+      "status": "optimal",
+      "objective": "5/2",
+      "point": {
+        "x": "0",
+        "y": "5/2",
+        "z": "0"
+      },
+      "dual": {
+        "cap:upper": "1/2",
+        "z:lower": "1"
+      }
+    },
+    "strict_fractional_gap": true,
+    "meter": {
+      "candidate_bases": 120,
+      "rational_operations": 1084,
+      "seconds": 0.0015605000080540776
+    }
+  },
+  "M02": {
+    "status": "optimal",
+    "objective": "-7/4",
+    "point": {
+      "x": "0",
+      "y": "2",
+      "z": "0"
+    },
+    "slices": [
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "1/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "1"
+        },
+        "status": "optimal",
+        "value": "-3/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "2"
+        },
+        "status": "optimal",
+        "value": "-7/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "-3/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "1"
+        },
+        "status": "optimal",
+        "value": "-7/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "-7/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "0"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      }
+    ],
+    "relaxation": {
+      "status": "optimal",
+      "objective": "-9/4",
+      "point": {
+        "x": "0",
+        "y": "5/2",
+        "z": "0"
+      },
+      "dual": {
+        "cap:upper": "1/2",
+        "z:lower": "1"
+      }
+    },
+    "strict_fractional_gap": true,
+    "meter": {
+      "candidate_bases": 120,
+      "rational_operations": 1084,
+      "seconds": 0.0015008000191301107
+    }
+  },
+  "M03": {
+    "status": "optimal",
+    "objective": "5/2",
+    "point": {
+      "x": "0",
+      "y": "2",
+      "z": "0"
+    },
+    "slices": [
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "1/2",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "1"
+        },
+        "status": "optimal",
+        "value": "3/2",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "2"
+        },
+        "status": "optimal",
+        "value": "5/2",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "3/2",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "1"
+        },
+        "status": "optimal",
+        "value": "5/2",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "5/2",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "0"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      }
+    ],
+    "relaxation": {
+      "status": "optimal",
+      "objective": "3",
+      "point": {
+        "x": "0",
+        "y": "5/2",
+        "z": "0"
+      },
+      "dual": {
+        "cap:upper": "1/2",
+        "z:lower": "1"
+      }
+    },
+    "strict_fractional_gap": true,
+    "meter": {
+      "candidate_bases": 120,
+      "rational_operations": 1084,
+      "seconds": 0.0016552000015508384
+    }
+  },
+  "M04": {
+    "status": "optimal",
+    "objective": "-5/4",
+    "point": {
+      "x": "0",
+      "y": "2",
+      "z": "0"
+    },
+    "slices": [
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "3/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "1"
+        },
+        "status": "optimal",
+        "value": "-1/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "2"
+        },
+        "status": "optimal",
+        "value": "-5/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "-1/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "1"
+        },
+        "status": "optimal",
+        "value": "-5/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "0"
+        },
+        "status": "optimal",
+        "value": "-5/4",
+        "dual": {
+          "z:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "0"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "3",
+          "y": "3"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "cap:upper": "1"
+        }
+      }
+    ],
+    "relaxation": {
+      "status": "optimal",
+      "objective": "-7/4",
+      "point": {
+        "x": "0",
+        "y": "5/2",
+        "z": "0"
+      },
+      "dual": {
+        "cap:upper": "1/2",
+        "z:lower": "1"
+      }
+    },
+    "strict_fractional_gap": true,
+    "meter": {
+      "candidate_bases": 120,
+      "rational_operations": 1084,
+      "seconds": 0.001528399996459484
+    }
+  },
+  "M05": {
+    "status": "optimal",
+    "objective": "-1/2",
+    "point": {
+      "b": "1",
+      "y": "1"
+    },
+    "slices": [
+      {
+        "integer_assignment": {
+          "b": "0"
+        },
+        "status": "optimal",
+        "value": "1/2",
+        "dual": {
+          "link:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "b": "1"
+        },
+        "status": "optimal",
+        "value": "-1/2",
+        "dual": {
+          "link:lower": "1"
+        }
+      }
+    ],
+    "relaxation": {
+      "status": "optimal",
+      "objective": "-1/2",
+      "point": {
+        "b": "1",
+        "y": "1"
+      },
+      "dual": {
+        "link:lower": "1",
+        "b:upper": "1"
+      }
+    },
+    "strict_fractional_gap": false,
+    "meter": {
+      "candidate_bases": 4,
+      "rational_operations": 190,
+      "seconds": 0.00027260000933893025
+    }
+  },
+  "M06": {
+    "status": "optimal",
+    "objective": "2",
+    "point": {
+      "x": "1",
+      "b": "1"
+    },
+    "slices": [
+      {
+        "integer_assignment": {
+          "x": "-1",
+          "b": "0"
+        },
+        "status": "optimal",
+        "value": "-2",
+        "dual": {}
+      },
+      {
+        "integer_assignment": {
+          "x": "-1",
+          "b": "1"
+        },
+        "status": "optimal",
+        "value": "0",
+        "dual": {}
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "b": "0"
+        },
+        "status": "optimal",
+        "value": "-1",
+        "dual": {}
+      },
+      {
+        "integer_assignment": {
+          "x": "0",
+          "b": "1"
+        },
+        "status": "optimal",
+        "value": "1",
+        "dual": {}
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "b": "0"
+        },
+        "status": "optimal",
+        "value": "0",
+        "dual": {}
+      },
+      {
+        "integer_assignment": {
+          "x": "1",
+          "b": "1"
+        },
+        "status": "optimal",
+        "value": "2",
+        "dual": {}
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "b": "0"
+        },
+        "status": "optimal",
+        "value": "1",
+        "dual": {}
+      },
+      {
+        "integer_assignment": {
+          "x": "2",
+          "b": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "sum:upper": "1"
+        }
+      }
+    ],
+    "relaxation": {
+      "status": "optimal",
+      "objective": "2",
+      "point": {
+        "x": "1",
+        "b": "1"
+      },
+      "dual": {
+        "sum:upper": "1",
+        "b:upper": "1"
+      }
+    },
+    "strict_fractional_gap": false,
+    "meter": {
+      "candidate_bases": 5,
+      "rational_operations": 428,
+      "seconds": 0.0005508000031113625
+    }
+  },
+  "M07": {
+    "status": "infeasible",
+    "slices": [
+      {
+        "integer_assignment": {
+          "x": "0"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "fractional:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "fractional:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "fractional:upper": "1"
+        }
+      }
+    ],
+    "meter": {
+      "candidate_bases": 23,
+      "rational_operations": 126,
+      "seconds": 0.00024839999969117343
+    }
+  },
+  "M08": {
+    "status": "infeasible",
+    "slices": [
+      {
+        "integer_assignment": {
+          "x": "0"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "fractional:lower": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "1"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "fractional:upper": "1"
+        }
+      },
+      {
+        "integer_assignment": {
+          "x": "2"
+        },
+        "status": "infeasible",
+        "farkas": {
+          "fractional:upper": "1"
+        }
+      }
+    ],
+    "meter": {
+      "candidate_bases": 23,
+      "rational_operations": 126,
+      "seconds": 0.0002841999812517315
+    }
+  },
+  "edit_rhs": {
+    "status": "optimal",
+    "objective": "7",
+    "point": {
+      "x": "0",
+      "y": "3"
+    },
+    "dual": {
+      "cap:upper": "3",
+      "x:lower": "1"
+    },
+    "meter": {
+      "candidate_bases": 1,
+      "rational_operations": 60,
+      "seconds": 9.519999730400741e-05
+    }
+  },
+  "edit_bounds": {
+    "status": "optimal",
+    "objective": "7",
+    "point": {
+      "x": "3",
+      "y": "1"
+    },
+    "dual": {
+      "cap:upper": "2",
+      "y:upper": "1"
+    },
+    "meter": {
+      "candidate_bases": 4,
+      "rational_operations": 194,
+      "seconds": 0.0002347000117879361
+    }
+  },
+  "edit_row": {
+    "status": "optimal",
+    "objective": "15/2",
+    "point": {
+      "x": "5/2",
+      "y": "3/2"
+    },
+    "dual": {
+      "cap:upper": "2",
+      "extra:upper": "1"
+    },
+    "meter": {
+      "candidate_bases": 1,
+      "rational_operations": 52,
+      "seconds": 8.270001853816211e-05
+    }
+  },
+  "edit_column": {
+    "status": "optimal",
+    "objective": "12",
+    "point": {
+      "x": "0",
+      "y": "2",
+      "z": "2"
+    },
+    "dual": {
+      "cap:upper": "3",
+      "x:lower": "1",
+      "z:upper": "1"
+    },
+    "meter": {
+      "candidate_bases": 5,
+      "rational_operations": 534,
+      "seconds": 0.000694699992891401
+    }
+  }
+}
