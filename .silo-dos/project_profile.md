@@ -1,22 +1,24 @@
 # SILO Project Profile
 
-## Current Approved Task — Reliability and File I/O, 2026-10-26
+## Delivered With CI HOLD — Reliability and File I/O, 2026-10-26
 
-用户已批准三项可靠性巩固，并要求先执行其他已讨论事项，明确延期规模和模型结构拓展。
-现已签发[唯一合同20261026-03-01](../tasks/codex/20261026-03-01_reliability-io.md)，
-依据[有限计划](../tasks/phases/reliability_io_20261026.md)，交`silo-solver开发`执行。
-签发时尚未产生实现/测试/CI结果；当前生产代码仍为已签收0.3.0a1。
+[唯一合同20261026-03-01](../tasks/codex/20261026-03-01_reliability-io.md)已交付并按停止条件结束。
+[执行报告](../tasks/reports/20261026-03-01_reliability-io_report.md)是本单结果来源。
+R1冻结f8f00fd先于生产修改；当前产品42892035db426c4739b6c1a7ad9648852d2b1dc8，候选0.3.0a2。
+R1/R2/R3通过：strict LP四接口与convert，96精确格式往返/16手写正例/25拒绝例/2微扰，
+外部24文件只读解析；正式首轮160公开请求全部通过，四指定MILP均实际分支，四编辑正确。
+本地完整质量6743通过；Windows3.13的dense/sparse×wheel/sdist四个全新环境各24请求通过。
 
-R1基线/冻结 → R2严格LP与既有MPS/JSON互操作 → R3独立同域验证 → R4实际CI/候选交付，
-共一个任务、四个内部检查点。新候选目标0.3.0a2；同域32模型、一轮160正式请求、最多两轮；
-本地自动核验60分钟；实际CI固定13job，最多同SHA两轮。精确格式比较不使用solver容差。
-完整文件权限、数字/区间/名称约定、次数和结束条件以合同为准，达到即停止，不追加任务。
+R4 HOLD，overall_complete=false。一次push成功，实际CI run40261995554绑定产品提交：
+Windows3.12质量成功；Ubuntu3.10/Windows3.10旧CG尾数精确断言失败；
+Ubuntu3.12旧RSS采样器缺VmHWM后StopIteration。远端8安装job及外部格式job未运行。
+这不符合纯基础设施rerun条件，本单不再push/rerun，不修改旧禁改算法/脚本/回归。
+最终报告/状态文档保留本地提交，源码身份保持。没有新的任务或实验排队。
 
-沿用当前分支和已知两治理差异，保护哈希保持、不暂存。一次push-on-success只同步指定公共任务分支获取CI；
-不merge/main/PR/tag/Release/PyPI。无法取得实际CI通过时如实交付未达，不以本地代替远端。
-独立核验、CI和安装均使用新任务证据目录；旧Goal已complete，旧账本/工件/原始失败不变。
-核心算法只读、C HOLD/D/E未开始、native延期；OneDrive保持关闭，不自动控制其他进程。
-推荐GPT-6 Sol/high，未据建议切换模型。后续完成状态由该合同报告链接核对。
+当前使用基线见[research_baseline](../docs/research_baseline.md)，伴学L0017已核对小例。
+两治理差异按原哈希保护且排除暂存，OneDrive保持退出，未控制其他用户进程。
+旧Goal保持complete，旧预算/工件/失败/封存记录不变；原C HOLD/D/E未开始、native延期。
+规模与模型结构拓展继续待讨论。后续若修复CI，需要新的明确有界合同。
 
 ## Completed Sparse LP Program — 2026-10-25
 

@@ -3,11 +3,11 @@ lesson_id: L0017
 title: 模型文件怎样保持数学语义
 topic: modeling.file-io
 version: 0.1.0
-status: draft
+status: checked
 created: 2026-10-26
 updated: 2026-10-26
-verified_code: null
-verified_on: null
+verified_code: 42892035db426c4739b6c1a7ad9648852d2b1dc8
+verified_on: 2026-10-26
 source_tasks: [20261026-03-01_reliability-io]
 ---
 
@@ -99,7 +99,9 @@ assert model_to_lp(parse_lp(model_to_lp(model))) == model_to_lp(model)
 精确格式往返、手写输入和highspy1.15.1的24次readModel/getLp属于不同核对路径；
 外部进程只解析，不执行优化。真实运行分母和失败记录以
 [本单报告](../../../tasks/reports/20261026-03-01_reliability-io_report.md)为准。
-本篇初建时尚未取得最终核验身份，元信息暂为draft/null。
+2026-10-26实际执行本篇Python小例，文本读写与稳定重写断言通过，公开求解调用0次。
+小例代码SHA为010140173005da670d243444e1d413272f179c378e6eb7a1148fbb7d7861bc8c；
+原始核对收据为outputs/reliability_io_20261026/prepush_check.json。
 
 ## 7. 研究意义与可扩展问题
 
@@ -124,7 +126,7 @@ SILO-LP-1不覆盖二次/非线性、SOS、半连续、多目标/多场景或任
 
 任务为[20261026-03-01](../../../tasks/codex/20261026-03-01_reliability-io.md)，
 冻结先行提交f8f00fd60728e0e9314342a3b4e037cfee50f790。
-2026-10-26初建v0.1.0，产品及教学小例实际核对身份待报告登记。
+2026-10-26初建v0.1.0并核对小例，产品身份42892035db426c4739b6c1a7ad9648852d2b1dc8。
 前置综合篇为[L0016](../L0016-reliable-solver/README.md)，本篇不改其历史核验身份。
 格式和独立读取参考[HiGHS官方Python示例](https://ergo-code.github.io/HiGHS/dev/interfaces/python/example-py/)
 及[模型文件格式说明](https://docs.gurobi.com/projects/optimizer/en/current/reference/fileformats/modelformats.html)。

@@ -1,7 +1,7 @@
 {
   "reviewed_on": "2026-10-26",
   "baseline": "537b742c21ff1ee4c1f50e950e99a299b1828371",
-  "assessment_note": "按2026-10-25已签收评估同步：稀疏LP与连续重优化原八项目标完成，本地候选0.3.0a1。以下是固定源/输入/本机该轮的证据，保留跨运行局限；原研究A/B、C HOLD、D/E未启动分别判断。网页读取不产生新验收。 当前候选0.3.0a2增加严格LP读写和convert；本单可靠性/实际CI待执行报告，不改旧原八项的范围。",
+  "assessment_note": "按2026-10-25已签收评估同步：稀疏LP与连续重优化原八项目标完成，本地候选0.3.0a1。以下是固定源/输入/本机该轮的证据，保留跨运行局限；原研究A/B、C HOLD、D/E未启动分别判断。网页读取不产生新验收。 当前候选0.3.0a2增加严格LP读写和convert；本单本地可靠性通过、实际CI失败，结果见执行报告，不改旧原八项的范围。",
   "boundaries": [
     "长期目标：同一 SILO 内核承载教学、学习与运筹优化研究。",
     "研究主线：固定资源约束路径在对偶变化下的精确状态维护、恢复与完整成本。",
@@ -327,11 +327,11 @@
       "id": "release",
       "name": "可复现与发行能力",
       "short": "发行",
-      "status": "0.3.0a2核验中",
+      "status": "本地通过，CI HOLD",
       "tone": "partial",
       "question": "其他人能否从交付物独立安装、运行并复核？",
-      "conclusion": "当前候选0.3.0a2的本单四环境与远端13job待实际核验；旧0.3.0a1八环境仍保留历史验收。",
-      "gap": "旧0.3.0a1的远端CI pending属于历史；当前0.3.0a2需绑定真实CI结果。尚无包发行。",
+      "conclusion": "0.3.0a2本地Windows3.13四环境各24请求通过；当前实际CI质量1/4成功，整体HOLD。旧0.3.0a1八环境结论保留。",
+      "gap": "旧0.3.0a1的CI pending属于历史；当前0.3.0a2 run40261995554因3个质量job失败，16远端工件核验未运行。",
       "criterion": "确定版本的发行物在声明环境独立安装，代表例子与 CLI 通过。",
       "sources": [
         "docs/sparse_program_acceptance_20261025.md",
@@ -418,9 +418,9 @@
     {
       "id": "package",
       "name": "Python 包与 CLI",
-      "status": "候选0.3.0a2核验中",
+      "status": "0.3.0a2本地通过/CI HOLD",
       "tone": "good",
-      "detail": "保留原生算法；新增SILO-LP-1四接口、optimize LP及不求解的convert。实际工件与CI状态见本单报告。",
+      "detail": "SILO-LP-1四接口、LP optimize与不求解convert完成；正式160和本地四安装通过。产品4289203一次push，CI失败；未公开包发行。",
       "sources": [
         "docs/sparse_program_acceptance_20261025.md",
         "docs/research_baseline.md"
@@ -429,11 +429,12 @@
     {
       "id": "clean",
       "name": "独立安装与平台矩阵",
-      "status": "8隔离环境已核验",
+      "status": "当前4本地环境通过",
       "tone": "good",
-      "detail": "Windows3.11/3.13 × dense/sparse × wheel/sdist共8环境、1008模块核对；远端Windows/Linux CI pending。",
+      "detail": "0.3.0a2 Windows3.13 dense/sparse×wheel/sdist共4全新环境通过；实际CI失败，远端安装0/16。旧0.3.0a1八环境保持历史身份。",
       "sources": [
-        "docs/sparse_program_acceptance_20261025.md"
+        "docs/sparse_program_acceptance_20261025.md",
+        "tasks/reports/20261026-03-01_reliability-io_report.md"
       ]
     },
     {
@@ -508,7 +509,7 @@
   },
   "project_position": {
     "title": "基础研究工具阶段",
-    "summary": "稀疏 LP / 连续重优化原八项目标已验收并收口；MIP / 分解仍偏基础研究原型。本地候选 0.3.0a1，远端 Windows/Linux CI pending，native 延期。 当前新增候选0.3.0a2的文件互操作与可靠性维护正在执行。",
+    "summary": "稀疏 LP / 连续重优化原八项目标已验收并收口；MIP / 分解仍偏基础研究原型。本地候选 0.3.0a1，远端 Windows/Linux CI pending，native 延期。 当前0.3.0a2文件互操作和本地独立核验通过；实际CI失败，整体交付HOLD，已停止。",
     "sources": [
       "docs/sparse_program_acceptance_20261025.md"
     ]

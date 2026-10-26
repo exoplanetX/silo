@@ -1,5 +1,16 @@
 # SILO Decision Log
 
+## DEC-20261026-RELIABILITY-IO-DELIVERY-HOLD
+
+- 唯一合同已执行至停止条件：R1/R2/R3和本地四环境通过，R4真实CI失败，overall_complete=false。
+- 冻结f8f00fd先于产品4289203；6743完整质量、96格式/16手写/25拒绝/2微扰、24外部只读解析、160正式请求均通过。
+- 候选0.3.0a2两新工件完成Windows3.13四环境96请求。一次公共任务分支push成功，main不动。
+- 实际run40261995554中Windows3.12成功，两个3.10的旧CG尾数断言失败，Ubuntu3.12旧RSS采样StopIteration。
+- CI依赖矩阵未运行，不作16安装或多平台通过声明。只读独立复核认定不符合纯基础设施重跑。
+- 保留所有失败；不改旧受保护脚本/算法/回归，不再次push或rerun；最终文档仅本地提交。
+- 旧Goal complete及研究/native/OneDrive边界不变。有限交付详见本单报告，后续任务须新授权。
+
+
 ## DEC-20261026-RELIABILITY-IO-DISPATCH
 
 - 用户批准固定研究基线、独立验证和实际CI，随后明确延期更大规模/更广结构，要求其他已讨论事项交付执行。

@@ -24,7 +24,7 @@
 | [L0014：受控研究策略、一般主问题与有限列生成](lessons/L0014-research-interfaces/README.md) | 2026-10-24 | `research.general-column-generation` | checked v0.2.0 | [教学研究原型M4](../tasks/codex/20261023-02-01_teaching-prototype.md)、[正确性修订](../tasks/codex/20261024-01-01_prototype-correctness-revision.md) |
 | [L0015：稀疏基、eta更新与重构后的状态一致性](lessons/L0015-sparse-basis-updates/README.md) | 2026-10-25 | `lp.sparse-basis-updates` | checked v0.2.2 | [稀疏整体执行](../tasks/codex/20261024-02-01_sparse-lp-program.md)、[RR02续接](../tasks/codex/20261024-02-02_sparse-lp-program.md) |
 | [L0016：可靠的 solver 怎样实现出来](lessons/L0016-reliable-solver/README.md) | 2026-10-26 | `solver.reliability` | checked v0.1.0 | [综合伴学整理](../tasks/codex/20261026-01-01_reliable-solver-learning.md) |
-| [L0017：模型文件怎样保持数学语义](lessons/L0017-model-file-io/README.md) | 2026-10-26 | `modeling.file-io` | draft v0.1.0 | [可靠基线与文件互操作](../tasks/codex/20261026-03-01_reliability-io.md) |
+| [L0017：模型文件怎样保持数学语义](lessons/L0017-model-file-io/README.md) | 2026-10-26 | `modeling.file-io` | checked v0.1.0 | [可靠基线与文件互操作](../tasks/codex/20261026-03-01_reliability-io.md) |
 
 L0001 的教学编排在 [系列整理任务](../tasks/codex/20261018-02-01_learning-series.md)
 中完成；算法实现和代码基线来自上表的 LP 开发任务。总目录同时记录两种来源。

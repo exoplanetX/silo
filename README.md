@@ -2,10 +2,13 @@
 
 SILO is a Python/NumPy teaching and research prototype for general-form LP and
 MILP, with a dense reference engine and an optional sparse LP engine. The local
-candidate is **0.3.0a2** (reliability and file I/O validation in progress). Use `silo.solve()` or
+candidate is **0.3.0a2** (local checks passed; multi-platform CI remains incomplete).
+Use `silo.solve()` or
 `silo optimize` for the general model pipeline. Local validation and artifact
 identities, fixed-run evidence and final acceptance are recorded in the
 [sparse program report](tasks/reports/20261024-02-02_sparse-lp-program_report.md).
+The current file I/O and independent acceptance results, including the failed CI,
+are in the [reliability report](tasks/reports/20261026-03-01_reliability-io_report.md).
 
 ## Project Philosophy
 

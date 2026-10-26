@@ -3,7 +3,9 @@
 当前候选更新为0.3.0a2；新增任务的实际核验状态见
 [研究基线](research_baseline.md)和[执行报告](../tasks/reports/20261026-03-01_reliability-io_report.md)。
 新检查入口为`python -m scripts.reliability.artifacts`，当前目标为Windows3.13四环境，
-远端Windows/Linux×3.11/3.13×dense/sparse的8job、16独立安装；实际CI结果待取得。
+远端Windows/Linux×3.11/3.13×dense/sparse的8job、16独立安装。
+本地四环境均实际通过；真实CI首轮因3个源码质量job失败，远端安装与外部解析job未运行。
+R4保持HOLD，不能把本地结果写成远端通过；失败与实际job链接见上述报告。
 每环境24固定公开请求，采用普通安装、源码树外`python -I`、direct_url工件SHA及全部已加载模块核对。
 新工件与旧候选独立，以下0.3.0a1及0.2.0a1描述保留历史身份。
 

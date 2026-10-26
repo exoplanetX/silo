@@ -1,5 +1,16 @@
 # SILO Technical Route
 
+## Current Stop — 20261026-03-01
+
+本单R1–R3及本地四安装通过，R4实际CI失败，已按合同停止；overall_complete=false。
+产品42892035db426c4739b6c1a7ad9648852d2b1dc8已一次push，run40261995554失败。
+旧CG精确尾数断言与Linux RSS采样故障属于代码路径，未使用同SHA基础设施rerun。
+远端16工件/24外部读未运行，后续不自动补跑、push或修禁改文件；新授权另立合同。
+[实际报告](../tasks/reports/20261026-03-01_reliability-io_report.md)记录全部有限结果与未达。
+旧Goal complete、C HOLD/D/E未开始、native延期、OneDrive退出保持。
+下列签发和旧corridor保留历史，不再构成本单续跑许可。
+
+
 ## Current Corridor — Reliability and File I/O, 2026-10-26
 
 执行[20261026-03-01](../tasks/codex/20261026-03-01_reliability-io.md)与
