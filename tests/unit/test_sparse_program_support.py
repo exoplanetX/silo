@@ -136,6 +136,7 @@ def test_external_guards_report_os_peak_and_never_solver_limit(tmp_path, scenari
         rss_limit=1 if scenario == "rss" else 1 << 30,
     )
     assert result["peak_rss_bytes"] > 0
+    assert result["memory_verification_valid"] and result["rss_sample_status"] == "measured"
     assert result["os_peak_method"] in ("PeakWorkingSetSize", "/proc VmHWM")
     if scenario == "normal":
         assert result["exit_code"] == 0 and result["guard_reason"] is None

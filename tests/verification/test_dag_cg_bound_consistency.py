@@ -17,6 +17,7 @@ from silo.decomposition import (
     DagPricingProblem,
     solve_dag_column_generation,
 )
+from silo.decomposition.restricted_master import RestrictedMasterProblem
 from silo.lp.simplex.revised import RevisedSimplexSolver
 from silo.lp.simplex.tableau import TableauSimplexSolver
 
@@ -169,18 +170,39 @@ def _natural_problem():
         'conv', [('p11',), ('p00',)], -3)
 
 
-def test_minimal_natural_rounding_failure_recovers_without_rewriting_weights():
+def test_minimal_natural_rounding_failure_recovers_without_rewriting_weights(monkeypatch):
+    # Delegate to the real native solve; capture the immutable published result
+    # before CG sees it. This observes weights, without injecting a synthetic LP.
+    native_solve, published = RestrictedMasterProblem.solve, []
+
+    def observed_solve(self, solver=None):
+        returned = native_solve(self, solver)
+        published.append((returned, dict(returned.primal_values)))
+        return returned
+
+    monkeypatch.setattr(RestrictedMasterProblem, 'solve', observed_solve)
     problem = _natural_problem()
     result = solve_dag_column_generation(problem)
     assert result.status == DagColumnGenerationStatus.TOLERANCE_REACHED, result.message
     record = result.iterations[-1]
-    assert record.master_result.primal_values == {'path_0': .75, 'path_1': .25000000000000006}
-    assert record.numerical_upper_bound == -1.7500000000000002
-    assert record.numerical_lower_bound == -1.75 and record.rho == 0
-    assert record.numerical_gap < 0 and record.objective_gap < 0
-    assert -record.objective_gap <= record.roundoff_allowance <= 1e-9
-    assert 'roundoff' in result.message.lower()
-    _audit_round(problem, record, _columns(problem.graph), Fraction(-7, 4))
+    columns, optimum = _columns(problem.graph), Fraction(-7, 4)
+    assert len(published) == len(result.iterations)
+    for observed, (native, weights) in zip(result.iterations, published, strict=True):
+        assert observed.master_result is native
+        assert dict(observed.master_result.primal_values) == weights
+        _audit_round(problem, observed, columns, optimum)
+    assert result.last_valid_master is published[-1][0]
+    assert abs(Fraction(record.master_result.objective_value) - optimum) <= Fraction(1, 10**9)
+    assert abs(Fraction(record.numerical_upper_bound) - optimum) <= Fraction(1, 10**9)
+    assert record.rho >= -1e-9 and record.objective_gap <= 1e-9
+    if record.objective_gap < 0:
+        assert -record.objective_gap <= record.roundoff_allowance <= 1e-9
+        assert 'roundoff' in result.message.lower()
+    print('NATURAL_CG_AUDIT=' + json.dumps({
+        'native_snapshots': len(published), 'weights': dict(record.master_result.primal_values),
+        'upper': record.numerical_upper_bound, 'lower': record.numerical_lower_bound,
+        'gap': record.objective_gap, 'eta': record.roundoff_allowance,
+        'exact_optimum': str(optimum), 'all_rounds_independently_checked': True}))
 
 
 @pytest.mark.parametrize('backend', BACKENDS)

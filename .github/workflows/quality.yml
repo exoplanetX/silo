@@ -27,6 +27,8 @@ jobs:
         python-version: ["3.10", "3.12"]
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -38,6 +40,17 @@ jobs:
         run: python scripts/prototype/evidence.py --verify
       - name: Static reliability freeze and independent oracle verification
         run: python -m scripts.reliability.freeze
+      - name: R4 revision scope and production identity
+        run: >-
+          python -m scripts.reliability.r4_closure --verify
+          --output outputs/reliability-ci/r4/identity.json
+      - name: Preserve actual R4 identity
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r4-identity-${{ matrix.os }}-${{ matrix.python-version }}
+          path: outputs/reliability-ci/r4/identity.json
+          if-no-files-found: error
       - name: Build the shared current wheel and sdist once
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
         run: python -m scripts.reliability.artifacts --build --output outputs/reliability-ci/dist

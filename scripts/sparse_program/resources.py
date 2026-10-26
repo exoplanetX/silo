@@ -7,6 +7,23 @@ import time
 from pathlib import Path
 
 
+def linux_peak_from_status(text):
+    """Return a genuine VmHWM in bytes, or None when this field is absent.
+
+    A short-lived/zombie process can still have a readable status without memory
+    fields. Missing, malformed and unreadable samples are distinct states; VmRSS
+    is deliberately not substituted for an OS high-water mark.
+    """
+    fields = [line.split() for line in text.splitlines() if line.startswith("VmHWM:")]
+    if not fields:
+        return None
+    if (len(fields) != 1 or len(fields[0]) != 3 or fields[0][0] != "VmHWM:"
+            or fields[0][2] != "kB" or not fields[0][1].isascii()
+            or not fields[0][1].isdigit()):
+        raise ValueError("Invalid /proc VmHWM sample")
+    return int(fields[0][1]) * 1024
+
+
 def peak_rss(process):
     if os.name == "nt":
         from ctypes import wintypes
@@ -35,9 +52,7 @@ def peak_rss(process):
             raise ctypes.WinError()
         return int(info.peak_working)
     text = Path(f"/proc/{process.pid}/status").read_text()
-    return (
-        int(next(line.split()[1] for line in text.splitlines() if line.startswith("VmHWM:"))) * 1024
-    )
+    return linux_peak_from_status(text)
 
 
 def windows_tree_peaks(process, peaks):
@@ -115,6 +130,7 @@ def windows_tree_peaks(process, peaks):
 
 def kill_tree(process):
     if process.poll() is not None:
+        process.wait()
         return
     if os.name == "nt":
         subprocess.run(
@@ -123,38 +139,81 @@ def kill_tree(process):
             stderr=subprocess.DEVNULL,
             check=False,
         )
+        if process.poll() is None:
+            # taskkill can return nonzero without raising. Reap our direct
+            # child even when that external tree-cleanup command did not work.
+            process.kill()
     else:
-        process.kill()
+        try:
+            process.kill()
+        except ProcessLookupError:
+            # The owned child can exit between poll() and kill(). Still reap it.
+            pass
     process.wait()
 
 
 def guarded(argv, cwd, log, seconds, rss_limit=1 << 30):
     start = time.perf_counter()
-    peak, guard_reason, process_peaks = 0, None, {}
+    peak, guard_reason, process_peaks = None, None, {}
+    valid_samples, missing_samples, missing_reason = 0, 0, None
     with Path(log).open("w", encoding="utf-8") as stream:
         process = subprocess.Popen(argv, cwd=cwd, stdout=stream, stderr=subprocess.STDOUT)
-        while True:
+        try:
+            while True:
+                try:
+                    measured = (
+                        windows_tree_peaks(process, process_peaks)
+                        if os.name == "nt"
+                        else peak_rss(process)
+                    )
+                    if os.name == "nt" and not process_peaks:
+                        measured = None
+                    if measured is None:
+                        missing_samples += 1
+                        missing_reason = ("Windows_tree_no_samples" if os.name == "nt"
+                                          else "VmHWM_field_missing")
+                    else:
+                        peak = measured if peak is None else max(peak, measured)
+                        valid_samples += 1
+                except FileNotFoundError:
+                    if os.name == "nt" and process.poll() is None:
+                        raise
+                    missing_samples += 1
+                    missing_reason = "process_status_disappeared"
+                except OSError:
+                    if process.poll() is None:
+                        raise
+                    missing_samples += 1
+                    missing_reason = "status_read_failed_after_exit"
+                # Missing samples never restart the absolute child deadline.
+                if peak is not None and peak > rss_limit:
+                    guard_reason = "harness_peak_rss"
+                elif time.perf_counter() - start > seconds:
+                    guard_reason = "harness_timeout"
+                if guard_reason:
+                    kill_tree(process)
+                    break
+                if process.poll() is not None:
+                    if peak is None:
+                        guard_reason = "harness_rss_unmeasured"
+                    break
+                time.sleep(0.01)
+            code = process.wait()
+        except BaseException:
+            # Own only this Popen child (and the existing Windows tree scope).
+            # Cleanup must not replace the original sampling/parser exception.
             try:
-                measured = (
-                    windows_tree_peaks(process, process_peaks)
-                    if os.name == "nt"
-                    else peak_rss(process)
-                )
-                peak = max(peak, measured)
-            except (OSError, StopIteration):
-                if process.poll() is None:
-                    raise
-            if peak > rss_limit:
-                guard_reason = "harness_peak_rss"
-            elif time.perf_counter() - start > seconds:
-                guard_reason = "harness_timeout"
-            if guard_reason:
-                kill_tree(process)
-                break
-            if process.poll() is not None:
-                break
-            time.sleep(0.01)
-        code = process.wait()
+                try:
+                    kill_tree(process)
+                finally:
+                    # Even a failed tree-cleanup command must not leave the
+                    # direct child we created running or unreaped.
+                    if process.poll() is None:
+                        process.kill()
+                    process.wait()
+            except BaseException:
+                pass
+            raise
     return {
         "pid": process.pid,
         "exit_code": code,
@@ -166,4 +225,9 @@ def guarded(argv, cwd, log, seconds, rss_limit=1 << 30):
         "conservative_sum_of_os_peaks": os.name == "nt",
         "monitored_processes": len(process_peaks) if os.name == "nt" else 1,
         "process_peak_bytes": process_peaks,
+        "rss_sample_status": "measured" if valid_samples else "unmeasured",
+        "valid_rss_samples": valid_samples,
+        "missing_rss_samples": missing_samples,
+        "last_missing_reason": missing_reason,
+        "memory_verification_valid": valid_samples > 0,
     }

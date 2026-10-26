@@ -1,6 +1,7 @@
 """Tool tests use hand microcases and never load formal acceptance inputs."""
 
 from copy import deepcopy
+from fractions import Fraction
 
 import pytest
 
@@ -57,3 +58,16 @@ def test_independent_kkt_checker_rejects_false_multipliers():
     result["side_multipliers"]["variable_upper"]["z"] = 0
     with pytest.raises(AssertionError):
         check(payload, result, {"status": "optimal", "objective": "1"})
+
+
+def test_r4_transport_only_accepts_strict_line_end_changes():
+    from scripts.reliability.r4_closure import strict_lf
+
+    assert strict_lf(b"one\r\ntwo\n") == b"one\ntwo\n"
+    with pytest.raises(ValueError, match="bare CR"):
+        strict_lf(b"one\rtwo")
+
+
+def test_r4_l0016_tail_difference_uses_actual_binary_values():
+    delta = Fraction(0.2500000000000001) - Fraction(0.25000000000000006)
+    assert delta == Fraction(1, 2**54)
